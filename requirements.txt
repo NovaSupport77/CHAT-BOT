@@ -1,2 +1,4 @@
-pyrogram==2.0.106
-tgcrypto
+pyrogram==2.1.4
+tgcrypto==1.2.0
+requests
+aiohttp
