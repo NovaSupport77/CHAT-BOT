@@ -2,6 +2,16 @@ services:
   - type: web
     name: advanced-chatbot
     env: python
-    plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: bash start.sh
+    startCommand: python advanced_chatbot_final.py
+    envVars:
+      - key: API_ID
+        value: "<YOUR_API_ID>"
+      - key: API_HASH
+        value: "<YOUR_API_HASH>"
+      - key: BOT_TOKEN
+        value: "<YOUR_BOT_TOKEN>"
+      - key: OWNER_ID
+        value: "7589623332"
+      - key: PORT
+        value: "8080"
