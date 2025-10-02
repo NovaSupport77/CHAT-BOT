@@ -3,7 +3,7 @@ services:
     name: advanced-chatbot
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python advanced_chatbot_final.py
+    startCommand: ./start.sh
     envVars:
       - key: API_ID
         value: "<YOUR_API_ID>"
@@ -14,4 +14,4 @@ services:
       - key: OWNER_ID
         value: "7589623332"
       - key: PORT
-        value: "8080"
+        value: ""   # Leave empty, Render will assign automatically
