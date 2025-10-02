@@ -1,2 +1,5 @@
 #!/bin/bash
-python3 advanced_chatbot.py
+# Start the Advanced Chatbot
+
+echo "✅ Starting Advanced Chatbot..."
+python3 advanced_chatbot_final.py
