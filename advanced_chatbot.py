@@ -1,270 +1,151 @@
-from pyrogram import Client, filters, enums
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-import os, json, random, threading, asyncio, time
-from http.server import BaseHTTPRequestHandler, HTTPServer
+# -*- coding: utf-8 -*-
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
+import random, time
+from datetime import datetime
 
-# -------- Env Vars --------
-API_ID = int(os.environ.get("API_ID", "0"))
-API_HASH = os.environ.get("API_HASH", "")
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
-OWNER_ID = int(os.environ.get("OWNER_ID", "7589623332"))
+# ----------------- CONFIG -----------------
+API_ID = 29332974        # Apka API ID
+API_HASH = "a5cf51e5143270a60178102b35a43ade"
+BOT_TOKEN = "8298863467:AAGQywrOMSu3K6I_vmmEj9-IZi82PNrZZKE"
+OWNER_ID = 7589623332
+BOT_USERNAME = "@ChattingPro_Bot"
 
-# -------- Bot Client --------
-app = Client("advanced_chatbot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+bot = Client("advanced_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# -------- Load Replies --------
-try:
-    with open("conversation.json", "r", encoding="utf-8") as f:
-        DATA = json.load(f)
-except:
-    DATA = {}
+afk_users = {}
+chatbot_status = {}
 
-if "daily" not in DATA:
-    DATA["daily"] = ["Hello 👋", "Hey there!", "Hi!"]
-
-# -------- Load Known Chats for Broadcast --------
-CHAT_IDS_FILE = "chats.json"
-if os.path.exists(CHAT_IDS_FILE):
-    with open(CHAT_IDS_FILE, "r") as f:
-        KNOWN_CHATS = json.load(f)
-else:
-    KNOWN_CHATS = {"groups": [], "privates": []}
-
-# -------- Keywords --------
-KEYWORDS = {
-    "love": "love", "i love you": "love", "miss": "love",
-    "sad": "sad", "cry": "sad", "depressed": "sad",
-    "happy": "happy", "mast": "happy",
-    "hello": "daily", "hi": "daily", "hey": "daily",
-    "bye": "bye", "goodbye": "bye",
-    "thanks": "thanks", "thank you": "thanks",
-    "gm": "morning", "good morning": "morning",
-    "gn": "night", "good night": "night",
-    "chutiya": "abuse", "bc": "abuse", "mc": "abuse"
-}
-
-# -------- Global Vars --------
-CHATBOT_STATUS = {}
-TAGGING = {}
-INTRO_TEXT = (
-    "ʜᴇʏ 👋 {name}\n\n"
-    "ɪ ᴀᴍ ᴀɴ ᴀᴅᴠᴀɴᴄᴇᴅ ᴄʜᴀᴛʙᴏᴛ 🤖\n"
-    "ᴀᴅᴅ ᴍᴇ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘs 🚀\n\n"
-    "🌟 ғᴇᴀᴛᴜʀᴇs: ᴀᴜᴛᴏ ʀᴇᴘʟʏ, ᴛᴀɢᴀʟʟ, ʙʀᴏᴀᴅᴄᴀsᴛ, sᴛᴀᴛs, sᴛɪᴄᴋᴇʀ ʀᴇᴘʟʏ"
-)
-OWNER_PANEL_TEXT = "ʜᴇʏ 👋 I am your bot! 🔒"
-
-# -------- Utility --------
-def get_reply(text: str):
-    text = text.lower()
-    for word, cat in KEYWORDS.items():
-        if word in text and cat in DATA:
-            return random.choice(DATA[cat])
-    return random.choice(DATA.get("daily", ["Hello 👋"]))
-
-async def is_admin(chat_id, user_id):
+# ----------------- ADMIN CHECK -----------------
+async def is_admin(message: Message):
     try:
-        member = await app.get_chat_member(chat_id, user_id)
-        return member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
+        member = await bot.get_chat_member(message.chat.id, message.from_user.id)
+        return member.status in ("administrator", "creator")
     except:
         return False
 
-async def save_chat_id(chat_id, type_):
-    if chat_id not in KNOWN_CHATS[type_]:
-        KNOWN_CHATS[type_].append(chat_id)
-        with open(CHAT_IDS_FILE, "w") as f:
-            json.dump(KNOWN_CHATS, f)
-
-# -------- /start Command with Ding Dong Animation --------
-@app.on_message(filters.command("start") & filters.private)
-async def start_cmd(client, message):
-    user = message.from_user
-    me = await app.get_me()
-    bot_username = me.username
-
-    anim_text = "ᴅɪɴɢ...ᴅᴏɴɢ 💥....ʙᴏᴛ ɪs sᴛᴀʀᴛɪɴɢ"
-    msg = await message.reply_text("Starting...")
-    current = ""
-    for ch in anim_text:
-        current += ch
-        try: await msg.edit_text(current)
-        except: pass
-        await asyncio.sleep(0.05)
-    await asyncio.sleep(0.5)
-    await msg.delete()
-
-    buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("➕ 𝐀ᴅᴅ ᴍᴇ ʏᴏᴜʀ 𝐆ʀᴏᴜᴘ ➕", url=f"https://t.me/{bot_username}?startgroup=true")],
-        [
-            InlineKeyboardButton("❍ᴡɳᴇʀ", url="https://t.me/TheXVoren"),
-            InlineKeyboardButton("𝐒ᴜρρᴏʀᴛ", url="https://t.me/Nova_Support_Chat")
-        ],
-        [InlineKeyboardButton("𝐂ᴏᴍᴍᴀɴᴅs 🛠", callback_data="commands")]
-    ])
-    await message.reply_photo(
-        "https://i.ibb.co/rKJDYmVM/IMG-20250917-111838.jpg",
-        caption=INTRO_TEXT.format(name=user.first_name),
-        reply_markup=buttons
+# ----------------- INTRO -----------------
+@bot.on_message(filters.command("start"))
+async def start(client, message: Message):
+    if message.chat.type != "private" and not await is_admin(message):
+        return
+    intro_photo = "https://iili.io/KVzgS44.jpg"
+    intro_text = (
+        f"ᴅɪɴɢ ᴅᴏɴɢ 🎶\n\n"
+        f"ʜєʏ {message.from_user.mention}\n"
+        "✦ ɪ ᴧϻ ᴧᴅᴠᴧηᴄєᴅ ᴄʜᴧᴛ ʙσᴛ ᴡɪᴛʜ sσϻє ғєᴧᴛᴜʀєs. ✦\n"
+        "✦ ʀєᴘʟʏ ɪη ɢʀσᴜᴘs & ᴘʀɪᴠᴧᴛє🥀\n"
+        "✦ ηᴏ ᴧʙᴜsɪηɢ & zєʀσ ᴅσᴡηᴛɪϻє\✦ ᴄʟɪᴄᴋ ʜєʟᴘ ʙᴜᴛᴛση ғσʀ ʜєʟᴘs❤️❖ ϻᴧᴅє ʙʏ {BOT_USERNAME}"
     )
-    await save_chat_id(message.chat.id, "privates")
+    intro_buttons = InlineKeyboardMarkup([
+        [InlineKeyboardButton("+ 𝐀ᴅᴅ ᴍᴇ ʏᴏᴜʀ 𝐆ʀᴏᴜᴘ +", url=f"https://t.me/{BOT_USERNAME[1:]}?startgroup=true")],
+        [InlineKeyboardButton("ᯓ❍ᴡ𝛈ᴇʀ", url=f"https://t.me/{OWNER_ID}"),
+         InlineKeyboardButton("◉ 𝐀ʙᴏᴜᴛ", callback_data="about_section")],
+        [InlineKeyboardButton("◉ 𝐇ᴇʟᴘ & 𝐂ᴏᴍᴍᴀɴᴅs", callback_data="help_section")]
+    ])
+    await message.reply_photo(intro_photo, caption=intro_text, reply_markup=intro_buttons)
 
-# -------- Commands Panel --------
-@app.on_callback_query(filters.regex("commands"))
-async def commands_cb(client, cq):
+# ----------------- ABOUT -----------------
+@bot.on_callback_query(filters.regex("about_section"))
+async def about_section(client, callback):
+    photo = "https://iili.io/KVzgS44.jpg"
     text = (
-        f"📜 Bot Commands:\n\n{OWNER_PANEL_TEXT}\n\n"
-        "/start, /help, /ping, /id, /broadcast, /stats, /chatbot on/off, /tagall <msg>, /stop"
+        "❖ ᴧ ϻɪηɪ ᴄʜᴧᴛ ʙᴏᴛ ғᴏʀ ᴛᴇʟᴇɢʀᴀϻ ɢʀᴏᴜᴘs & ᴘʀɪᴠᴧᴛᴇ\n"
+        "● ᴡʀɪᴛᴛᴇη ɪη ᴘʏᴛʜᴏɴ\n"
+        "● ᴋєєᴘ ʏσᴜʀ ᴧᴄᴛɪᴠє ɢʀσᴜᴘ. ● ᴧᴅᴅ ϻє ηᴏᴡ ʙʟᴀʙʏ ɪɴ ʏᴏᴜʀ ɢʀσᴜᴘs"
     )
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="back"), InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close")]
+        [InlineKeyboardButton("𝐄ᴠᴀʀᴀ 𝐒ᴜᴘᴘᴏʀᴛ 𝐂ʜᴀᴛ", url="https://t.me/Evara_Support_Chat"),
+         InlineKeyboardButton("𝐔ρ∂ᴀᴛᴇs", url="https://t.me/Evara_Updates")],
+        [InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="start_back"),
+         InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_section")]
     ])
-    await cq.answer()
-    await cq.message.edit(text, reply_markup=buttons)
+    await callback.message.edit_media(media=photo, caption=text, reply_markup=buttons)
 
-@app.on_callback_query(filters.regex("back"))
-async def back_cb(client, cq):
-    await start_cmd(client, cq.message)
+# ----------------- HELP & COMMANDS -----------------
+@bot.on_callback_query(filters.regex("help_section"))
+async def help_section(client, callback):
+    photo = "https://iili.io/KVzgS44.jpg"
+    buttons = InlineKeyboardMarkup([
+        [InlineKeyboardButton("ᴄᴏᴜᴘʟᴇ", callback_data="cmd_couple"),
+         InlineKeyboardButton("ᴄʜᴀᴛʙᴏᴛ", callback_data="cmd_chatbot")],
+        [InlineKeyboardButton("ᴛᴏᴏʟs", callback_data="cmd_tools"),
+         InlineKeyboardButton("ɢᴀᴍᴇs", callback_data="cmd_games")],
+        [InlineKeyboardButton("sᴛɪᴄᴋᴇʀs", callback_data="cmd_stickers"),
+         InlineKeyboardButton("ɢʀᴏᴜᴘs", callback_data="cmd_groups")]
+    ])
+    await callback.message.edit_media(media=photo, caption="", reply_markup=buttons)
 
-@app.on_callback_query(filters.regex("close"))
-async def close_cb(client, cq):
-    await cq.message.delete()
-    await cq.answer("Closed ✅")
+# ----------------- BACK & CLOSE -----------------
+@bot.on_callback_query(filters.regex("close_section"))
+async def close_section(client, callback):
+    await callback.message.delete()
 
-# -------- /help Command --------
-@app.on_message(filters.command("help") & filters.private)
-async def help_cmd(client, message):
-    text = (
-        "📜 **Bot Commands:**\n"
-        "/start - Start Bot\n"
-        "/help - Show this message\n"
-        "/ping - Check Bot Speed\n"
-        "/id - Get User ID\n"
-        "/broadcast - Broadcast Message (Owner Only)\n"
-        "/stats - Bot Stats (Owner Only)\n"
-        "/chatbot on/off - Toggle AI in Groups\n"
-        "/tagall <msg> - Tag All Members\n"
-        "/stop - Stop Tagging\n"
-        "/paneltext <text> - Change Owner Panel Text (Owner Only)"
-    )
-    await message.reply_text(text)
+@bot.on_callback_query(filters.regex("start_back"))
+async def start_back(client, callback):
+    await start(client, callback.message)
 
-# -------- /ping Command --------
-@app.on_message(filters.command("ping"))
-async def ping_cmd(client, message):
-    start = time.time()
-    m = await message.reply_text("🏓 Pinging...")
-    end = time.time()
-    await m.edit_text(f"✅ Bot is Alive!\n⚡ {round((end-start)*1000)} ms")
+# ----------------- AFK -----------------
+@bot.on_message(filters.group & filters.text)
+async def afk_check(client, message: Message):
+    if message.from_user.id in afk_users:
+        await message.reply_text(f"ʜᴇʏ {message.from_user.mention}, ʏᴏᴜ ᴀғᴋ !!")
+    for user_id in afk_users.keys():
+        if message.reply_to_message and message.reply_to_message.from_user.id == user_id:
+            await message.reply_text(f"ᴛʜɪs ᴜsᴇʀ ɪs ᴀғᴋ !! ◉‿◉")
 
-# -------- /id Command --------
-@app.on_message(filters.command("id"))
-async def id_cmd(client, message):
-    user = message.reply_to_message.from_user if message.reply_to_message else message.from_user
-    await message.reply_text(f"👤 {user.first_name}\n🆔 {user.id}")
+# ----------------- FUN COMMANDS -----------------
+@bot.on_message(filters.command("Couples") & filters.group)
+async def couples_cmd(client, message):
+    members = [m.user for m in await client.get_chat_members(message.chat.id)]
+    if len(members) < 2: return
+    couple = random.sample(members, 2)
+    await message.reply_text(f"💞 Couple: {couple[0].mention} ❤️ {couple[1].mention}")
 
-# -------- /stats Command --------
-@app.on_message(filters.command("stats") & filters.user(OWNER_ID))
-async def stats_cmd(client, message):
-    await message.reply_text(f"📊 Bot Stats:\n👥 Groups: {len(KNOWN_CHATS['groups'])}\n👤 Privates: {len(KNOWN_CHATS['privates'])}")
+@bot.on_message(filters.command("cute") & filters.group)
+async def cute_cmd(client, message):
+    percent = random.randint(0, 100)
+    await message.reply_text(f"ʏᴏᴜʀ ᴄᴜᴛᴇɴᴇss ʟᴇᴠᴇʟ ɪs {percent}% 😉\n[ᴍᴏʀᴇ ʜᴇʟᴘ](https://t.me/Evara_Support_Chat)")
 
-# -------- /broadcast Command --------
-@app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
-async def broadcast_cmd(client, message):
-    if not (message.reply_to_message or len(message.command) > 1):
-        return await message.reply_text("Usage: /broadcast <msg> or reply to a message.")
-    text = message.text.split(None, 1)[1] if len(message.command) > 1 else None
-    sent = 0
-    for chat_type in ["privates", "groups"]:
-        for chat_id in KNOWN_CHATS[chat_type]:
-            try:
-                if message.reply_to_message:
-                    await message.reply_to_message.copy(chat_id)
-                else:
-                    await app.send_message(chat_id, text)
-                sent += 1
-            except: continue
-    await message.reply_text(f"✅ Broadcast sent to {sent} chats.")
+@bot.on_message(filters.command("love") & filters.group)
+async def love_cmd(client, message):
+    try:
+        names = message.text.split(None, 2)[1:]
+        percent = random.randint(0,100)
+        await message.reply_text(f"ʟᴏᴠᴇ ᴘᴏssɪʙɪʟɪᴛʏ ɪs {percent}% 😉 for {names[0]} + {names[1]}\n[ᴍᴏʀᴇ ʜᴇʟᴘ](https://t.me/Evara_Support_Chat)")
+    except:
+        await message.reply_text("Use: /love name1 name2")
 
-# -------- /paneltext Command (Owner Only) --------
-@app.on_message(filters.command("paneltext") & filters.user(OWNER_ID))
-async def paneltext_cmd(client, message):
-    global OWNER_PANEL_TEXT
-    text = message.text.split(None, 1)[1] if len(message.command) > 1 else None
-    if not text:
-        return await message.reply_text("Usage: /paneltext <text>")
-    OWNER_PANEL_TEXT = text
-    await message.reply_text(f"✅ Owner panel text updated!")
-
-# -------- /chatbot Toggle --------
-@app.on_message(filters.command("chatbot") & filters.group)
+# ----------------- CHATBOT -----------------
+@bot.on_message(filters.command("chatbot") & filters.group)
 async def chatbot_toggle(client, message):
-    if not await is_admin(message.chat.id, message.from_user.id):
+    if len(message.text.split()) < 2:
+        await message.reply_text("Use /chatbot enable OR /chatbot disable")
         return
-    mode = message.command[1].lower() if len(message.command) > 1 else ""
-    CHATBOT_STATUS[message.chat.id] = (mode == "on")
-    await save_chat_id(message.chat.id, "groups")
-    await message.reply_text(f"🤖 Chatbot is now {'ON ✅' if CHATBOT_STATUS[message.chat.id] else 'OFF ❌'}")
+    action = message.text.split()[1].lower()
+    if action == "enable":
+        chatbot_status[message.chat.id] = True
+        await message.reply_text("ᴄʜᴀᴛʙᴏᴛ sᴛᴀᴛᴜs ɪs ᴇɴᴀʙʟᴇ ✰")
+    elif action == "disable":
+        chatbot_status[message.chat.id] = False
+        await message.reply_text("ᴄʜᴀᴛʙᴏᴛ sᴛᴀᴛᴜs ɪs ᴅɪsᴀʙʟᴇ ✰")
 
-# -------- /tagall Command --------
-@app.on_message(filters.command("tagall") & filters.group)
-async def tagall_cmd(client, message):
-    if not await is_admin(message.chat.id, message.from_user.id):
-        return
-    chat_id = message.chat.id
-    TAGGING[chat_id] = True
-    msg = message.text.split(None, 1)[1] if len(message.command) > 1 else "Tagging All!"
-    await message.reply_text("✅ Tagging Started...")
-    async for member in app.get_chat_members(chat_id):
-        if not TAGGING.get(chat_id):
-            break
-        try:
-            await app.send_message(chat_id, f"{msg}\n[{member.user.first_name}](tg://user?id={member.user.id})")
-            await asyncio.sleep(0.5)
-        except: continue
-    await message.reply_text("✅ Tagging Done!")
+# ----------------- /Devloper -----------------
+@bot.on_message(filters.command("Devloper"))
+async def developer_cmd(client, message):
+    photo = "https://iili.io/KVzmgWl.jpg"
+    text = "ʙᴏᴛ ᴅᴇᴠʟᴏᴘᴇʀ ɪs"
+    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐃ᴇᴠʟᴏᴘᴇʀ ღ", url=f"https://t.me/{BOT_USERNAME[1:]}")]])
+    await message.reply_photo(photo, caption=text, reply_markup=buttons)
 
-# -------- /stop Command --------
-@app.on_message(filters.command("stop") & filters.group)
-async def stop_tag(client, message):
-    TAGGING[message.chat.id] = False
-    await message.reply_text("❌ Tagging Stopped!")
+# ----------------- PING -----------------
+@bot.on_message(filters.command("ping") & filters.group)
+async def ping_cmd(client, message):
+    start_time = time.time()
+    msg = await message.reply_text("ᴘɪɴɢɪɴɢ... sᴛᴀʀᴛᴇᴅ.. ´･ᴗ･` ᴘɪɴɢ.. ᴘᴏɴɢ ⚡")
+    end_time = time.time()
+    uptime = datetime.now().strftime("%H:%M:%S")
+    await msg.edit(f"ᴘɪɴɢ ➳ {round((end_time - start_time)*1000)}ms\nᴜᴘᴛɪᴍᴇ ➳ {uptime}")
 
-# -------- Private Auto Reply --------
-@app.on_message(filters.text & filters.private)
-async def private_reply(client, message):
-    await save_chat_id(message.chat.id, "privates")
-    reply = get_reply(message.text)
-    await message.reply_text(reply)
-
-# -------- Group Auto Reply --------
-@app.on_message(filters.text & filters.group)
-async def group_reply(client, message):
-    await save_chat_id(message.chat.id, "groups")
-    if CHATBOT_STATUS.get(message.chat.id, True) and random.random() < 0.7:
-        reply = get_reply(message.text)
-        await message.reply_text(reply)
-
-# -------- Voice Chat Notifications --------
-@app.on_message(filters.group)
-async def voice_chat_events(client, message):
-    if getattr(message, "video_chat_started", False):
-        await message.reply_text("🎤 Voice Chat Started!")
-    elif getattr(message, "video_chat_ended", False):
-        await message.reply_text("❌ Voice Chat Ended!")
-    elif getattr(message, "video_chat_invite", False):
-        await message.reply_text("📣 You've been invited to a Voice Chat!")
-
-# -------- Health Check --------
-PORT = int(os.environ.get("PORT", 8080))
-class _H(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"OK")
-
-def _start_http():
-    HTTPServer(("0.0.0.0", PORT), _H).serve_forever()
-
-threading.Thread(target=_start_http, daemon=True).start()
-print("✅ Advanced Chatbot is running...")
-app.run()
+# ----------------- RUN -----------------
+bot.run()
