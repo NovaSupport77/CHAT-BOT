@@ -1,5 +1,2 @@
-# Ensure Pyrogram version is 2.0.106 or newer to support all features like Voice Chat Handlers
 pyrogram>=2.0.106
-
-# You can optionally list a specific, stable version like this:
-# pyrogram==2.5.1
+cryptg
