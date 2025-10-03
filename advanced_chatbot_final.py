@@ -35,59 +35,59 @@ DEVELOPER_PHOTO = "https://iili.io/KVzmgWl.jpg"
 
 # ----------------- NEW FANCY FONTS APPLIED HERE -----------------
 INTRO_TEXT_TEMPLATE = (
-    "𝐇𝐞𝐲 {mention_name}\n"
-    "✦ 𝐈 𝐚𝐦 𝐚𝐧 𝐚𝐝𝐯𝐚𝐧𝐜𝐞𝐝 𝐜𝐡𝐚𝐭 𝐛𝐨𝐭 𝐰𝐢𝐭𝐡 𝐬𝐨𝐦𝐞 𝐟𝐞𝐚𝐭𝐮𝐫𝐞𝐬. \n"
-    "✦ 𝐑𝐞𝐩𝐥𝐲 𝐢𝐧 𝐠𝐫𝐨𝐮𝐩𝐬 & 𝐩𝐫𝐢𝐯𝐚𝐭𝐞 𝐦𝐞𝐬𝐬𝐚𝐠𝐞𝐬 🥀\n"
-    "✦ 𝐍𝐨 𝐚𝐛𝐮𝐬𝐢𝐧𝐠 & 𝐳𝐞𝐫𝐨 𝐝𝐨𝐰𝐧𝐭𝐢𝐦𝐞\n"
-    "✦ 𝐂𝐥𝐢𝐜𝐤 𝐇𝐞𝐥𝐩 𝐛𝐮𝐭𝐭𝐨𝐧 𝐟𝐨𝐫 𝐜𝐨𝐦𝐦𝐚𝐧𝐝𝐬 ❤️\n"
-    "❖ 𝐌𝐚𝐝𝐞 𝐛𝐲...{developer}"
+    "𝐇ᴇʏ {mention_name}\n"
+    "✦ 𝐈 ᴧᴍ ᴧɴ ᴧᴅᴠᴀɴᴄᴇᴅ ᴄʜᴧᴛ ʙᴏᴛ ᴡɪᴛʜ sᴏᴍᴇ ғᴇᴀᴛᴜʀᴇs. \n"
+    "✦ 𝐑ᴇᴘʟʏ ɪɴ ɢʀᴏᴜᴘs & ᴘʀɪᴠᴧᴛᴇs  🥀\n"
+    "✦ 𝐍ᴏ ᴧʙᴜsɪɴɢ & ᴢᴇʀᴏ ᴅᴏᴡɴᴛɪᴍᴇ\n"
+    "✦ 𝐂ʟɪᴄᴋ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ғᴏʀ ᴄᴏᴍᴍᴧɴᴅs ❤️\n"
+    "❖ 𝐌ᴧᴅᴇ ʙʏ...{developer}"
 )
 
 ABOUT_TEXT = (
-    "❖ 𝐀 𝐦𝐢𝐧𝐢 𝐜𝐡𝐚𝐭 𝐛𝐨𝐭 𝐟𝐨𝐫 𝐓𝐞𝐥𝐞𝐠𝐫𝐚𝐦 𝐠𝐫𝐨𝐮𝐩𝐬 & 𝐩𝐫𝐢𝐯𝐚𝐭𝐞 𝐦𝐞𝐬𝐬𝐚𝐠𝐞𝐬\n"
-    "● 𝐖𝐫𝐢𝐭𝐭𝐞𝐧 𝐢𝐧 𝐏𝐲𝐭𝐡𝐨𝐧 \n"
-    "● 𝐊𝐞𝐞𝐩 𝐲𝐨𝐮𝐫 𝐠𝐫𝐨𝐮𝐩 𝐚𝐜𝐭𝐢𝐯𝐞.\n"
-    "● 𝐀𝐝𝐝 𝐦𝐞 𝐧𝐨𝐰 𝐛𝐚𝐛𝐲 𝐢𝐧 𝐲𝐨𝐮𝐫 𝐠𝐫𝐨𝐮𝐩𝐬."
+    "❖ 𝐀 ᴍɪɴɪ ᴄʜᴧᴛ ʙᴏᴛ ғᴏʀ ᴛᴇʟᴇɢʀᴧᴍs ɢʀᴏᴜᴘs & ᴘʀɪᴠᴧᴛᴇ ᴍᴇssᴧɢᴇs\n"
+    "● 𝐖ʀɪᴛᴛᴇɴ ɪɴ ᴘʏᴛʜᴏɴ \n"
+    "● 𝐊ᴇᴘᴘ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴧᴄᴛɪᴠᴇ.\n"
+    "● 𝐀ᴅᴅ ᴍᴇ ɴᴏᴡ ʙᴧʙʏ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘs."
 )
 
 # --- Sub-Help Menu Content (Applied Font) ---
 HELP_COMMANDS_TEXT_MAP = {
     "couple": (
-        "📜 𝐂𝐨𝐮𝐩𝐥𝐞 & 𝐋𝐨𝐯𝐞 𝐂𝐨𝐦𝐦𝐚𝐧𝐝𝐬:\n"
-        "/couples ~ 𝐂𝐡𝐨𝐨𝐬𝐞 𝐚 𝐫𝐚𝐧𝐝𝐨𝐦 𝐜𝐨𝐮𝐩𝐥𝐞\n"
-        "/cute ~ 𝐂𝐡𝐞𝐜𝐤 𝐲𝐨𝐮𝐫 𝐜𝐮𝐭𝐞𝐧𝐞𝐬𝐬\n"
-        "/love name1 + name2 ~ 𝐒𝐞𝐞 𝐥𝐨𝐯𝐞 𝐩𝐨𝐬𝐬𝐢𝐛𝐢𝐥𝐢𝐭𝐲\n"
-        "\n_𝐀𝐥𝐥 𝐭𝐡𝐞𝐬𝐞 𝐜𝐨𝐦𝐦𝐚𝐧𝐝𝐬 𝐚𝐫𝐞 𝐚𝐯𝐚𝐢𝐥𝐚𝐛𝐥𝐞 𝐭𝐨 𝐞𝐯𝐞𝐫𝐲𝐨𝐧𝐞."
+        "📜 𝐂ᴏᴜᴘʟᴇ & 𝐋ᴏᴠᴇ 𝐂ᴏᴍᴍᴀɴᴅs:\n"
+        "/couples ~ 𝐂ʜᴏᴏsᴇ ᴧ ʀᴧɴᴅᴏᴍ ᴄᴏᴜᴘʟᴇ\n"
+        "/cute ~ 𝐂ʜᴇᴄᴋ ʏᴏᴜʀ ᴄᴜᴛᴇɴᴇss\n"
+        "/love name1 + name2 ~ 𝐒ᴇᴇ ʟᴏᴠᴇ ᴘᴏssɪʙʟɪᴛʏ\n"
+        "\n_ᴧʟʟ ᴛʜᴇsᴇ ᴄᴏᴍᴍᴀɴᴅs ᴀʀᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏ ᴇᴠᴇʀʏᴏɴᴇ."
     ),
     "chatbot": (
-        "📜 𝐂𝐡𝐚𝐭𝐛𝐨𝐭 𝐂𝐨𝐦𝐦𝐚𝐧𝐝:\n"
-        "/chatbot enable/disable ~ 𝐄𝐧𝐚𝐛𝐥𝐞/𝐝𝐢𝐬𝐚𝐛𝐥𝐞 𝐜𝐡𝐚𝐭𝐛𝐨𝐭\n"
+        "📜 𝐂ʜᴀᴛʙᴏᴛ 𝐂ᴏᴍᴍᴀɴᴅ:\n"
+        "/chatbot enable/disable ~ 𝐄ɴᴀʙʟᴇ/ᴅɪsᴀʙʟᴇ ᴄʜᴀᴛʙᴏᴛ\n"
         "\n"
-        "𝐍𝐨𝐭𝐞: 𝐎𝐧𝐥𝐲 𝐰𝐨𝐫𝐤𝐬 𝐢𝐧 𝐠𝐫𝐨𝐮𝐩 𝐚𝐧𝐝 𝐨𝐧𝐥𝐲 𝐟𝐨𝐫 𝐚𝐝𝐦𝐢𝐧𝐬/𝐨𝐰𝐧𝐞𝐫.\n"
-        "𝐄𝐱𝐚𝐦𝐩𝐥𝐞: /chatbot enable"
+        "𝐍ᴏᴛᴇ: ᴏɴʟʏ ᴡᴏʀᴋs ɪɴ ɢʀᴏᴜᴘ ᴀɴᴅ ᴏɴʟʏ ғᴏʀ ᴀᴅᴍɪɴs/ᴏᴡɴᴇʀ.\n"
+        "𝐄xᴀᴍᴘʟᴇ: /chatbot enable"
     ),
     "tools": (
-        "📜 𝐓𝐨𝐨𝐥𝐬 𝐂𝐨𝐦𝐦𝐚𝐧𝐝𝐬:\n"
-        "/id ~ 𝐆𝐞𝐭 𝐮𝐬𝐞𝐫 𝐈𝐃 (𝐫𝐞𝐩𝐥𝐲 𝐨𝐫 𝐭𝐚𝐠)\n"
-        "/tagall ~ 𝐓𝐚𝐠 𝐚𝐥𝐥 m𝐞𝐦𝐛𝐞𝐫𝐬 (𝐀𝐝𝐦𝐢𝐧 𝐎𝐧𝐥𝐲)\n"
-        "/stop ~ 𝐓𝐨 𝐬𝐭𝐨𝐩 𝐭𝐚𝐠𝐠𝐢𝐧𝐠 (𝐀𝐝𝐦𝐢𝐧 𝐎𝐧𝐥𝐲)\n"
-        "/afk reason ~ 𝐀𝐰𝐚𝐲 𝐟𝐫𝐨𝐦 𝐭𝐡𝐞 𝐤𝐞𝐲𝐛𝐨𝐚𝐫𝐝\n"
-        "\n_𝐓𝐚𝐠𝐚𝐥𝐥/𝐒𝐭𝐨𝐩 𝐫𝐞𝐪𝐮𝐢𝐫𝐞𝐬 𝐀𝐝𝐦𝐢𝐧. 𝐎𝐭𝐡𝐞𝐫𝐬 𝐚𝐫𝐞 𝐟𝐨𝐫 𝐞𝐯𝐞𝐫𝐲𝐨𝐧𝐞."
+        "📜 𝐓ᴏᴏʟs 𝐂ᴏᴍᴍᴧɴᴅs:\n"
+        "/id ~ 𝐆ᴇᴛ ᴜsᴇʀ 𝐈ᴅ (ʀᴇᴘʟʏ ᴏʀ ᴛᴧɢ)\n"
+        "/tagall ~ 𝐓ᴧɢ ᴀʟʟ ᴍᴇᴍʙᴇʀs (𝐀ᴅᴍɪɴ 𝐎ɴʟʏ)\n"
+        "/stop ~ 𝐓ᴏ sᴛᴏᴘ ᴛᴧɢɢɪɴɢ (𝐀ᴅᴍɪɴ 𝐎ɴʟʏ)\n"
+        "/afk reason ~ 𝐀ᴡᴀʏ ғʀᴏᴍ ᴛʜᴇ ᴋᴇʏʙᴏᴀʀᴅ\n"
+        "\n_𝐓ᴀɢᴀʟʟ/𝐒ᴛᴏᴘ ʀᴇǫᴜɪʀᴇs 𝐀ᴅᴍɪɴ. 𝐎ᴛʜᴇʀs ᴀʀᴇ ғᴏʀ ᴇᴠᴇʀʏᴏɴᴇ."
     ),
     "games": (
-        "📜 𝐆𝐚𝐦𝐞𝐬 𝐂𝐨𝐦𝐦𝐚𝐧𝐝𝐬:\n"
-        "/dice ~ 𝐑𝐨𝐥𝐥 𝐚 𝐝𝐢𝐜𝐞\n"
-        "/jackpot ~ 𝐉𝐚𝐜𝐤𝐩𝐨𝐭 𝐦𝐚𝐜𝐡𝐢𝐧𝐞\n"
-        "/football ~ 𝐏𝐥𝐚𝐲 𝐟𝐨𝐨𝐭𝐛𝐚𝐥𝐥\n"
-        "/basketball ~ 𝐏𝐥𝐚𝐲 𝐛𝐚𝐬𝐤𝐞𝐭𝐛𝐚𝐥𝐥\n"
-        "\n_𝐀𝐥𝐥 𝐭𝐡𝐞𝐬𝐞 𝐠𝐚𝐦𝐞𝐬 𝐚𝐫𝐞 𝐚𝐯𝐚𝐢𝐥𝐚𝐛𝐥𝐞 𝐭𝐨 𝐞𝐯𝐞𝐫𝐲𝐨𝐧𝐞."
+        "📜 𝐆ᴧᴍᴇs 𝐂ᴏᴍᴍᴧɴᴅs:\n"
+        "/dice ~ 𝐑ᴏʟʟ ᴧ ᴅɪᴄᴇ\n"
+        "/jackpot ~ 𝐉ᴧᴄᴋᴘᴏᴛ ᴍᴀᴄʜɪɴᴇ\n"
+        "/football ~ 𝐏ʟᴀʏ ғᴏᴏᴛʙᴧʟʟ\n"
+        "/basketball ~ 𝐏ʟᴀʏ ʙᴧsᴋᴇᴛʙᴀʟʟ\n"
+        "\n_𝐀ʟʟ ᴛʜᴇsᴇ ɢᴀᴍᴇs ᴀʀᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏ ᴇᴠᴇʀʏᴏɴᴇ."
     ),
     "group": (
-        "📜 𝐆𝐫𝐨𝐮𝐩 𝐔𝐭𝐢𝐥𝐢𝐭𝐲 𝐂𝐨𝐦𝐦𝐚𝐧𝐝𝐬:\n"
-        "/mmf text ~ 𝐂𝐫𝐞𝐚𝐭𝐞 𝐚 𝐬𝐭𝐢𝐜𝐤𝐞𝐫 𝐰𝐢𝐭𝐡 𝐭𝐞𝐱𝐭 (𝐑𝐞𝐩𝐥𝐲 𝐭𝐨 𝐚 𝐬𝐭𝐢𝐜𝐤𝐞𝐫)\n"
-        "/staff ~ 𝐃𝐢𝐬𝐩𝐥𝐚𝐲𝐬 𝐠𝐫𝐨𝐮𝐩 𝐬𝐭𝐚𝐟𝐟 𝐦𝐞𝐦𝐛𝐞𝐫𝐬\n"
-        "/botlist ~ 𝐂𝐡𝐞𝐜𝐤 𝐡𝐨𝐰 𝐦𝐚𝐧𝐲 𝐛𝐨𝐭𝐬 𝐢𝐧 𝐲𝐨𝐮𝐫 𝐠𝐫𝐨𝐮𝐩 (𝐀𝐝𝐦𝐢𝐧 𝐎𝐧𝐥𝐲)"
-        "\n_𝐁𝐨𝐭𝐥𝐢𝐬𝐭 𝐫𝐞𝐪𝐮𝐢𝐫𝐞𝐬 𝐀𝐝𝐦𝐢𝐧. 𝐎𝐭𝐡𝐞𝐫𝐬 𝐚𝐫𝐞 𝐟𝐨𝐫 𝐞𝐯𝐞𝐫𝐲𝐨𝐧𝐞."
+        "📜 𝐆ʀᴏᴜᴘ 𝐔ᴛɪʟɪᴛʏ 𝐂ᴏᴍᴍᴧɴᴅs:\n"
+        "/mmf text ~ 𝐂ʀᴇᴀᴛᴇ ᴀ sᴛɪᴄᴋᴇʀ ᴡɪᴛʜ ᴛᴇxᴛ (ʀᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ)\n"
+        "/staff ~ 𝐃ɪsᴘʟᴧʏs ɢʀᴏᴜᴘ sᴛᴧғғ ᴍᴇᴍʙᴇʀs\n"
+        "/botlist ~ 𝐂ʜᴇᴄᴋ ʜᴏᴡ ᴍᴀɴʏ ʙᴏᴛs ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ (𝐀ᴅᴍɪɴ ᴏɴʟʏ)"
+        "\n_ʙᴏᴛʟɪsᴛ ʀᴇǫᴜɪʀᴇs ᴀᴅᴍɪɴ. ᴏᴛʜᴇʀs ᴀʀᴇ ғᴏʀ ᴇᴠᴇʀʏᴏɴᴇ."
     )
 }
 # ----------------- FANCY FONTS END -----------------
@@ -177,22 +177,22 @@ def get_start_buttons(bot_username):
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("➕ 𝐀𝐝𝐝 𝐌𝐞 𝐓𝐨 𝐘𝐨𝐮𝐫 𝐆𝐫𝐨𝐮𝐩 ➕", url=f"https://t.me/{bot_username}?startgroup=true")],
         [
-            InlineKeyboardButton("𝐎𝐰𝐧𝐞𝐫", user_id=OWNER_ID),
-            InlineKeyboardButton("𝐀𝐛𝐨𝐮𝐭", callback_data="about")
+            InlineKeyboardButton("ᯓ❍ᴡɳ𝛆ʀ", user_id=OWNER_ID),
+            InlineKeyboardButton("◉ 𝐀ʙᴏᴜᴛ", callback_data="about")
         ],
-        [InlineKeyboardButton("𝐇𝐞𝐥𝐩 & 𝐂𝐨𝐦𝐦𝐚𝐧𝐝𝐬", callback_data="help_main")]
+        [InlineKeyboardButton("◉ 𝐇ᴇʟᴘ & 𝐂ᴏᴍᴍᴀɴᴅs", callback_data="help_main")]
     ])
 
 def get_about_buttons():
     """Returns the About section button layout."""
     return InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("𝐄𝐯𝐚𝐫𝐚 𝐒𝐮𝐩𝐩𝐨𝐫𝐭 𝐂𝐡𝐚𝐭", url=SUPPORT_CHAT),
-            InlineKeyboardButton("𝐔𝐩𝐝𝐚𝐭𝐞𝐬", url=UPDATES_CHANNEL)
+            InlineKeyboardButton("𝐄ᴠᴀʀᴀ 𝐒ᴜᴘᴘᴏʀᴛ 𝐂ʜᴀᴛ", url=SUPPORT_CHAT),
+            InlineKeyboardButton("𝐔ᴘᴅᴀᴛᴇs", url=UPDATES_CHANNEL)
         ],
         [
-            InlineKeyboardButton("𝐁𝐚𝐜𝐤", callback_data="start_back"),
-            InlineKeyboardButton("𝐂𝐥𝐨𝐬𝐞", callback_data="close")
+            InlineKeyboardButton("• 𝐁ᴀᴄᴋ", callback_data="start_back"),
+            InlineKeyboardButton("• 𝐂ʟᴏsᴇ", callback_data="close")
         ]
     ])
 
@@ -200,17 +200,17 @@ def get_help_main_buttons():
     """Returns the main Help & Commands button layout."""
     return InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("𝐂𝐨𝐮𝐩𝐥𝐞", callback_data="help_couple"),
-            InlineKeyboardButton("𝐂𝐡𝐚𝐭𝐛𝐨𝐭", callback_data="help_chatbot")
+            InlineKeyboardButton("ᴄᴏᴜᴘʟᴇ", callback_data="help_couple"),
+            InlineKeyboardButton("ᴄʜᴀᴛʙᴏᴛ", callback_data="help_chatbot")
         ],
         [
-            InlineKeyboardButton("𝐓𝐨𝐨𝐥𝐬", callback_data="help_tools"),
-            InlineKeyboardButton("𝐆𝐚𝐦𝐞𝐬", callback_data="help_games")
+            InlineKeyboardButton("ᴛᴏᴏʟs", callback_data="help_tools"),
+            InlineKeyboardButton("ɢᴀᴍᴇs", callback_data="help_games")
         ],
-        [InlineKeyboardButton("𝐆𝐫𝐨𝐮𝐩", callback_data="help_group")],
+        [InlineKeyboardButton("ɢʀᴏᴜᴘ", callback_data="help_group")],
         [
-            InlineKeyboardButton("𝐁𝐚𝐜𝐤", callback_data="start_back"),
-            InlineKeyboardButton("𝐂𝐥𝐨𝐬𝐞", callback_data="close")
+            InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="start_back"),
+            InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close")
         ]
     ])
 
@@ -238,25 +238,25 @@ async def callbacks_handler(client, query):
         )
     elif data == "help_main":
         await query.message.edit_caption(
-            caption="📜 𝐂𝐨𝐦𝐦𝐚𝐧𝐝𝐬 𝐌𝐞𝐧𝐮:\n\n𝐂𝐡𝐨𝐨𝐬𝐞 𝐚 𝐜𝐚𝐭𝐞𝐠𝐨𝐫𝐲 𝐛𝐞𝐥𝐨𝐰:",
+            caption="📜 𝐂ᴏᴍᴍᴀɴᴅs 𝐌ᴇɴᴜ:\n\n𝐂ʜᴏᴏsᴇ ᴀ ᴄᴀᴛᴇɢᴏʀʏ ʙᴇʟᴏᴡ:",
             reply_markup=get_help_main_buttons()
         )
     elif data.startswith("help_"):
         category = data.split("_")[1]
-        text = HELP_COMMANDS_TEXT_MAP.get(category, "𝐄𝐫𝐫𝐨𝐫: 𝐔𝐧𝐤𝐧𝐨𝐰𝐧 𝐂𝐚𝐭𝐞𝐠𝐨𝐫𝐲")
+        text = HELP_COMMANDS_TEXT_MAP.get(category, "𝐄ʀʀᴏʀ: 𝐔ɴᴋɴᴏᴡɴ 𝐂ᴀᴛᴇɢᴏʀʏ")
         
         # Custom button logic for sub-menus
         buttons = []
         if category in ["couple", "cute", "love"]:
-            buttons.append(InlineKeyboardButton("𝐒𝐮𝐩𝐩𝐨𝐫𝐭", url=SUPPORT_CHAT))
+            buttons.append(InlineKeyboardButton("✦ 𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT))
             
         # Ensure buttons is a list of lists for InlineKeyboardMarkup
         buttons_markup_rows = []
         if buttons:
             buttons_markup_rows.append(buttons)
         buttons_markup_rows.append([
-            InlineKeyboardButton("𝐁𝐚𝐜𝐤", callback_data="help_main"),
-            InlineKeyboardButton("𝐂𝐥𝐨𝐬𝐞", callback_data="close")
+            InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="help_main"),
+            InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close")
         ])
         
         await query.message.edit_caption(
@@ -266,7 +266,7 @@ async def callbacks_handler(client, query):
     elif data == "close":
         await query.message.delete()
     else:
-        await query.answer("𝐓𝐡𝐢𝐬 𝐛𝐮𝐭𝐭𝐨𝐧 𝐢𝐬 𝐧𝐨𝐭 𝐲𝐞𝐭 𝐟𝐮𝐧𝐜𝐭𝐢𝐨𝐧𝐚𝐥.") 
+        await query.answer("𝐓ʜɪs ʙᴜᴛᴛᴏɴ ɪs ɴᴏᴛ ʏᴇᴛ 𝐅ᴜɴᴄᴛɪᴏɴᴀʟ.") 
 
 # -------- Commands --------
 
@@ -278,7 +278,7 @@ async def start_cmd(client, message):
     developer_link = DEVELOPER_HANDLE.strip('@')
     
     # Ding Dong Animation
-    anim_text = "𝐃𝐈𝐍𝐆...𝐃𝐎𝐍𝐆 💥....𝐁𝐎𝐓 𝐈𝐒 𝐒𝐓𝐀𝐑𝐓𝐈𝐍𝐆"
+    anim_text = "ᴅɪɴɢ...ᴅᴏɴɢ 💥....ʙᴏᴛ ɪs sᴛᴀʀᴛɪɴɢ"
     msg = await message.reply_text("Starting...")
     
     current = ""
@@ -312,7 +312,7 @@ async def start_cmd(client, message):
 @app.on_message(filters.command("developer"))
 async def developer_cmd(client, message):
     # Animation
-    anim_text = "𝐘𝐎𝐔 𝐖𝐀𝐍𝐓 𝐓𝐎 𝐊𝐍𝐎𝐖, 𝐓𝐇𝐈𝐒 𝐁𝐎𝐓 𝐃𝐄𝐕𝐄𝐋𝐎𝐏𝐄𝐑 💥..𝐇𝐄𝐑𝐄"
+    anim_text = "𝐘ᴏᴜ 𝐖ᴀɳᴛ ᴛᴏ 𝐊ɳᴏᴡ..𝐓ʜɪs 𝐁ᴏᴛ 𝐃ᴇᴠᴇʟᴏᴘᴇʀ 💥..𝐇ᴇʀᴇ"
     m = await message.reply_text("Searching...")
     
     current = ""
@@ -333,10 +333,10 @@ async def developer_cmd(client, message):
         pass # Ignore if the animation message is already deleted/edited/not found
         
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐫 ღ", url=f"https://t.me/{DEVELOPER_HANDLE.strip('@')}")]
+        [InlineKeyboardButton("𝐃ᴇᴠᴇʟᴏᴘᴇʀ ღ", url=f"https://t.me/{DEVELOPER_HANDLE.strip('@')}")]
     ])
     
-    caption_text = f"𝐁𝐨𝐭 𝐝𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐫 𝐢𝐬 [{DEVELOPER_USERNAME}](t.me/{DEVELOPER_HANDLE.strip('@')})"
+    caption_text = f"𝐁ᴏᴛ 𝐃ᴇᴠᴇʟᴏᴘᴇʀ ɪs [{DEVELOPER_USERNAME}](t.me/{DEVELOPER_HANDLE.strip('@')})"
     
     try:
         # 1. Try to send the photo response
@@ -361,9 +361,9 @@ async def ping_cmd(client, message):
     start = time.time()
     
     # Ping animation
-    m = await message.reply_text("𝐏𝐢𝐧𝐠𝐢𝐧𝐠...𝐬𝐭𝐚𝐫𝐭𝐞𝐝..´･ᴗ･")
+    m = await message.reply_text("Pɪɴɢɪɴɢ...sᴛᴀʀᴛᴇᴅ..´･ᴗ･")
     await asyncio.sleep(0.5)
-    await m.edit_text("𝐏𝐢𝐧𝐠..𝐏𝐨𝐧𝐠 ⚡")
+    await m.edit_text("Pɪɴɢ..Pᴏɴɢ ⚡")
     await asyncio.sleep(0.5)
     
     end = time.time()
@@ -373,8 +373,8 @@ async def ping_cmd(client, message):
     me = await client.get_me()
     
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("➕ 𝐀𝐝𝐝 𝐌𝐞 ➕", url=f"https://t.me/{me.username}?startgroup=true")],
-        [InlineKeyboardButton("𝐒𝐮𝐩𝐩𝐨𝐫𝐭", url=SUPPORT_CHAT)]
+        [InlineKeyboardButton("➕ 𝐀ᴅᴅ 𝐌ᴇ ➕", url=f"https://t.me/{me.username}?startgroup=true")],
+        [InlineKeyboardButton("𝐒ᴜρρᴏɾᴛ", url=SUPPORT_CHAT)]
     ])
     
     try:
@@ -384,8 +384,8 @@ async def ping_cmd(client, message):
         
     await message.reply_photo(
         PING_PHOTO,
-        caption=f"𝐏𝐢𝐧𝐠 ➳ {ping_ms} 𝐦𝐬\n"
-                f"𝐔𝐩𝐭𝐢𝐦𝐞 ➳ {uptime_readable}",
+        caption=f"𝐏ɪɴɢ ➳ {ping_ms} 𝐦𝐬\n"
+                f"𝐔ᴘᴛɪᴍᴇ ➳ {uptime_readable}",
         reply_markup=buttons
     ) 
 
@@ -398,19 +398,19 @@ async def id_cmd(client, message):
 # -------- /stats Command (Owner Only) --------
 @app.on_message(filters.command("stats") & filters.user(OWNER_ID))
 async def stats_cmd(client, message):
-    await message.reply_text(f"📊 𝐁𝐨𝐭 𝐒𝐭𝐚𝐭𝐬:\n👥 𝐆𝐫𝐨𝐮𝐩𝐬: {len(KNOWN_CHATS['groups'])}\n👤 𝐏𝐫𝐢𝐯𝐚𝐭𝐞𝐬: {len(KNOWN_CHATS['privates'])}")
+    await message.reply_text(f"📊 𝐁ᴏᴛ 𝐒ᴛᴀᴛs:\n👥 𝐆ʀᴏᴜᴘs: {len(KNOWN_CHATS['groups'])}\n👤 𝐏ʀɪᴠᴀᴛᴇs: {len(KNOWN_CHATS['privates'])}")
 
 # -------- /broadcast (Owner Only) --------
 @app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
 async def broadcast_cmd(client, message):
     if not (message.reply_to_message or len(message.command) > 1):
-        return await message.reply_text("𝐔𝐬𝐚𝐠𝐞: /𝐛𝐫𝐨𝐚𝐝𝐜𝐚𝐬𝐭 𝐨𝐫 𝐫𝐞𝐩𝐥𝐲 𝐭𝐨 𝐚 m𝐞𝐬𝐬𝐚𝐠𝐞.")
+        return await message.reply_text("ᴜsᴀɢᴇ: /ʙʀᴏᴀᴅᴄᴀsᴛ ᴏʀ ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇssᴀɢᴇ.")
     
     text = message.text.split(None, 1)[1] if len(message.command) > 1 else None
     
     sent = 0
     failed = 0
-    m = await message.reply_text("𝐒𝐭𝐚𝐫𝐭𝐢𝐧𝐠 𝐛𝐫𝐨𝐚𝐝𝐜𝐚𝐬𝐭...")
+    m = await message.reply_text("𝐒ᴛᴀʀᴛɪɴɢ 𝐁ʀᴏᴀᴅᴄᴀsᴛ...")
     
     for chat_type in ["privates", "groups"]:
         for chat_id in KNOWN_CHATS[chat_type]:
@@ -425,29 +425,29 @@ async def broadcast_cmd(client, message):
                 failed += 1
                 continue
                 
-    await m.edit_text(f"✅ 𝐁𝐫𝐨𝐚𝐝𝐜𝐚𝐬𝐭 𝐃𝐨𝐧𝐞!\n𝐒𝐞𝐧𝐭 𝐭𝐨 {sent} 𝐜𝐡𝐚𝐭𝐬.\n𝐅𝐚𝐢𝐥𝐞𝐝 𝐢𝐧 {failed} 𝐜𝐡𝐚𝐭𝐬.")
+    await m.edit_text(f"✅ 𝐁ʀᴏᴀᴅᴄᴀsᴛ ᴅᴏɴᴇ!\n𝐒ᴇɴᴛ ᴛᴏ {sent} ᴄʜᴀᴛs.\n𝐅ᴀɪʟᴇᴅ ɪɴ {failed} ᴄʜᴀᴛs.")
 
 # -------- /chatbot Toggle --------
 @app.on_message(filters.command("chatbot") & filters.group)
 async def chatbot_toggle(client, message):
     if not await is_admin(message.chat.id, message.from_user.id):
-        return await message.reply_text("❗ 𝐎𝐧𝐥𝐲 𝐚𝐝𝐦𝐢𝐧𝐬 𝐚𝐧𝐝 𝐨𝐰𝐧𝐞𝐫 𝐜𝐚𝐧 𝐮𝐬𝐞 𝐭𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝.")
+        return await message.reply_text("❗ Oɴʟʏ ᴀᴅᴍɪɴs ᴀɴᴅ ᴏᴡɴᴇʀ ᴄᴀɴ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
     
     if len(message.command) < 2:
-        return await message.reply_text("𝐔𝐬𝐚𝐠𝐞: /𝐜𝐡𝐚𝐭𝐛𝐨𝐭 𝐞𝐧𝐚𝐛𝐥𝐞 𝐨𝐫 /𝐜𝐡𝐚𝐭𝐛𝐨𝐭 𝐝𝐢𝐬𝐚𝐛𝐥𝐞")
+        return await message.reply_text("𝐔sᴀɢᴇ: /ᴄʜᴀᴛʙᴏᴛ ᴇɴᴀʙʟᴇ ᴏʀ /ᴄʜᴀᴛʙᴏᴛ ᴅɪsᴀʙʟᴇ")
         
     mode = message.command[1].lower()
     
     if mode in ["on", "enable"]:
         CHATBOT_STATUS[message.chat.id] = True
         status_text = "enabled"
-        await message.reply_text(f"𝐂𝐡𝐚𝐭𝐛𝐨𝐭 𝐬𝐭𝐚𝐭𝐮𝐬 𝐢𝐬 {status_text.upper()} ✰")
+        await message.reply_text(f"𝐂ʜᴀᴛʙᴏᴛ sᴛᴀᴛᴜs ɪs {status_text.upper()} ✰")
     elif mode in ["off", "disable"]:
         CHATBOT_STATUS[message.chat.id] = False
         status_text = "disabled"
-        await message.reply_text(f"𝐂𝐡𝐚𝐭𝐛𝐨𝐭 𝐬𝐭𝐚𝐭𝐮𝐬 𝐢𝐬 {status_text.upper()} ✰")
+        await message.reply_text(f"𝐂ʜᴀᴛʙᴏᴛ sᴛᴀᴛᴜs ɪs {status_text.upper()} ✰")
     else:
-        return await message.reply_text("𝐔𝐬𝐚𝐠𝐞: /𝐜𝐡𝐚𝐭𝐛𝐨𝐭 𝐞𝐧𝐚𝐛𝐥𝐞 𝐨𝐫 /𝐜𝐡𝐚𝐭𝐛𝐨𝐭 𝐝𝐢𝐬𝐚𝐛𝐥𝐞")
+        return await message.reply_text("𝐔sᴀɢᴇ: /ᴄʜᴀᴛʙᴏᴛ ᴇɴᴀʙʟᴇ ᴏʀ /ᴄʜᴀᴛʙᴏᴛ ᴅɪsᴀʙʟᴇ")
         
     await save_chat_id(message.chat.id, "groups") 
 
@@ -455,15 +455,15 @@ async def chatbot_toggle(client, message):
 @app.on_message(filters.command("tagall") & filters.group)
 async def tagall_cmd(client, message):
     if not await is_admin(message.chat.id, message.from_user.id):
-        return await message.reply_text("❗ 𝐎𝐧𝐥𝐲 𝐚𝐝𝐦𝐢𝐧𝐬 𝐜𝐚𝐧 𝐮𝐬𝐞 /𝐭𝐚𝐠𝐚𝐥𝐥.")
+        return await message.reply_text("❗ 𝐎ɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /ᴛᴀɢᴀʟʟ.")
     
     if not await is_bot_admin(message.chat.id):
-        return await message.reply_text("❗ 𝐈 𝐧𝐞𝐞𝐝 𝐚𝐝𝐦𝐢𝐧 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧𝐬 (𝐭𝐚𝐠 𝐦𝐞𝐦𝐛𝐞𝐫𝐬) 𝐭𝐨 𝐮𝐬𝐞 𝐭𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝.")
+        return await message.reply_text("❗ 𝐈 ɴᴇᴇᴅ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ (ᴛᴀɢ ᴍᴇᴍʙᴇʀs) ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
 
     chat_id = message.chat.id
     
     if TAGGING.get(chat_id):
-        return await message.reply_text("❗ 𝐀𝐥𝐫𝐞𝐚𝐝𝐲 𝐭𝐚𝐠𝐠𝐢𝐧𝐠 𝐢𝐧 𝐭𝐡𝐢𝐬 𝐜𝐡𝐚𝐭. 𝐔𝐬𝐞 /𝐬𝐭𝐨𝐩 𝐭𝐨 𝐜𝐚𝐧𝐜𝐞𝐥.")
+        return await message.reply_text("❗ 𝐀ʟʀᴇᴀᴅʏ ᴛᴀɢɢɪɴɢ ɪɴ ᴛʜɪs ᴄʜᴀᴛ. 𝐔sᴇ /sᴛᴏᴘ ᴛᴏ ᴄᴀɴᴄᴇʟ.")
         
     TAGGING[chat_id] = True
     
@@ -471,11 +471,11 @@ async def tagall_cmd(client, message):
     if len(message.command) > 1:
         msg = message.text.split(None, 1)[1]
     elif message.reply_to_message:
-        msg = "𝐓𝐚𝐠𝐠𝐢𝐧𝐠 𝐟𝐫𝐨𝐦 𝐫𝐞𝐩𝐥𝐢𝐞𝐝 m𝐞𝐬𝐬𝐚𝐠𝐞!"
+        msg = "𝐓ᴀɢɢɪɴɢ ғʀᴏᴍ ʀᴇᴘʟɪᴇᴅ ᴍᴇssᴀɢᴇ!"
     else:
-        msg = "𝐀𝐭𝐭𝐞𝐧𝐭𝐢𝐨𝐧!"
+        msg = "𝐀ᴛᴛᴇɴᴛɪᴏɴ!"
         
-    m = await message.reply_text("𝐓𝐚𝐠𝐠𝐢𝐧𝐠 𝐬𝐭𝐚𝐫𝐭𝐞𝐝 !! ♥")
+    m = await message.reply_text("𝐓ᴀɢɢɪɴɢ 𝐒ᴛᴀʀᴛᴇᴅ !! ♥")
     
     member_list = []
     # Collect all members first
@@ -508,20 +508,20 @@ async def tagall_cmd(client, message):
             
     # Final message update
     if TAGGING.get(chat_id):
-        await m.edit_text("𝐓𝐚𝐠𝐠𝐢𝐧𝐠 𝐜𝐨𝐦𝐩𝐥𝐞𝐭𝐞𝐝 !! ◉‿◉")
+        await m.edit_text("𝐓ᴀɢɢɪɴɢ 𝐂ᴏᴍᴘʟᴇᴛᴇᴅ !! ◉‿◉")
         TAGGING[chat_id] = False 
 
 # -------- /stop Tagging --------
 @app.on_message(filters.command("stop") & filters.group)
 async def stop_tag(client, message):
     if not await is_admin(message.chat.id, message.from_user.id):
-        return await message.reply_text("❗ 𝐎𝐧𝐥𝐲 𝐚𝐝𝐦𝐢𝐧𝐬 𝐜𝐚𝐧 𝐮𝐬𝐞 /𝐬𝐭𝐨𝐩.")
+        return await message.reply_text("❗ 𝐎ɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /sᴛᴏᴘ.")
         
     if TAGGING.get(message.chat.id):
         TAGGING[message.chat.id] = False
-        await message.reply_text("𝐓𝐚𝐠𝐠𝐢𝐧𝐠 𝐬𝐭𝐨𝐩𝐩𝐞𝐝 !!")
+        await message.reply_text("𝐓ᴀɢɢɪɴɢ 𝐒ᴛᴏᴘᴘᴇᴅ !!")
     else:
-        await message.reply_text("❗ 𝐍𝐨 𝐭𝐚𝐠𝐠𝐢𝐧𝐠 𝐢𝐬 𝐜𝐮𝐫𝐫𝐞𝐧𝐭𝐥𝐲 𝐫𝐮𝐧𝐧𝐢𝐧𝐠.")
+        await message.reply_text("❗ 𝐍ᴏ 𝐓ᴀɢɢɪɴɢ ɪs 𝐂ᴜʀʀᴇɴᴛʟʏ 𝐑ᴜɴɴɪɴɢ.")
 
 # -------- /couples, /cute, /love Commands --------
 @app.on_message(filters.command("couples") & filters.group)
@@ -535,7 +535,7 @@ async def couples_cmd(client, message):
         return await message.reply_text("🚫 𝐂𝐚𝐧𝐧𝐨𝐭 𝐟𝐞𝐭𝐜𝐡 𝐦𝐞𝐦𝐛𝐞𝐫𝐬 𝐝𝐮𝐞 𝐭𝐨 𝐫𝐞𝐬𝐭𝐫𝐢𝐜𝐭𝐢𝐨𝐧𝐬.")
 
     if len(member_list) < 2:
-        return await message.reply_text("❗ 𝐍𝐞𝐞𝐝 𝐚𝐭 𝐥𝐞𝐚𝐬𝐭 𝐭𝐰𝐨 𝐦𝐞𝐦𝐛𝐞𝐫𝐬 𝐭𝐨 𝐟𝐨𝐫𝐦 𝐚 𝐜𝐨𝐮𝐩𝐥𝐞.")
+        return await message.reply_text("❗ 𝐍ᴇᴇᴅ ᴀᴛ ʟᴇᴀsᴛ ᴛᴡᴏ ᴍᴇᴍʙᴇʀs ᴛᴏ ғᴏʀᴍ ᴀ 𝐂ᴏᴜᴘʟᴇ.")
         
     # Pick two random unique members
     couple = random.sample(member_list, 2)
@@ -546,37 +546,38 @@ async def couples_cmd(client, message):
     love_percent = random.randint(30, 99)
     
     await message.reply_text(
-        f"💘 𝐍𝐞𝐰 𝐂𝐨𝐮𝐩𝐥𝐞 𝐨𝐟 𝐭𝐡𝐞 𝐃𝐚𝐲!\n\n"
+        f"💘 𝐍ᴇᴡ 𝐂ᴏᴜᴘʟᴇ ᴏғ ᴛʜᴇ 𝐃ᴀʏ!\n\n"
         f"{user1.first_name} 💖 {user2.first_name}\n"
-        f"𝐋𝐨𝐯𝐞 𝐥𝐞𝐯𝐞𝐥 𝐢𝐬 {love_percent}%! 🎉"
+        f"𝐋ᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}%! 🎉"
     )
 
 @app.on_message(filters.command("cute"))
 async def cute_cmd(client, message):
     cute_level = random.randint(30, 99)
     user = message.from_user
-    text = f"{user.first_name}'𝐬 𝐜𝐮𝐭𝐞𝐧𝐞𝐬𝐬 𝐥𝐞𝐯𝐞𝐥 𝐢𝐬 {cute_level}% 💖"
-    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒𝐮𝐩𝐩𝐨𝐫𝐭", url=SUPPORT_CHAT)]])
+    text = f"{user.first_name}'𝐬
+ᴄᴜᴛᴇɴᴇss ʟᴇᴠᴇʟ ɪs {cute_level}% 💖"
+    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
     await message.reply_text(text, reply_markup=buttons)
 
 @app.on_message(filters.command("love"))
 async def love_cmd(client, message):
     if len(message.command) < 2 or "+" not in message.text:
-        return await message.reply_text("𝐔𝐬𝐚𝐠𝐞: /𝐥𝐨𝐯𝐞 𝐅𝐢𝐫𝐬𝐭 𝐍𝐚𝐦𝐞 + 𝐒𝐞𝐜𝐨𝐧𝐝 𝐍𝐚𝐦𝐞")
+        return await message.reply_text("𝐔sᴀɢᴇ: /ʟᴏᴠᴇ 𝐅ɪʀsᴛ 𝐍ᴀᴍᴇ + 𝐒ᴇᴄᴏɴᴅ 𝐍ᴀᴍᴇ")
 
     # Split the argument and clean it up
     arg_text = message.text.split(None, 1)[1]
     names = [n.strip() for n in arg_text.split("+") if n.strip()]
     
     if len(names) < 2:
-        return await message.reply_text("𝐏𝐥𝐞𝐚𝐬𝐞 𝐩𝐫𝐨𝐯𝐢𝐝𝐞 𝐭𝐰𝐨 𝐧𝐚𝐦𝐞𝐬 𝐬𝐞𝐩𝐚𝐫𝐚𝐭𝐞𝐝 𝐛𝐲 𝐚 '+' (𝐞.𝐠., /𝐥𝐨𝐯𝐞 𝐀𝐥𝐢𝐜𝐞 + 𝐁𝐨𝐛)")
+        return await message.reply_text("𝐏ʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ᴛᴡᴏ ɴᴀᴍᴇs sᴇᴘʀᴀᴛᴇᴅ ʙʏ ᴀ '+' (ᴇ.ɢ., /ʟᴏᴠᴇ 𝐀ʟɪᴄᴇ + 𝐁ᴏʙ)")
         
     # The rest of the logic is fine
     love_percent = random.randint(1, 100)
-    text = f"❤️ 𝐋𝐨𝐯𝐞 𝐏𝐨𝐬𝐬𝐢𝐛𝐢𝐥𝐢𝐭𝐲\n" \
-           f"{names[0]} & {names[1]}'𝐬 𝐥𝐨𝐯𝐞 𝐥𝐞𝐯𝐞𝐥 𝐢𝐬 {love_percent}% 😉"
+    text = f"❤️ 𝐋ᴏᴠᴇ 𝐏ᴏssɪʙʟɪᴛʏ\n" \
+           f"{names[0]} & {names[1]}'𝐬 ʟᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}% 😉"
            
-    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒𝐮𝐩𝐩𝐨𝐫𝐭", url=SUPPORT_CHAT)]])
+    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
     await message.reply_text(text, reply_markup=buttons) 
 
 # -------- /afk Command --------
@@ -591,19 +592,19 @@ async def afk_cmd(client, message):
         afk_data = AFK_USERS.pop(user_id)
         time_afk = get_readable_time(int(time.time() - afk_data["time"]))
         await message.reply_text(
-            f"𝐘𝐞𝐚𝐡, [{user_name}](tg://user?id={user_id}), 𝐲𝐨𝐮 𝐚𝐫𝐞 𝐛𝐚𝐜𝐤, 𝐨𝐧𝐥𝐢𝐧𝐞! (𝐀𝐅𝐊 𝐟𝐨𝐫: {time_afk}) 😉",
+            f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀʀᴇ ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏʀ: {time_afk}) 😉",
             parse_mode=enums.ParseMode.MARKDOWN
         )
         return # Stop execution after returning
         
     # If user is not AFK, they are setting AFK status
-    reason = message.text.split(None, 1)[1] if len(message.command) > 1 else "𝐍𝐨 𝐫𝐞𝐚𝐬𝐨𝐧 𝐠𝐢𝐯𝐞𝐧."
+    reason = message.text.split(None, 1)[1] if len(message.command) > 1 else "𝐍ᴏ ʀᴇᴀsᴏɴ ɢɪᴠᴇ."
     
     AFK_USERS[user_id] = {"reason": reason, "chat_id": message.chat.id, "username": user_name, "time": time.time()}
     
     # Send the AFK message
     await message.reply_text(
-        f"𝐇𝐞𝐲, [{user_name}](tg://user?id={user_id}), 𝐲𝐨𝐮 𝐚𝐫𝐞 𝐀𝐅𝐊! (𝐑𝐞𝐚𝐬𝐨𝐧: {reason})",
+        f"𝐇ᴇʏ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀʀᴇ 𝐀ғᴋ! (𝐑ᴇᴀsᴏɴ: {reason})",
         parse_mode=enums.ParseMode.MARKDOWN
     )
     # The automatic "I'm back" message when they send a non-/afk message is handled in group_reply_and_afk_checker 
@@ -615,7 +616,7 @@ async def mmf_cmd(client, message):
     # Since the full functionality is not implemented, we provide a clean, non-buggy error/status message.
     
     if not message.reply_to_message or not message.reply_to_message.sticker:
-        return await message.reply_text("❗ 𝐑𝐞𝐩𝐥𝐲 𝐭𝐨 𝐚 𝐬𝐭𝐢𝐜𝐤𝐞𝐫 𝐚𝐧𝐝 𝐩𝐫𝐨𝐯𝐢𝐝𝐞 𝐭𝐞𝐱𝐭 𝐭𝐨 𝐮𝐬𝐞 𝐭𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝.\n\n*(𝐍𝐨𝐭𝐞: 𝐭𝐡𝐢𝐬 𝐟𝐞𝐚𝐭𝐮𝐫𝐞 𝐢𝐬 𝐜𝐮𝐫𝐫𝐞𝐧𝐭𝐥𝐲 𝐮𝐧𝐝𝐞𝐫 𝐦𝐚𝐢𝐧𝐭𝐞𝐧𝐚𝐧𝐜𝐞)*")
+        return await message.reply_text("❗ 𝐑ᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ ᴀɴᴅ ᴘʀᴏᴠɪᴅᴇ ᴛᴇxᴛ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.\n\n*(𝐍ᴏᴛᴇ: ᴛʜɪs ғᴇᴀᴛᴜʀᴇ ɪs ᴄᴜʀᴇɴᴛʟʏ ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴀɴᴄᴇ)*")
         
     if len(message.command) < 2:
         return await message.reply_text("❗ 𝐏𝐫𝐨𝐯𝐢𝐝𝐞 𝐭𝐡𝐞 𝐭𝐞𝐱𝐭 𝐲𝐨𝐮 𝐰𝐚𝐧𝐭 𝐨𝐧 𝐭𝐡𝐞 𝐬𝐭𝐢𝐜𝐤𝐞𝐫.")
@@ -623,7 +624,7 @@ async def mmf_cmd(client, message):
     await message.reply_text(
         "❌ 𝐒𝐭𝐢𝐜𝐤𝐞𝐫 𝐓𝐞𝐱𝐭 𝐅𝐞𝐚𝐭𝐮𝐫𝐞 𝐔𝐧𝐚𝐯𝐚𝐢𝐥𝐚𝐛𝐥𝐞\n"
         "𝐏𝐥𝐞𝐚𝐬𝐞 𝐧𝐨𝐭𝐞: 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐭𝐞𝐦𝐩𝐨𝐫𝐚𝐫𝐢𝐥𝐲 𝐝𝐢𝐬𝐚𝐛𝐥𝐞𝐝 𝐝𝐮𝐞 𝐭𝐨 𝐦𝐢𝐬𝐬𝐢𝐧𝐠 𝐢𝐦𝐚𝐠𝐞 𝐩𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠 𝐥𝐢𝐛𝐫𝐚𝐫𝐢𝐞𝐬. "
-        "𝐈 𝐚𝐦 𝐰𝐨𝐫𝐤𝐢𝐧𝐠 𝐨𝐧 𝐢𝐭!"
+        "𝐈 ᴀᴍ ᴡᴏʀᴋɪɴɢ ᴏɴ ɪᴛ!"
     ) 
 
 # -------- /staff, /botlist Commands --------
@@ -635,7 +636,7 @@ async def staff_cmd(client, message):
             admin async for admin in app.get_chat_members(message.chat.id, filter=enums.ChatMembersFilter.ADMINISTRATORS)
         ]
         
-        staff_list = "👑 𝐆𝐫𝐨𝐮𝐩 𝐒𝐭𝐚𝐟𝐟 𝐌𝐞𝐦𝐛𝐞𝐫𝐬:\n"
+        staff_list = "👑 𝐆ʀᴏᴜᴘ 𝐒ᴛᴀғғ 𝐌ᴇᴍʙᴇʀs:\n"
         for admin in admins:
             if not admin.user.is_bot:
                 tag = f"[{admin.user.first_name}](tg://user?id={admin.user.id})"
@@ -650,7 +651,7 @@ async def staff_cmd(client, message):
 @app.on_message(filters.command("botlist") & filters.group)
 async def botlist_cmd(client, message):
     if not await is_admin(message.chat.id, message.from_user.id):
-        return await message.reply_text("❗ 𝐎𝐧𝐥𝐲 𝐚𝐝𝐦𝐢𝐧𝐬 𝐜𝐚𝐧 𝐮𝐬𝐞 /𝐛𝐨𝐭𝐥𝐢𝐬𝐭.")
+        return await message.reply_text("❗ ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /ʙᴏᴛʟɪsᴛ.")
         
     # Logic confirmed from previous fix
     try:
@@ -658,7 +659,7 @@ async def botlist_cmd(client, message):
             bot async for bot in app.get_chat_members(message.chat.id, filter=enums.ChatMembersFilter.BOTS)
         ]
         
-        bot_list = "🤖 𝐁𝐨𝐭𝐬 𝐢𝐧 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩:\n"
+        bot_list = "🤖 𝐁ᴏᴛs ɪɴ ᴛʜɪs 𝐆ʀᴏᴜᴘ:\n"
         for bot in bots:
             tag = f"[{bot.user.first_name}](tg://user?id={bot.user.id})"
             # Ensure username exists before trying to access it
@@ -716,7 +717,7 @@ async def group_reply_and_afk_checker(client, message: Message):
         
         # Send the "I'm back" message
         await message.reply_text(
-            f"𝐘𝐞𝐚𝐡, [{user_name}](tg://user?id={user_id}), 𝐲𝐨𝐮 𝐚𝐫𝐞 𝐛𝐚𝐜𝐤, 𝐨𝐧𝐥𝐢𝐧𝐞! (𝐀𝐅𝐊 𝐟𝐨𝐫: {time_afk}) 😉",
+            f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀʀᴇ ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏʀ: {time_afk}) 😉",
             parse_mode=enums.ParseMode.MARKDOWN
         )
         # Note: We don't return here, as the message might still need to trigger other actions (like AFK tagging)
@@ -745,9 +746,9 @@ async def group_reply_and_afk_checker(client, message: Message):
             time_afk = get_readable_time(int(time.time() - afk_data["time"]))
             
             await message.reply_text(
-                f"⚠️ [{user_name}](tg://user?id={afk_id}) 𝐢𝐬 𝐀𝐅𝐊! ◉‿◉\n"
-                f"𝐑𝐞𝐚𝐬𝐨𝐧: *{reason}*\n"
-                f"𝐓𝐢𝐦𝐞: *{time_afk}*",
+                f"⚠️ [{user_name}](tg://user?id={afk_id}) 𝐢𝐬 𝐀ғᴋ! ◉‿◉\n"
+                f"𝐑ᴇᴀsᴏɴ: *{reason}*\n"
+                f"𝐓ɪᴍᴇ: *{time_afk}*",
                 parse_mode=enums.ParseMode.MARKDOWN
             )
             # Only send one AFK notice per message to avoid spam
@@ -792,12 +793,12 @@ async def voice_chat_events(client, message):
         return
 
     if message.video_chat_started:
-        await message.reply_text("🎤 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐒𝐭𝐚𝐫𝐭𝐞𝐝! 𝐓𝐢𝐦𝐞 𝐭𝐨 𝐣𝐨𝐢𝐧!")
+        await message.reply_text("🎤 𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐒ᴛᴀʀᴛᴇᴅ! 𝐓ɪᴍᴇ ᴛᴏ ᴊᴏɪɴ!")
         
     elif message.video_chat_ended:
         # Get duration safely
-        duration = get_readable_time(message.video_chat_ended.duration) if message.video_chat_ended.duration else "𝐚 𝐬𝐡𝐨𝐫𝐭 𝐭𝐢𝐦𝐞"
-        await message.reply_text(f"❌ 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐄𝐧𝐝𝐞𝐝! 𝐈𝐭 𝐥𝐚𝐬𝐭𝐞𝐝 𝐟𝐨𝐫 {duration}.")
+        duration = get_readable_time(message.video_chat_ended.duration) if message.video_chat_ended.duration else "ᴀ sʜᴏʀᴛ ᴛɪᴍᴇ"
+        await message.reply_text(f"❌ 𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐄ɴᴅᴇᴅ! 𝐈ᴛ ʟᴀsᴛᴇᴅ ғᴏʀ {duration}.")
         
     elif message.video_chat_members_invited:
         invited_users_count = len(message.video_chat_members_invited.users)
@@ -806,9 +807,9 @@ async def voice_chat_events(client, message):
         # Check if the bot was invited (optional, for specific reply)
         me = await client.get_me()
         if me.id in [u.id for u in message.video_chat_members_invited.users]:
-            await message.reply_text(f"📣 𝐇𝐞𝐲 {inviter}, 𝐭𝐡𝐚𝐧𝐤𝐬 𝐟𝐨𝐫 𝐢𝐧𝐯𝐢𝐭𝐢𝐧𝐠 𝐦𝐞 𝐭𝐨 𝐭𝐡𝐞 𝐯𝐨𝐢𝐜𝐞 𝐜𝐡𝐚𝐭!")
+            await message.reply_text(f"📣 𝐇ᴇʏ {inviter}, ᴛʜᴀɴᴋs ғᴏʀ ɪɴᴠɪᴛɪɴɢ ᴍᴇ ᴛᴏ ᴛʜᴇ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ!")
         else:
-            await message.reply_text(f"🗣️ {inviter} 𝐢𝐧𝐯𝐢𝐭𝐞𝐝 {invited_users_count} 𝐦𝐞𝐦𝐛𝐞𝐫𝐬 𝐭𝐨 𝐭𝐡𝐞 𝐯𝐨𝐢𝐜𝐞 𝐜𝐡𝐚𝐭!") 
+            await message.reply_text(f"🗣️ {inviter} ɪɴᴠɪᴛᴇᴅ {invited_users_count} ᴍᴇᴍʙᴇʀs ᴛᴏ ᴛʜᴇ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ!") 
 
 # -------- Health Check --------
 PORT = int(os.environ.get("PORT", 8080))
