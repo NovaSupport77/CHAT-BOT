@@ -1,604 +1,587 @@
 # advanced_chatbot_final.py
-# Cleaned up + extended version of your bot with requested UI + features.
+# Pyrogram-based Telegram bot implementing advanced group & private features
+# Requirements:
+#   pip install pyrogram tgcrypto
+# Set environment variables: API_ID, API_HASH, BOT_TOKEN, OWNER_ID
+# Run: python bot.py
+
 import os
-import json
-import random
-import threading
 import asyncio
 import time
-from datetime import datetime
-from http.server import BaseHTTPRequestHandler, HTTPServer
-
+import random
+from typing import Dict, Set, List
 from pyrogram import Client, filters, enums
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
+from pyrogram.types import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    Message,
+    CallbackQuery,
+    ChatPermissions,
+)
 
-# -------- Env Vars --------
+# --- Config ---
 API_ID = int(os.environ.get("API_ID", "0"))
 API_HASH = os.environ.get("API_HASH", "")
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
-OWNER_ID = int(os.environ.get("OWNER_ID", "7589623332"))  # your owner id
-PORT = int(os.environ.get("PORT", 8080))
+OWNER_ID = int(os.environ.get("OWNER_ID", "7589623332"))  # default from your message
+BOT_USERNAME = os.environ.get("BOT_USERNAME", None)  # optional, for mentions
 
-# -------- Bot Client --------
-app = Client("advanced_chatbot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
-
-# -------- Load Replies --------
-try:
-    with open("conversation.json", "r", encoding="utf-8") as f:
-        DATA = json.load(f)
-except:
-    DATA = {}
-
-if "daily" not in DATA:
-    DATA["daily"] = ["Hello 👋", "Hey there!", "Hi!"]
-
-# -------- Load Known Chats for Broadcast --------
-CHAT_IDS_FILE = "chats.json"
-if os.path.exists(CHAT_IDS_FILE):
-    with open(CHAT_IDS_FILE, "r", encoding="utf-8") as f:
-        KNOWN_CHATS = json.load(f)
-else:
-    KNOWN_CHATS = {"groups": [], "privates": []}
-
-# -------- Keywords --------
-KEYWORDS = {
-    "love": "love", "i love you": "love", "miss": "love",
-    "sad": "sad", "cry": "sad", "depressed": "sad",
-    "happy": "happy", "mast": "happy",
-    "hello": "daily", "hi": "daily", "hey": "daily",
-    "bye": "bye", "goodbye": "bye",
-    "thanks": "thanks", "thank you": "thanks",
-    "gm": "morning", "good morning": "morning",
-    "gn": "night", "good night": "night",
-    "chutiya": "abuse", "bc": "abuse", "mc": "abuse"
-}
-
-# -------- Global Vars --------
-CHATBOT_STATUS = {}
-TAGGING = {}
-INTRO_TEXT = (
-    "ʜєʏ {name}\n\n"
-    "✦ ɪ ᴧϻ ᴧᴅᴠᴧηᴄєᴅ ᴄʜᴧᴛ ʙσᴛ ᴡɪᴛʜ sσϻє ғєᴧᴛᴜʀєs.\n"
-    "✦ ʀєᴘʟʏ ɪη ɢʀσᴜᴘs & ᴘʀɪᴠᴧᴛє 🥀\n"
-    "✦ ηᴏ ᴧʙᴜsɪηɢ & zєʀσ ᴅσᴡɴᴛɪᴍє\n"
-    "✦ ᴄʟɪᴄᴋ ʜєʟᴘ ʙᴜᴛᴛση ғσʀ ʜєʟᴘs ❤️\n"
-    "❖ ϻᴧᴅє ʙʏ... @TheXVoren"
-)
-
-OWNER_PANEL_TEXT = "ʜᴇʏ 👋 I am your bot! 🔒"
-
-# AFK store
-AFK = {}  # chat_id -> {user_id: (since_ts, reason)}
-
-# uptime tracking
-START_TIME = time.time()
-
-# -------- Utility --------
-def get_reply(text: str):
-    text = (text or "").lower()
-    for word, cat in KEYWORDS.items():
-        if word in text and cat in DATA:
-            return random.choice(DATA[cat])
-    return random.choice(DATA.get("daily", ["Hello 👋"]))
-
-async def is_admin(chat_id, user_id):
-    try:
-        member = await app.get_chat_member(chat_id, user_id)
-        return member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
-    except:
-        return False
-
-async def is_bot_admin(chat_id):
-    try:
-        me = await app.get_me()
-        member = await app.get_chat_member(chat_id, me.id)
-        return member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
-    except:
-        return False
-
-async def save_chat_id(chat_id, type_):
-    if chat_id not in KNOWN_CHATS.get(type_, []):
-        KNOWN_CHATS.setdefault(type_, []).append(chat_id)
-        with open(CHAT_IDS_FILE, "w", encoding="utf-8") as f:
-            json.dump(KNOWN_CHATS, f)
-
-# -------- /start Command with Ding Dong Animation and new layout --------
-START_IMAGE = "https://iili.io/KVzgS44.jpg"  # given image url
-
-@api_call_safe := None  # placeholder to keep linter calm (no-op)
-
-@a := None  # avoid unused assignment warnings (harmless)
-
-@app.on_message(filters.command("start") & filters.private)
-async def start_cmd(client, message: Message):
-    user = message.from_user
-    me = await app.get_me()
-    bot_username = me.username or "bot"
-    anim_text = "ᴅɪɴɢ...ᴅᴏɴɢ 💥....ʙᴏᴛ ɪs sᴛᴀʀᴛɪɴɢ"
-    msg = await message.reply_text("Starting...")
-    current = ""
-    for ch in anim_text:
-        current += ch
-        try:
-            await msg.edit_text(current)
-        except:
-            pass
-        await asyncio.sleep(0.04)
-    await asyncio.sleep(0.35)
-    try:
-        await msg.delete()
-    except:
-        pass
-
-    # Buttons layout (as you specified)
-    buttons = InlineKeyboardMarkup(
-        [
-            [InlineKeyboardButton("➕ 𝐀ᴅᴅ ᴍᴇ ʏᴏᴜʀ 𝐆ʀᴏᴜᴘ ➕", url=f"https://t.me/{bot_username}?startgroup=true")],
-            [
-                InlineKeyboardButton("ᯓ❍ᴡ𝛈ᴇʀ", url=f"https://t.me/TheXVoren"),
-                InlineKeyboardButton("◉ 𝐀ʙᴏᴜᴛ", callback_data="about_section")
-            ],
-            [
-                InlineKeyboardButton("𝐄ᴠᴀʀᴀ 𝐒ᴜᴘᴘᴏʀᴛ 𝐂ʜᴀᴛ", url="https://t.me/Evara_Support_Chat"),
-                InlineKeyboardButton("𝐔ρ∂ᴀᴛᴇs", url="https://t.me/Evara_Updatesfir")
-            ],
-            [
-                InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="back_to_start"),
-                InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_start")
-            ],
-            [InlineKeyboardButton("◉ 𝐇ᴇʟᴘ & 𝐂ᴏᴍᴍᴀɴᴅs", callback_data="help_commands")]
-        ]
-    )
-
-    await message.reply_photo(
-        START_IMAGE,
-        caption=INTRO_TEXT.format(name=user.first_name or user.username or "Friend"),
-        reply_markup=buttons
-    )
-    await save_chat_id(message.chat.id, "privates")
-
-# -------- callback handlers for start sections --------
-@app.on_callback_query(filters.regex("back_to_start"))
-async def back_to_start_cb(client, cq):
-    # Re-run start style reply (private)
-    try:
-        await start_cmd(client, cq.message)
-    except:
-        await cq.answer("Cannot go back.", show_alert=True)
-
-@app.on_callback_query(filters.regex("close_start"))
-async def close_start_cb(client, cq):
-    try:
-        await cq.message.delete()
-    except:
-        pass
-    await cq.answer("Closed ✅")
-
-@app.on_callback_query(filters.regex("about_section"))
-async def about_section_cb(client, cq):
-    text = (
-        "❖ ᴧ ϻɪηɪ ᴄʜᴧᴛ ʙᴏᴛ ғᴏʀ ᴛᴇʟᴇɢʀᴧϻ ɢʀᴏᴜᴘs & ᴘʀɪᴠᴧᴛᴇ\n"
-        "● ᴡʀɪᴛᴛᴇη ɪη ᴘʏᴛʜᴏɴ\n\n"
-        "● ᴋєєᴘ ʏσᴜʀ ᴧᴄᴛɪᴠє ɢʀσᴜᴘ.\n"
-        "● ᴧᴅᴅ ϻє ηᴏᴡ ʙᴧʙʏ ɪɴ ʏᴏᴜʀ ɢʀσᴜᴘs."
-    )
-    buttons = InlineKeyboardMarkup(
-        [
-            [InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="back_to_start"), InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_start")]
-        ]
-    )
-    await cq.answer()
-    await cq.message.edit(text=text, reply_markup=buttons)
-
-# -------- Help & Commands Main (with nested navigation) --------
-HELP_IMAGE = START_IMAGE  # use same image
-@app.on_callback_query(filters.regex("help_commands"))
-async def help_commands_cb(client, cq):
-    text = "Help & Commands — select a category below."
-    buttons = InlineKeyboardMarkup(
-        [
-            [
-                InlineKeyboardButton("ᴄᴏᴜᴘʟᴇs", callback_data="help_couples"),
-                InlineKeyboardButton("ᴄᴜᴛᴇ", callback_data="help_cute"),
-                InlineKeyboardButton("ʟᴏᴠᴇ", callback_data="help_love")
-            ],
-            [
-                InlineKeyboardButton("ᴄʜᴀᴛʙᴏᴛ", callback_data="help_chatbot"),
-                InlineKeyboardButton("ᴛᴏᴏʟs", callback_data="help_tools"),
-                InlineKeyboardButton("ɢᴀᴍᴇs", callback_data="help_games")
-            ],
-            [
-                InlineKeyboardButton("sᴛɪᴄᴋᴇʀs", callback_data="help_stickers"),
-                InlineKeyboardButton("ɢʀᴏᴜᴘs", callback_data="help_groups"),
-                InlineKeyboardButton("𝐃ᴇᴠʟᴏᴘᴇʀ", callback_data="help_developer")
-            ],
-            [
-                InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="back_to_start"),
-                InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_start")
-            ]
-        ]
-    )
-    await cq.answer()
-    try:
-        await cq.message.edit(text=text, reply_markup=buttons)
-    except:
-        # if edit fails (older message), send new
-        await cq.message.reply_photo(HELP_IMAGE, caption=text, reply_markup=buttons)
-
-# Individual help subpages
-@app.on_callback_query(filters.regex("help_couples"))
-async def help_couples_cb(client, cq):
-    text = "/Couples ~ ᴄʜᴏᴏsᴇ ᴀ ʀᴀɴᴅᴏᴍ ᴄᴏᴜᴘʟᴇ\nWhen used, bot picks two random members and shows a couple."
-    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ", url="https://t.me/Evara_Support_Chat")],
-                                   [InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="help_commands"),
-                                    InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_start")]])
-    await cq.answer()
-    await cq.message.edit(text=text, reply_markup=buttons)
-
-@app.on_callback_query(filters.regex("help_cute"))
-async def help_cute_cb(client, cq):
-    text = "/cute ~ ᴄʜᴇᴄᴋ ʏᴏᴜʀ ᴄᴜᴛᴇɴᴇss\nBot returns a random percent like: YOUR CUTE LEVEL IS 30%."
-    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ", url="https://t.me/Evara_Support_Chat")],
-                                   [InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="help_commands"),
-                                    InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_start")]])
-    await cq.answer()
-    await cq.message.edit(text=text, reply_markup=buttons)
-
-@app.on_callback_query(filters.regex("help_love"))
-async def help_love_cb(client, cq):
-    text = "/love first_name + second_name ~ gives love possibility percent between two names."
-    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ", url="https://t.me/Evara_Support_ChatIn")],
-                                   [InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="help_commands"),
-                                    InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_start")]])
-    await cq.answer()
-    await cq.message.edit(text=text, reply_markup=buttons)
-
-@app.on_callback_query(filters.regex("help_chatbot"))
-async def help_chatbot_cb(client, cq):
-    text = "/chatbot ~ enable/disable chatbot in group. Only owner/admin can use. NOTE: ONLY WORKS IN GROUPS!"
-    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="help_commands"),
-                                     InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_start")]])
-    await cq.answer()
-    await cq.message.edit(text=text, reply_markup=buttons)
-
-@app.on_callback_query(filters.regex("help_tools"))
-async def help_tools_cb(client, cq):
-    text = (
-        "/id ~ Get user id (reply to user or use directly)\n"
-        "/tagall ~ Tag all members with text. Owner/admin only. Shows 'TAGGING STARTED !!' and 'TAGGING COMPLETED !!'\n"
-        "/stop ~ Stop tagging\n"
-        "/afk ~ Mark yourself AFK (reply format or /afk reason)\n"
-        "/tr ~ Reply to a message with /tr to translate to English"
-    )
-    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="help_commands"),
-                                     InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_start")]])
-    await cq.answer()
-    await cq.message.edit(text=text, reply_markup=buttons)
-
-@app.on_callback_query(filters.regex("help_games"))
-async def help_games_cb(client, cq):
-    text = (
-        "/dice ~ roll a dice\n"
-        "/jackpot ~ jackpot machine (fun)\n"
-        "/football ~ play football\n"
-        "/basketball ~ play basketball"
-    )
-    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="help_commands"),
-                                     InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_start")]])
-    await cq.answer()
-    await cq.message.edit(text=text, reply_markup=buttons)
-
-@app.on_callback_query(filters.regex("help_stickers"))
-async def help_stickers_cb(client, cq):
-    text = (
-        "/mmf ~ reply a sticker + text -> text gets added to sticker (creates a text sticker)\n"
-        "/q r ~ create quote from message (reply to msg)"
-    )
-    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="help_commands"),
-                                     InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_start")]])
-    await cq.answer()
-    await cq.message.edit(text=text, reply_markup=buttons)
-
-@app.on_callback_query(filters.regex("help_groups"))
-async def help_groups_cb(client, cq):
-    text = "/staff ~ displays group staff members\n/botlist ~ shows bots in group (owner/admin only)\n/ping ~ fancy ping with uptime"
-    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="help_commands"),
-                                     InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_start")]])
-    await cq.answer()
-    await cq.message.edit(text=text, reply_markup=buttons)
-
-@app.on_callback_query(filters.regex("help_developer"))
-async def help_developer_cb(client, cq):
-    text = "Developer info & contact."
-    buttons = InlineKeyboardMarkup(
-        [
-            [InlineKeyboardButton("𝐃ᴇᴠʟᴏᴘᴇʀ ღ", url="https://t.me/TheXVoren")],
-            [InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="help_commands"), InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_start")]
-        ]
-    )
-    await cq.answer()
-    await cq.message.edit(text=text, reply_markup=buttons)
-
-# -------- /help command removed per request (do not register) --------
-
-# -------- /ping Command (fancy) --------
+# Images URLs you gave
+INTRO_IMAGE = "https://iili.io/KVzgS44.jpg"
 PING_IMAGE = "https://iili.io/KVzbu4t.jpg"
+DEVELOPER_IMAGE = "https://iili.io/KVzmgWl.jpg"
 
-@app.on_message(filters.command("ping"))
-async def ping_cmd(client, message: Message):
-    # Fancy animation followed by ping output and uptime
-    m = await message.reply_text("ᴘɪɴɢɪɴɢ...sᴛᴀʀᴛᴇᴅ..´･ᴗ･`ᴘɪɴɢ..ᴘᴏɴɢ ⚡")
-    await asyncio.sleep(0.6)
-    end = time.time()
-    latency_ms = round((end - message.date.timestamp()) * 1000) if message.date else "N/A"
-    uptime = str(datetime.utcfromtimestamp(time.time() - START_TIME).strftime("%H:%M:%S"))
-    text = f"✅ Bot is Alive!\n⚡ Ping: {latency_ms} ms\n⏱ Uptime: {uptime}"
-    buttons = InlineKeyboardMarkup(
+SUPPORT_LINK = "https://t.me/Evara_Support_Chat"
+UPDATES_LINK = "https://t.me/Evara_Updates"
+OWNER_USERNAME = "@TheXVoren"
+OWNER_PROFILE_LINK = f"https://t.me/{OWNER_USERNAME.lstrip('@')}"
+OWNER_ID_INT = OWNER_ID
+
+# --- Runtime state ---
+start_time = time.time()
+chatbot_enabled: Dict[int, bool] = {}  # chat_id -> bool
+afk_users: Dict[int, str] = {}  # user_id -> reason or empty
+tagging_active: Set[int] = set()  # chat ids where tagall is running (prevent reentrancy)
+# store last afk status to detect return: we store a set of afk users; on message from them -> back
+afk_set: Set[int] = set()
+
+# Utility keyboard builders (many are nested)
+def main_start_kb(bot_mention: str = None):
+    # First column: single Add Me button
+    kb = [
+        [InlineKeyboardButton("+ 𝐀ᴅᴅ ᴍᴇ ʏᴏᴜʀ 𝐆ʀᴏᴜᴘ +", url=f"https://t.me/{BOT_USERNAME or ''}?startgroup=true")],
         [
-            [InlineKeyboardButton("+ ᴀᴅᴅ ᴍᴇ +", url=f"https://t.me/{(await app.get_me()).username}?startgroup=true"),
-             InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ", url="https://t.me/Evara_Support_Chatok")]
+            InlineKeyboardButton("ᯓ❍ᴡ𝛈ᴇʀ", url=OWNER_PROFILE_LINK),
+            InlineKeyboardButton("◉ 𝐀ʙᴏᴜᴛ", callback_data="about_open"),
+        ],
+        [
+            InlineKeyboardButton("◉ 𝐇ᴇʟᴘ & 𝐂ᴏᴍᴍᴀɴᴅs", callback_data="help_open"),
+        ],
+    ]
+    return InlineKeyboardMarkup(kb)
+
+def about_kb():
+    kb = [
+        [
+            InlineKeyboardButton("𝐄ᴠᴀʀᴀ 𝐒ᴜᴘᴘᴏʀᴛ 𝐂ʜᴀᴛ", url=SUPPORT_LINK),
+            InlineKeyboardButton("𝐔ρ∂ᴀᴛᴇs", url=UPDATES_LINK),
+        ],
+        [
+            InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="back_main"),
+            InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_all"),
+        ],
+    ]
+    return InlineKeyboardMarkup(kb)
+
+def about_text():
+    return (
+        "**❖ ᴧ ϻɪηɪ ᴄʜᴧᴛ ʙᴏᴛ ғᴏʀ ᴛᴇʟᴇɢʀᴀᴍ ɢʀᴏᴜᴘs & ᴘʀɪᴠᴧᴛᴇ**\n"
+        "**● ᴡʀɪᴛᴛᴇη ɪη ᴘʏᴛʜᴏɴ**\n"
+        "**● ᴋєєᴘ ʏσᴜʀ ᴧᴄᴛɪᴠє ɢʀσᴜᴘ.**\n"
+        "**● ᴧᴅᴅ ϻє ηᴏᴡ ʙᴧʙʏ ɪɴ ʏᴏᴜʀ ɢʀσᴜᴘs.**\n"
+        f"\nMade by {OWNER_USERNAME}"
+    )
+
+# Help menu keyboard (first level)
+def help_main_kb():
+    kb = [
+        [InlineKeyboardButton("ᴄᴏᴜᴘʟᴇ", callback_data="help_couple"),
+         InlineKeyboardButton("ᴄʜᴀᴛʙᴏᴛ", callback_data="help_chatbot"),
+         InlineKeyboardButton("ᴛᴏᴏʟs", callback_data="help_tools")],
+        [InlineKeyboardButton("ɢᴀᴍᴇs", callback_data="help_games"),
+         InlineKeyboardButton("sᴛɪᴄᴋᴇʀs", callback_data="help_stickers"),
+         InlineKeyboardButton("ɢʀᴏᴜᴘs", callback_data="help_groups")],
+        [InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="back_main"),
+         InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_all")],
+    ]
+    return InlineKeyboardMarkup(kb)
+
+# Submenus keyboards for help pages will include Back & Close and Back to help
+def simple_backclose_kb(back_to="help_open"):
+    return InlineKeyboardMarkup(
+        [[InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data=back_to),
+          InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_all")]]
+    )
+
+def couple_kb():
+    return InlineKeyboardMarkup(
+        [[InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ", url=SUPPORT_LINK)],
+         [InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="help_open"),
+          InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_all")]]
+    )
+
+def tools_kb():
+    return InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="help_open"),
+             InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_all")]
         ]
     )
+
+def chat_bot_kb():
+    return InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton("/chatbot enable", callback_data="enable_chatbot_cb"),
+             InlineKeyboardButton("/chatbot disable", callback_data="disable_chatbot_cb")],
+            [InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="help_open"),
+             InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_all")],
+        ]
+    )
+
+def help_commands_couple_kb():
+    return InlineKeyboardMarkup(
+        [
+            [InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ", url=SUPPORT_LINK)],
+            [InlineKeyboardButton("𝐁ᴀᴄᴋ", callback_data="help_open"),
+             InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_all")],
+        ]
+    )
+
+# Help pages text
+def help_couple_text():
+    return (
+        "**/Couples** ~ ᴄʜᴏᴏsᴇ ᴀ ʀᴀɴᴅᴏᴍ ᴄᴏᴜᴘʟᴇ from the group\n"
+        "**/cute** ~ ᴄʜᴇᴄᴋ ʏᴏᴜʀ ᴄᴜᴛᴇɴᴇss (random %)\n"
+        "**/love** ~ ɢɪᴠᴇ ᴛᴡᴏ ɴᴀᴍᴇs first_name + second_name -> love percentage\n\n"
+        f"Buttons: support -> {SUPPORT_LINK}"
+    )
+
+def help_chatbot_text():
+    return (
+        "**/chatbot enable|disable** — Enable or disable chatbot replies in the current group.\n"
+        "Note: Only owner or admins can use this. Only works in groups."
+    )
+
+def help_tools_text():
+    return (
+        "**/id** — get user's telegram id (reply to user or tag)\n"
+        "**/tagall** — tag all members (owner/admin only)\n"
+        "**/stop** — stop tagging\n"
+        "**/afk** — set yourself AFK (owner/admin can set AFK for others if desired)\n"
+    )
+
+def help_games_text():
+    return (
+        "**/dice** — roll a dice (random 1-6, uses native dice send)\n"
+        "**/jackpot** — play a jackpot (simple placeholder game)\n"
+        "**/football**, **/basketball** — simple play commands\n    (they run in-group games)"
+    )
+
+def help_stickers_text():
+    return (
+        "**/mmf** — reply to a sticker and add text: `/mmf your text` -> returns a sticker with text (basic implementation returns the original sticker or message acknowledging; sticker image editing would need image editing third-party tools)."
+    )
+
+def help_groups_text():
+    return (
+        "**/staff** — list group admins\n"
+        "**/botlist** — list bots in the group\n"
+        "**/ping** — ping & uptime\n"
+    )
+
+# --- Bot client ---
+app = Client("advanced_chat_bot",
+             api_id=API_ID,
+             api_hash=API_HASH,
+             bot_token=BOT_TOKEN,
+             workers=20)
+
+# --- Helpers ---
+def is_admin_or_owner(chat_id: int, user_id: int):
+    # returns True if user is owner or admin in chat (or global owner)
+    if user_id == OWNER_ID:
+        return True
     try:
-        await m.edit_text(text)
-    except:
-        await message.reply_photo(PING_IMAGE, caption=text, reply_markup=buttons)
+        member = app.get_chat_member(chat_id, user_id)
+        return member.status in ("administrator", "creator")
+    except Exception:
+        return False
 
-# -------- /id Command --------
-@app.on_message(filters.command("id"))
-async def id_cmd(client, message: Message):
-    if message.reply_to_message:
-        user = message.reply_to_message.from_user
-    else:
-        user = message.from_user
-    await message.reply_text(f"👤 {user.first_name}\n🆔 {user.id}")
-
-# -------- /stats Command (owner only) --------
-@app.on_message(filters.command("stats") & filters.user(OWNER_ID))
-async def stats_cmd(client, message: Message):
-    await message.reply_text(f"📊 Bot Stats:\n👥 Groups: {len(KNOWN_CHATS.get('groups',[]))}\n👤 Privates: {len(KNOWN_CHATS.get('privates',[]))}")
-
-# -------- /broadcast Command (owner only) --------
-@app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
-async def broadcast_cmd(client, message: Message):
-    if not (message.reply_to_message or len(message.command) > 1):
-        return await message.reply_text("Usage: /broadcast <text>  or reply to a message.")
-    text = message.text.split(None, 1)[1] if len(message.command) > 1 else None
-    sent = 0
-    for chat_type in ["privates", "groups"]:
-        for chat_id in KNOWN_CHATS.get(chat_type, []):
-            try:
-                if message.reply_to_message:
-                    await message.reply_to_message.copy(chat_id)
-                else:
-                    await app.send_message(chat_id, text)
-                sent += 1
-            except:
-                continue
-    await message.reply_text(f"✅ Broadcast sent to {sent} chats.")
-
-# -------- /paneltext Command (Owner Only) --------
-@app.on_message(filters.command("paneltext") & filters.user(OWNER_ID))
-async def paneltext_cmd(client, message: Message):
-    global OWNER_PANEL_TEXT
-    text = message.text.split(None, 1)[1] if len(message.command) > 1 else None
-    if not text:
-        return await message.reply_text("Usage: /paneltext <text>")
-    OWNER_PANEL_TEXT = text
-    await message.reply_text(f"✅ Owner panel text updated!")
-
-# -------- /chatbot Toggle (group) --------
-@app.on_message(filters.command("chatbot") & filters.group)
-async def chatbot_toggle(client, message: Message):
-    # only allow admins of group to toggle; also ensure bot is admin to work
-    if not await is_admin(message.chat.id, message.from_user.id):
-        return await message.reply_text("Only group admins can toggle chatbot.")
-    if not await is_bot_admin(message.chat.id):
-        return await message.reply_text("I must be admin in this group to enable chatbot features.")
-    mode = message.command[1].lower() if len(message.command) > 1 else ""
-    CHATBOT_STATUS[message.chat.id] = (mode in ("on", "enable", "true"))
-    await save_chat_id(message.chat.id, "groups")
-    await message.reply_text(f"🤖 Chatbot is now {'ON ✅' if CHATBOT_STATUS[message.chat.id] else 'OFF ❌'}")
-
-# -------- /tagall Command (group, admin-only) --------
-@app.on_message(filters.command("tagall") & filters.group)
-async def tagall_cmd(client, message: Message):
-    # require invoking user to be admin and bot to be admin
-    if not await is_admin(message.chat.id, message.from_user.id):
-        return await message.reply_text("Only group admins can start tagall.")
-    if not await is_bot_admin(message.chat.id):
-        return await message.reply_text("I need admin rights to tag members. Make me admin.")
-    chat_id = message.chat.id
-    TAGGING[chat_id] = True
-    msg = message.text.split(None, 1)[1] if len(message.command) > 1 else "Tagging All!"
-    await message.reply_text("✅ TAGGING STARTED !! ♥")
+async def ensure_bot_is_admin(chat_id: int):
     try:
-        async for member in app.get_chat_members(chat_id):
-            if not TAGGING.get(chat_id):
-                break
-            try:
-                name = member.user.first_name or member.user.username or "Member"
-                await app.send_message(chat_id, f"{msg}\n🔹 {name}")
-                await asyncio.sleep(0.4)
-            except:
-                continue
+        m = await app.get_chat_member(chat_id, (await app.get_me()).id)
+        return m.status in ("administrator", "creator")
+    except Exception:
+        return False
+
+def uptime_text():
+    delta = int(time.time() - start_time)
+    m, s = divmod(delta, 60)
+    h, m = divmod(m, 60)
+    d, h = divmod(h, 24)
+    return f"{d}d {h}h {m}m {s}s"
+
+# --- Animated intro: send "ᴅɪɴɢ ᴅᴏɴɢ" then edit to main intro text with photo & keyboard ---
+async def send_intro(message: Message):
+    # Keep the original "ᴅɪɴɢ ᴅᴏɴɢ" animation effect
+    try:
+        sent = await message.reply_text("ᴅɪɴɢ  ᴅᴏɴɢ 🔔")
+        await asyncio.sleep(0.7)
+        await sent.edit_text("ᴅɪɴɢ ᴅᴏɴɢ 🔔  — Booting...")
+        await asyncio.sleep(0.6)
+        # now send photo with long caption & keyboard (we use owner mention as requested)
+        caption = (
+            "**ʜєʏ**\n"
+            f"**{OWNER_USERNAME}**\n\n"
+            "✦ ɪ ᴧϻ ᴧᴅᴠᴧηᴄєᴅ ᴄʜᴧᴛ ʙσᴛ ᴡɪᴛʜ sσϻє ғєᴧᴛᴜʀєs. ✦\n"
+            "ʀєᴘʟʏ ɪη ɢʀσᴜᴘs & ᴘʀɪᴠᴧᴛє🥀✦ ηᴏ ᴧʙᴜsɪηɢ & zєʀσ ᴅσᴡɴᴛɪᴍє✦\n"
+            "ᴄʟɪᴄᴋ ʜєʟᴘ ʙᴜᴛᴛση ғσʀ ʜєʟᴘs❤️\n\n"
+            f"❖ ϻᴧᴅє ʙʏ... {OWNER_USERNAME}"
+        )
+        kb = main_start_kb(bot_mention=OWNER_USERNAME)
+        await message.reply_photo(INTRO_IMAGE, caption=caption, reply_markup=kb)
     except Exception as e:
-        pass
-    await message.reply_text("✅ TAGGING COMPLETED !! ◉‿◉")
+        await message.reply_text("Error sending intro: " + str(e))
 
-# -------- /stop Command (group) --------
-@app.on_message(filters.command("stop") & filters.group)
-async def stop_tag(client, message: Message):
-    TAGGING[message.chat.id] = False
-    await message.reply_text("❌ TAGGING STOPPED !!")
+# --- Command handlers ---
+@app.on_message(filters.command(["start"]) & (filters.private | filters.group))
+async def start_handler(client: Client, message: Message):
+    # In groups bot should respond only if bot is admin (as per your ask)
+    if message.chat.type in ("group", "supergroup"):
+        bot_admin = await ensure_bot_is_admin(message.chat.id)
+        if not bot_admin:
+            # don't respond in groups if bot is not admin
+            return
+    # send animated intro in private, and same in group when triggered by admin or allowed
+    await send_intro(message)
 
-# -------- /couples Command --------
-@app.on_message(filters.command("Couples") & filters.group)
-async def couples_cmd(client, message: Message):
-    # pick two random members
-    if not await is_bot_admin(message.chat.id):
-        return await message.reply_text("I need to be admin to fetch members for couples.")
-    members = []
-    async for m in app.get_chat_members(message.chat.id, limit=200):
-        if not m.user.is_bot:
-            members.append(m.user.first_name or m.user.username or "Member")
-    if len(members) < 2:
-        return await message.reply_text("Not enough members to pick a couple.")
-    a, b = random.sample(members, 2)
-    await message.reply_text(f"💞 Couple: {a} + {b} \nThey look cute together!")
+@app.on_message(filters.command(["Devloper", "developer", "Developer"]) & filters.private | filters.command(["Devloper"]) & filters.group)
+async def developer_cmd(client: Client, message: Message):
+    # show developer image + button to owner profile
+    kb = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("𝐃ᴇᴠʟᴏᴘᴇʀ ღ", url=OWNER_PROFILE_LINK)]]
+    )
+    await message.reply_photo(DEVELOPER_IMAGE, caption="ʙᴏᴛ ᴅᴇᴠʟᴏᴘᴇʀ", reply_markup=kb)
 
-# -------- /cute Command --------
-@app.on_message(filters.command("cute") & filters.group)
-async def cute_cmd(client, message: Message):
-    target = message.reply_to_message.from_user.first_name if message.reply_to_message else message.from_user.first_name
-    percent = random.randint(1, 100)
-    await message.reply_text(f"✨ {target}, your cute level is {percent}% 💖")
+@app.on_message(filters.command(["ping"]) & (filters.private | filters.group))
+async def ping_cmd(client: Client, message: Message):
+    if message.chat.type in ("group", "supergroup"):
+        if not await ensure_bot_is_admin(message.chat.id):
+            return
+    # simple ping: measure a tiny roundtrip
+    t0 = time.time()
+    m = await message.reply_text("ᴘɪɴɢɪɴɢ... sᴛᴀʀᴇᴅ..´･ᴗ･`")
+    t1 = time.time()
+    rtt = int((t1 - t0) * 1000)
+    text = f"ᴘɪɴɢ ➳ {rtt} ms\nᴜᴘᴛɪᴍᴇ ➳ {uptime_text()}"
+    kb = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("+ ᴀᴅᴅ ᴍᴇ +", url=f"https://t.me/{BOT_USERNAME or ''}?startgroup=true"),
+          InlineKeyboardButton("sᴜᴘᴘᴏʀᴛ", url=SUPPORT_LINK)]]
+    )
+    await m.delete()
+    await message.reply_photo(PING_IMAGE, caption=text, reply_markup=kb)
 
-# -------- /love Command --------
-@app.on_message(filters.command("love") & (filters.group | filters.private))
-async def love_cmd(client, message: Message):
-    # expects "first + second" after command or as args
-    args = message.text.split(None, 1)
-    if len(args) < 2:
-        return await message.reply_text("Usage: /love name1 + name2")
-    text = args[1]
-    if "+" in text:
-        a, b = [p.strip() for p in text.split("+", 1)]
+@app.on_message(filters.command(["chatbot"]) & filters.group)
+async def chatbot_toggle(client: Client, message: Message):
+    # Only owner or admin
+    if not is_admin_or_owner(message.chat.id, message.from_user.id):
+        await message.reply_text("🚫 Only owner or admins can use this.")
+        return
+    if len(message.command) < 2:
+        await message.reply_text("Usage: /chatbot enable|disable")
+        return
+    action = message.command[1].lower()
+    if action == "enable":
+        chatbot_enabled[message.chat.id] = True
+        await message.reply_text("ᴄʜᴀᴛʙᴏᴛ sᴛᴀᴛᴜs ɪs ᴇɴᴀʙʟᴇ ✰")
+    elif action == "disable":
+        chatbot_enabled[message.chat.id] = False
+        await message.reply_text("ᴄʜᴀᴛʙᴏᴛ sᴛᴀᴛᴜs ɪs ᴅɪsᴀʙʟᴇ ✰")
     else:
-        parts = text.split()
-        if len(parts) >= 2:
-            a, b = parts[0], parts[1]
-        else:
-            return await message.reply_text("Please give two names, e.g. /love Alice + Bob")
+        await message.reply_text("Use enable or disable.")
+
+# /couples - choose 2 random members (works in groups)
+@app.on_message(filters.command(["Couples", "couples"]) & filters.group)
+async def couples_cmd(client: Client, message: Message):
+    if not await ensure_bot_is_admin(message.chat.id):
+        return
+    try:
+        members = []
+        # get up to 200 non-bot members
+        async for m in client.get_chat_members(message.chat.id, limit=200):
+            if not (m.user.is_bot):
+                members.append(m.user)
+        if len(members) < 2:
+            await message.reply_text("Not enough members to pick a couple.")
+            return
+        a, b = random.sample(members, 2)
+        await message.reply_text(f"💘 Couple: {a.mention} + {b.mention}\nLooks amazing together!")
+    except Exception as e:
+        await message.reply_text("Error: " + str(e))
+
+# /cute - random percent
+@app.on_message(filters.command(["cute"]) & (filters.group | filters.private))
+async def cute_cmd(client: Client, message: Message):
+    who = message.reply_to_message.from_user if message.reply_to_message else message.from_user
     percent = random.randint(1, 100)
-    await message.reply_text(f"💘 Love possibility between {a} ❤️ {b} is {percent}% 😉")
+    await message.reply_text(f"{who.mention}, ʏᴏᴜʀ ᴄᴜᴛᴇɴᴇss ʟᴇᴠᴇʟ ɪs {percent}% 💖")
 
-# -------- /afk Command --------
-@app.on_message(filters.command("afk") & (filters.group | filters.private))
-async def afk_cmd(client, message: Message):
-    user = message.from_user
-    reason = " ".join(message.command[1:]) if len(message.command) > 1 else "AFK"
-    AFK.setdefault(message.chat.id, {})[user.id] = (int(time.time()), reason)
-    await message.reply_text(f"ʜᴇʏ, {user.first_name} you are now AFK: {reason}")
+# /love name1+name2
+@app.on_message(filters.command(["love"]) & (filters.group | filters.private))
+async def love_cmd(client: Client, message: Message):
+    text = message.text.partition(" ")[2]
+    if not text or "+" not in text:
+        await message.reply_text("Usage: /love name1+name2")
+        return
+    name1, _, name2 = text.partition("+")
+    name1 = name1.strip()
+    name2 = name2.strip()
+    percent = random.randint(1, 100)
+    await message.reply_text(f"💞 Love possibility between **{name1}** and **{name2}** is **{percent}%** 😉")
 
-# When someone mentions an AFK user, notify
-@app.on_message(filters.group & filters.text)
-async def afk_notify(client, message: Message):
-    # If a message mentions someone who is AFK, notify
+# /id - get user id
+@app.on_message(filters.command(["id"]) & (filters.group | filters.private))
+async def id_cmd(client: Client, message: Message):
+    target = message.reply_to_message.from_user if message.reply_to_message else message.from_user
+    await message.reply_text(f"User: {target.mention}\nID: `{target.id}`", parse_mode="markdown")
+
+# tagall - owner/admin only (be careful with large groups)
+@app.on_message(filters.command(["tagall", "Tagall"]) & filters.group)
+async def tagall_cmd(client: Client, message: Message):
+    if not is_admin_or_owner(message.chat.id, message.from_user.id):
+        await message.reply_text("🚫 Only owner or admins can use this.")
+        return
+    if message.chat.id in tagging_active:
+        await message.reply_text("Tagging already in progress. Use /stop to stop.")
+        return
+    tagging_active.add(message.chat.id)
+    await message.reply_text("𝐓ᴀɢɢɪɴɢ sᴛᴀʀᴛᴇᴅ !! ♥")
+    members = []
+    async for m in client.get_chat_members(message.chat.id, limit=200):
+        if not m.user.is_bot:
+            members.append(m.user)
+    # chunk to avoid extremely long messages (chunks of 20)
+    try:
+        chunk = []
+        for user in members:
+            if message.chat.id not in tagging_active:
+                break
+            chunk.append(user.mention)
+            if len(chunk) >= 20:
+                await message.reply_text(" ".join(chunk))
+                chunk = []
+                await asyncio.sleep(1.2)
+        if chunk and message.chat.id in tagging_active:
+            await message.reply_text(" ".join(chunk))
+    except Exception as e:
+        await message.reply_text("Error tagging: " + str(e))
+    finally:
+        if message.chat.id in tagging_active:
+            tagging_active.remove(message.chat.id)
+            await message.reply_text("ᴛᴀɢɢɪɴɢ ᴄᴏᴍᴘʟᴇᴛᴇᴅ !! ◉‿◉")
+
+# /stop - stop tagging
+@app.on_message(filters.command(["stop"]) & filters.group)
+async def stop_cmd(client: Client, message: Message):
+    if not is_admin_or_owner(message.chat.id, message.from_user.id):
+        await message.reply_text("🚫 Only owner or admins can use this.")
+        return
+    if message.chat.id in tagging_active:
+        tagging_active.remove(message.chat.id)
+        await message.reply_text("ᴛᴀɢɢɪɴɢ sᴛᴏᴘᴇᴅ !!")
+    else:
+        await message.reply_text("No tagging in progress.")
+
+# /afk
+@app.on_message(filters.command(["afk"]) & (filters.group | filters.private))
+async def afk_cmd(client: Client, message: Message):
+    # set AFK for the user who uses it (or for a mentioned user if owner/admin)
+    reason = message.text.partition(" ")[2].strip()
+    target_id = message.from_user.id
+    # if owner/admin and they replied to someone, can set AFK for that user
+    if message.reply_to_message and is_admin_or_owner(message.chat.id, message.from_user.id):
+        target_id = message.reply_to_message.from_user.id
+    afk_users[target_id] = reason or "AFK"
+    afk_set.add(target_id)
+    await message.reply_text(f"ʜᴇʏ, <a href='tg://user?id={target_id}'>user</a> ɪs ᴀғᴋ !!", parse_mode="html")
+
+# detect mentions to AFK users
+@app.on_message(filters.group & ~filters.service)
+async def afk_detector(client: Client, message: Message):
+    # If someone messages who is AFK, announce return
+    uid = message.from_user.id
+    if uid in afk_set:
+        afk_set.remove(uid)
+        afk_users.pop(uid, None)
+        await message.reply_text(f"ʏᴇᴀʜ, {message.from_user.mention}, ʏᴏᴜ ᴀʀᴇ ʙᴀᴄᴋ , ᴏɴʟʏɴʟɪɴᴇ !! 😉")
+    # if message mentions users who are AFK, notify
     if message.entities:
         mentioned_ids = set()
         for ent in message.entities:
-            if ent.type in ("mention", "text_mention"):
-                if ent.type == "text_mention" and ent.user:
-                    mentioned_ids.add(ent.user.id)
-                elif ent.type == "mention":
-                    # mention string -> try to extract username (we won't resolve username to id here)
-                    pass
-    # Also if a user who was AFK sends a message, mark them back
-    uid = message.from_user.id
-    if AFK.get(message.chat.id, {}).get(uid):
-        AFK[message.chat.id].pop(uid, None)
-        await message.reply_text(f"ʏᴇᴀʜ, {message.from_user.first_name} you are back, ONLINE!! 😉")
+            if ent.type == "text_mention" and ent.user:
+                mentioned_ids.add(ent.user.id)
+    # Also check reply_to_message
+    if message.reply_to_message:
+        rid = message.reply_to_message.from_user.id
+        if rid in afk_users:
+            reason = afk_users.get(rid, "AFK")
+            await message.reply_text(f"ᴛʜɪs ᴜsᴇʀ ɪs ᴀғᴋ !! ({reason})")
 
-# -------- /tr Command (simple placeholder) --------
-@app.on_message(filters.command("tr") & filters.group)
-async def tr_cmd(client, message: Message):
-    # this is a placeholder translate to english (would require external API)
+# /mmf - reply to sticker + text (simple echo; actual image sticker editing needs more tools)
+@app.on_message(filters.command(["mmf"]) & (filters.group | filters.private))
+async def mmf_cmd(client: Client, message: Message):
     if not message.reply_to_message:
-        return await message.reply_text("Reply to a message with /tr to translate to English.")
-    text = message.reply_to_message.text or ""
-    # naive placeholder: return same text (since no external calls here)
-    await message.reply_text(f"Translated (placeholder):\n{text}")
-
-# -------- /dice and simple games (dice) --------
-@app.on_message(filters.command("dice") & filters.group)
-async def dice_cmd(client, message: Message):
-    # Pyrogram has send_dice but some versions differ; use send_dice if available
+        await message.reply_text("Reply to a sticker or image with /mmf your_text")
+        return
+    text = message.text.partition(" ")[2].strip()
+    if not text:
+        await message.reply_text("Please provide text to put on sticker.")
+        return
+    # For now, we will acknowledge and resend the same media with caption (cannot write text onto sticker without image processing)
     try:
-        await message.reply_text("🎲 You rolled a " + str(random.randint(1, 6)))
+        if message.reply_to_message.sticker:
+            await message.reply_text(f"Sticker text: {text}\n(note: editing sticker image requires extra tools)")
+        elif message.reply_to_message.photo:
+            await message.reply_to_message.reply_photo(message.reply_to_message.photo.file_id, caption=text)
+        else:
+            await message.reply_text("Reply to a sticker or photo.")
     except Exception as e:
-        await message.reply_text("Couldn't roll dice: " + str(e))
+        await message.reply_text("Error: " + str(e))
 
-# -------- /developer Command --------
-@app.on_message(filters.command("Devloper") | filters.command("developer"))
-async def developer_cmd(client, message: Message):
-    DEV_IMG = "https://iili.io/KVzmgWl.jpg"
-    buttons = InlineKeyboardMarkup(
-        [
-            [InlineKeyboardButton("𝐃ᴇᴠʟᴏᴘᴇʀ ღ", url="https://t.me/TheXVoren")],
-            [InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close_start")]
-        ]
-    )
-    await message.reply_photo(DEV_IMG, caption="ʙᴏᴛ ᴅᴇᴠʟᴏᴘᴇʀ", reply_markup=buttons)
-
-# -------- staff command (list admins) --------
-@app.on_message(filters.command("staff") & filters.group)
-async def staff_cmd(client, message: Message):
-    if not await is_bot_admin(message.chat.id):
-        return await message.reply_text("I need admin rights to list staff.")
+# /staff - list admins
+@app.on_message(filters.command(["staff"]) & filters.group)
+async def staff_cmd(client: Client, message: Message):
     admins = []
-    async for m in app.get_chat_members(message.chat.id, filter=enums.ChatMembersFilter.ADMINS):
-        admins.append(f"{m.user.first_name} — {m.user.id}")
-    if not admins:
-        return await message.reply_text("No admins found.")
-    await message.reply_text("Group admins:\n" + "\n".join(admins))
+    async for m in client.get_chat_members(message.chat.id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
+        admins.append(f"{m.user.mention}")
+    text = "**Group staff members:**\n" + "\n".join(admins)
+    await message.reply_text(text)
 
-# -------- botlist command (list bots) --------
-@app.on_message(filters.command("botlist") & filters.group)
-async def botlist_cmd(client, message: Message):
+# /botlist - bots in group
+@app.on_message(filters.command(["botlist"]) & filters.group)
+async def botlist_cmd(client: Client, message: Message):
     bots = []
-    async for m in app.get_chat_members(message.chat.id, limit=200):
+    async for m in client.get_chat_members(message.chat.id, limit=200):
         if m.user.is_bot:
-            bots.append(f"{m.user.first_name} — {m.user.id}")
-    if not bots:
-        return await message.reply_text("No bots found in this group.")
-    await message.reply_text("Bots in group:\n" + "\n".join(bots))
+            bots.append(m.user.mention)
+    await message.reply_text("Bots in this group:\n" + ("\n".join(bots) if bots else "No bots found."))
 
-# -------- Private Auto Reply --------
-@app.on_message(filters.text & filters.private)
-async def private_reply(client, message: Message):
-    await save_chat_id(message.chat.id, "privates")
-    reply = get_reply(message.text)
-    await message.reply_text(reply)
+# Games: dice /jackpot /football /basketball simple implementations
+@app.on_message(filters.command(["dice"]) & filters.group)
+async def dice_cmd(client: Client, message: Message):
+    await message.reply_dice()
 
-# -------- Group Auto Reply (only if bot is admin and chatbot enabled) --------
-@app.on_message(filters.text & filters.group)
-async def group_reply(client, message: Message):
-    await save_chat_id(message.chat.id, "groups")
-    # Only reply if chatbot enabled in this chat (default True) AND bot is admin
-    if not await is_bot_admin(message.chat.id):
-        return  # do not respond if bot isn't admin
-    if CHATBOT_STATUS.get(message.chat.id, True) and random.random() < 0.7:
-        reply = get_reply(message.text)
+@app.on_message(filters.command(["jackpot"]) & filters.group)
+async def jackpot_cmd(client: Client, message: Message):
+    # simple random winner among active chat members (small sample)
+    members = []
+    async for m in client.get_chat_members(message.chat.id, limit=200):
+        if not m.user.is_bot:
+            members.append(m.user)
+    if not members:
+        await message.reply_text("No participants found.")
+        return
+    winner = random.choice(members)
+    amount = random.randint(10, 500)
+    await message.reply_text(f"🎰 Jackpot! Winner: {winner.mention}\nPrize: {amount} coins (virtual)")
+
+@app.on_message(filters.command(["football","basketball"]) & filters.group)
+async def sport_game(client: Client, message: Message):
+    story = "Game started! (simple group minigame placeholder)"
+    await message.reply_text(story)
+
+# Callback query handlers for inline buttons (navigation)
+@app.on_callback_query()
+async def callbacks(client: Client, cq: CallbackQuery):
+    data = cq.data
+    try:
+        if data == "about_open":
+            await cq.message.edit_caption(
+                caption=about_text(),
+                reply_markup=about_kb()
+            )
+            await cq.answer()
+        elif data == "help_open":
+            await cq.message.edit_caption(caption="Help & Commands — Choose a section", reply_markup=help_main_kb())
+            await cq.answer()
+        elif data == "back_main":
+            # revert to main intro page
+            caption = (
+                "**ʜєʏ**\n"
+                f"**{OWNER_USERNAME}**\n\n"
+                "✦ ɪ ᴧϻ ᴧᴅᴠᴧηᴄєᴅ ᴄʜᴧᴛ ʙσᴛ ᴡɪᴛʜ sσϻє ғєᴧᴛᴜʀєs. ✦\n"
+                "ʀєᴘʟʏ ɪη ɢʀσᴜᴘs & ᴘʀɪᴠᴧᴛє🥀✦ ηᴏ ᴧʙᴜsɪηɢ & zєʀσ ᴅσᴡɴᴛɪᴍє✦\n"
+                "ᴄʟɪᴄᴋ ʜєʟᴘ ʙᴜᴛᴛση ғσʀ ʜєʟᴘs❤️\n\n"
+                f"❖ ϻᴧᴅє ʙʏ... {OWNER_USERNAME}"
+            )
+            await cq.message.edit_caption(caption=caption, reply_markup=main_start_kb())
+            await cq.answer()
+        elif data == "close_all":
+            # delete message (close)
+            try:
+                await cq.message.delete()
+            except:
+                await cq.message.edit_caption(caption="Closed.")
+            await cq.answer()
+        elif data == "help_couple":
+            await cq.message.edit_caption(caption=help_couple_text(), reply_markup=couple_kb())
+            await cq.answer()
+        elif data == "help_chatbot":
+            await cq.message.edit_caption(caption=help_chatbot_text(), reply_markup=chat_bot_kb())
+            await cq.answer()
+        elif data == "help_tools":
+            await cq.message.edit_caption(caption=help_tools_text(), reply_markup=simple_backclose_kb("help_open"))
+            await cq.answer()
+        elif data == "help_games":
+            await cq.message.edit_caption(caption=help_games_text(), reply_markup=simple_backclose_kb("help_open"))
+            await cq.answer()
+        elif data == "help_stickers":
+            await cq.message.edit_caption(caption=help_stickers_text(), reply_markup=simple_backclose_kb("help_open"))
+            await cq.answer()
+        elif data == "help_groups":
+            await cq.message.edit_caption(caption=help_groups_text(), reply_markup=simple_backclose_kb("help_open"))
+            await cq.answer()
+        elif data == "enable_chatbot_cb":
+            # Try to enable chatbot for this chat (only if admin)
+            chat = cq.message.chat
+            if not is_admin_or_owner(chat.id, cq.from_user.id):
+                await cq.answer("Only owner or admins can do that.", show_alert=True)
+                return
+            chatbot_enabled[chat.id] = True
+            await cq.answer("Chatbot enabled for this group.")
+        elif data == "disable_chatbot_cb":
+            chat = cq.message.chat
+            if not is_admin_or_owner(chat.id, cq.from_user.id):
+                await cq.answer("Only owner or admins can do that.", show_alert=True)
+                return
+            chatbot_enabled[chat.id] = False
+            await cq.answer("Chatbot disabled for this group.")
+        else:
+            await cq.answer()
+    except Exception as e:
         try:
-            await message.reply_text(reply)
+            await cq.answer("Error: " + str(e), show_alert=True)
         except:
             pass
 
-# -------- Voice Chat Notifications (kept) --------
-@app.on_message(filters.group)
-async def voice_chat_events(client, message: Message):
-    # Note: Pyrogram event attributes may differ by version
-    if getattr(message, "video_chat_started", False):
-        await message.reply_text("🎤 Voice Chat Started!")
-    elif getattr(message, "video_chat_ended", False):
-        await message.reply_text("❌ Voice Chat Ended!")
-    elif getattr(message, "video_chat_invite", False):
-        await message.reply_text("📣 You've been invited to a Voice Chat!")
+# Simple chatbot auto-reply behavior for groups (if enabled and bot is admin)
+@app.on_message(filters.group & ~filters.edited & ~filters.bot)
+async def group_auto_reply(client: Client, message: Message):
+    # Only reply if bot is admin in group
+    if not await ensure_bot_is_admin(message.chat.id):
+        return
+    # check if chatbot is enabled for this chat (defaults to enabled)
+    enabled = chatbot_enabled.get(message.chat.id, True)
+    if not enabled:
+        return
+    # simple small talk: respond to mention or random triggers
+    text = (message.text or "").lower()
+    # respond only when mentioned or keywords seen
+    me = await app.get_me()
+    mentioned = False
+    if message.entities:
+        for ent in message.entities:
+            if ent.type == "mention":
+                ent_text = message.text[ent.offset: ent.offset + ent.length]
+                if ent_text.lstrip("@").lower() == (me.username or "").lower():
+                    mentioned = True
+            if ent.type == "text_mention" and ent.user and ent.user.id == me.id:
+                mentioned = True
+    if mentioned or any(w in text for w in ["hello", "hi", "bot", "hey"]):
+        # reply with a playful message
+        await message.reply_text("Hi! I'm an advanced chat bot. Type /Devloper to know my maker.")
 
-# -------- Health Check for Render --------
-class _H(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"OK")
-
-def _start_http():
-    HTTPServer(("0.0.0.0", PORT), _H).serve_forever()
-
-threading.Thread(target=_start_http, daemon=True).start()
-print("✅ Advanced Chatbot is running...")
-
-# -------- Run the bot --------
+# Start the bot
 if __name__ == "__main__":
+    print("Starting Advanced Chat Bot...")
     app.run()
