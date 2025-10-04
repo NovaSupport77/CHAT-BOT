@@ -4,4 +4,5 @@ pymongo==4.7.1
 dnspython==2.3.0
 pyaes==1.6.1
 pysocks==1.7.1
-flask
+flask==2.3.3
+waitress==2.1.2
