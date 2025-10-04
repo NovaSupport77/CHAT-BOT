@@ -36,72 +36,82 @@ DEVELOPER_PHOTO = "https://iili.io/KVzmgWl.jpg"
 
 # ----------------- NEW FANCY FONTS APPLIED HERE -----------------
 INTRO_TEXT_TEMPLATE = (
-    "𝐇ᴇʏ {mention_name}\n"
-    "✦ 𝐈 ᴧᴍ ᴧɴ ᴧᴅᴠᴀɴᴄᴇᴅ ᴄʜᴧᴛ ʙᴏᴛ ᴡɪᴛʜ sᴏᴍᴇ ғᴇᴀᴛᴜʀᴇs. \n"
-    "✦ 𝐑ᴇᴘʟʏ ɪɴ ɢʀᴏᴜᴘs & ᴘʀɪᴠᴧᴛᴇs 🥀\n"
-    "✦ 𝐍ᴏ ᴧʙᴜsɪɴɢ & ᴢᴇʀᴏ ᴅᴏᴡɴᴛɪᴍᴇ\n"
-    "✦ 𝐂ʟɪᴄᴋ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ғᴏʀ ᴄᴏᴍᴍᴧɴᴅs ❤️\n"
-    "❖ 𝐌ᴧᴅᴇ ʙʏ...{developer}"
+    "𝐇ᴇʏ {mention_name}\n"
+    "✦ 𝐈 ᴧᴍ ᴧɴ ᴧᴅᴠᴀɴᴄᴇᴅ ᴄʜᴧᴛ ʙᴏᴛ ᴡɪᴛʜ sᴏᴍᴇ ғᴇᴀᴛᴜʀᴇs. \n"
+    "✦ 𝐑ᴇᴘʟʏ ɪɴ ɢʀᴏᴜᴘs & ᴘʀɪᴠᴧᴛᴇs 🥀\n"
+    "✦ 𝐍ᴏ ᴧʙᴜsɪɴɢ & ᴢᴇʀᴏ ᴅᴏᴡɴᴛɪᴍᴇ\n"
+    "✦ 𝐂ʟɪᴄᴋ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ғᴏʀ ᴄᴏᴍᴍᴧɴᴅs ❤️\n"
+    "❖ 𝐌ᴧᴅᴇ ʙʏ...{developer}"
 )
 
 ABOUT_TEXT = (
-    "❖ 𝐀 ᴍɪɴɪ ᴄʜᴧᴛ ʙᴏᴛ ғᴏʀ ᴛᴇʟᴇɢʀᴧᴍs ɢʀᴏᴜᴘs & ᴘʀɪᴠᴧᴛᴇ ᴍᴇssᴧɢᴇs\n"
-    "● 𝐖ʀɪᴛᴛᴇɴ ɪɴ ᴘʏᴛʜᴏɴ \n"
-    "● 𝐊ᴇᴘᴘ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴧᴄᴛɪᴠᴇ.\n"
-    "● 𝐀ᴅᴅ ᴍᴇ ɴᴏᴡ ʙᴧʙʏ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘs."
+    "❖ 𝐀 ᴍɪɴɪ ᴄʜᴧᴛ ʙᴏᴛ ғᴏʀ ᴛᴇʟᴇɢʀᴧᴍs ɢʀᴏᴜᴘs & ᴘʀɪᴠᴧᴛᴇ ᴍᴇssᴧɢᴇs\n"
+    "● 𝐖ʀɪᴛᴛᴇɴ ɪɴ ᴘʏᴛʜᴏɴ \n"
+    "● 𝐊ᴇᴘᴘ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴧᴄᴛɪᴠᴇ.\n"
+    "● 𝐀ᴅᴅ ᴍᴇ ɴᴏᴡ ʙᴧʙʏ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘs."
 )
 
 # --- Sub-Help Menu Content (Applied Font) ---
 HELP_COMMANDS_TEXT_MAP = {
-    "couple": (
-        "📜 𝐂ᴏᴜᴘʟᴇ & 𝐋ᴏᴠᴇ 𝐂ᴏᴍᴍᴀɴᴅs:\n"
-        "/couples ~ 𝐂ʜᴏᴏsᴇ ᴧ ʀᴧɴᴅᴏᴍ ᴄᴏᴜᴘʟᴇ\n"
-        "/cute ~ 𝐂ʜᴇᴄᴋ ʏᴏᴜʀ ᴄᴜᴛᴇɴᴇss\n"
-        "/love name1 + name2 ~ 𝐒ᴇᴇ ʟᴏᴠᴇ ᴘᴏssɪʙɪʟɪᴛʏ\n"
-        "\n_ᴧʟʟ ᴛʜᴇsᴇ ᴄᴏᴍᴍᴀɴᴅs ᴀʀᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏ ᴇᴠᴇʀʏᴏɴᴇ."
-    ),
-    "chatbot": (
-        "📜 𝐂ʜᴀᴛʙᴏᴛ 𝐂ᴏᴍᴍᴀɴᴅ:\n"
-        "/chatbot enable/disable ~ 𝐄ɴᴀʙʟᴇ/ᴅɪsᴀʙʟᴇ ᴄʜᴀᴛʙᴏᴛ\n"
-        "\n"
-        "𝐍ᴏᴛᴇ: ᴏɴʟʏ ᴡᴏʀᴋs ɪɴ ɢʀᴏᴜᴘ ᴀɴᴅ ᴏɴʟʏ ғᴏʀ ᴀᴅᴍɪɴs/ᴏᴡɴᴇʀ.\n"
-        "𝐄xᴀᴍᴘʟᴇ: /chatbot enable"
-    ),
-    "tools": (
-        "📜 𝐓ᴏᴏʟs 𝐂ᴏᴍᴍᴧɴᴅs:\n"
-        "/id ~ 𝐆ᴇᴛ ᴜsᴇʀ 𝐈ᴅ (ʀᴇᴘʟʏ ᴏʀ ᴛᴧɢ)\n"
-        "/tagall ~ 𝐓ᴧɢ ᴀʟʟ ᴍᴇᴍʙᴇʀs (𝐀ᴅᴍɪɴ 𝐎ɴʟʏ)\n"
-        "/stop ~ 𝐓ᴏ sᴛᴏᴘ ᴛᴧɢɢɪɴɢ (𝐀ᴅᴍɪɴ 𝐎ɴʟʏ)\n"
-        "/afk reason ~ 𝐀ᴡᴀʏ ғʀᴏᴍ ᴛʜᴇ ᴋᴇʏʙᴏᴀʀᴅ\n"
-        "\n_𝐓ᴀɢᴀʟʟ/𝐒ᴛᴏᴘ ʀᴇǫᴜɪʀᴇs 𝐀ᴅᴍɪɴ. 𝐎ᴛʜᴇʀs ᴀʀᴇ ғᴏʀ ᴇᴠᴇʀʏᴏɴᴇ."
-    ),
-    "games": (
-        "📜 𝐆ᴧᴍᴇs 𝐂ᴏᴍᴍᴧɴᴅs:\n"
-        "/dice ~ 𝐑ᴏʟʟ ᴧ ᴅɪᴄᴇ\n"
-        "/jackpot ~ 𝐉ᴧᴄᴋᴘᴏᴛ ᴍᴀᴄʜɪɴᴇ\n"
-        "/football ~ 𝐏ʟᴀʏ ғᴏᴏᴛʙᴧʟʟ\n"
-        "/basketball ~ 𝐏ʟᴀʏ ʙᴧsᴋᴇᴛʙᴀʟʟ\n"
-        "\n_𝐀ʟʟ ᴛʜᴇsᴇ ɢᴀᴍᴇs ᴀʀᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏ ᴇᴠᴇʀʏᴏɴᴇ."
-    ),
-    "group": (
-        "📜 𝐆ʀᴏᴜᴘ 𝐔ᴛɪʟɪᴛʏ 𝐂ᴏᴍᴍᴧɴᴅs:\n"
-        "/mmf text ~ 𝐂ʀᴇᴀᴛᴇ ᴀ sᴛɪᴄᴋᴇʀ ᴡɪᴛʜ ᴛᴇxᴛ (ʀᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ)\n"
-        "/staff ~ 𝐃ɪsᴘʟᴧʏs ɢʀᴏᴜᴘ sᴛᴧғғ ᴍᴇᴍʙᴇʀs\n"
-        "/botlist ~ 𝐂ʜᴇᴄᴋ ʜᴏᴡ ᴍᴀɴʏ ʙᴏᴛs ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ (𝐀ᴅᴍɪɴ ᴏɴʟʏ)"
-        "\n_ʙᴏᴛʟɪsᴛ ʀᴇǫᴜɪʀᴇs ᴀᴅᴍɪɴ. ᴏᴛʜᴇʀs ᴀʀᴇ ғᴏʀ ᴇᴠᴇʀʏᴏɴᴇ."
-    )
+    "couple": (
+        "📜 𝐂ᴏᴜᴘʟᴇ & 𝐋ᴏᴠᴇ 𝐂ᴏᴍᴍᴀɴᴅs:\n"
+        "/couples ~ 𝐂ʜᴏᴏsᴇ ᴧ ʀᴧɴᴅᴏᴍ ᴄᴏᴜᴘʟᴇ\n"
+        "/cute ~ 𝐂ʜᴇᴄᴋ ʏᴏᴜʀ ᴄᴜᴛᴇɴᴇss\n"
+        "/love name1 + name2 ~ 𝐒ᴇᴇ ʟᴏᴠᴇ ᴘᴏssɪʙɪʟɪᴛʏ\n"
+        "\n_ᴧʟʟ ᴛʜᴇsᴇ ᴄᴏᴍᴍᴀɴᴅs ᴀʀᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏ ᴇᴠᴇʀʏᴏɴᴇ."
+    ),
+    "chatbot": (
+        "📜 𝐂ʜᴀᴛʙᴏᴛ 𝐂ᴏᴍᴍᴀɴᴅ:\n"
+        "/chatbot enable/disable ~ 𝐄ɴᴀʙʟᴇ/ᴅɪsᴀʙʟᴇ ᴄʜᴀᴛʙᴏᴛ\n"
+        "\n"
+        "𝐍ᴏᴛᴇ: ᴏɴʟʏ ᴡᴏʀᴋs ɪɴ ɢʀᴏᴜᴘ ᴀɴᴅ ᴏɴʟʏ ғᴏʀ ᴀᴅᴍɪɴs/ᴏᴡɴᴇʀ.\n"
+        "𝐄xᴀᴍᴘʟᴇ: /chatbot enable"
+    ),
+    "tools": (
+        "📜 𝐓ᴏᴏʟs 𝐂ᴏᴍᴍᴧɴᴅs:\n"
+        "/id ~ 𝐆ᴇᴛ ᴜsᴇʀ 𝐈ᴅ (ʀᴇᴘʟʏ ᴏʀ ᴛᴧɢ)\n"
+        "/tagall ~ 𝐓ᴧɢ ᴀʟʟ ᴍᴇᴍʙᴇʀs (𝐀ᴅᴍɪɴ 𝐎ɴʟʏ)\n"
+        "/stop ~ 𝐓ᴏ sᴛᴏᴘ ᴛᴧɢɢɪɴɢ (𝐀ᴅᴍɪɴ 𝐎ɴʟʏ)\n"
+        "/afk reason ~ 𝐀ᴡᴀʏ ғʀᴏᴍ ᴛʜᴇ ᴋᴇʏʙᴏᴀʀᴅ\n"
+        "\n_𝐓ᴀɢᴀʟʟ/𝐒ᴛᴏᴘ ʀᴇǫᴜɪʀᴇs 𝐀ᴅᴍɪɴ. 𝐎ᴛʜᴇʀs ᴀʀᴇ ғᴏʀ ᴇᴠᴇʀʏᴏɴᴇ."
+    ),
+    "games": (
+        "📜 𝐆ᴧᴍᴇs 𝐂ᴏᴍᴍᴧɴᴅs:\n"
+        "/dice ~ 𝐑ᴏʟʟ ᴧ ᴅɪᴄᴇ\n"
+        "/jackpot ~ 𝐉ᴧᴄᴋᴘᴏᴛ ᴍᴀᴄʜɪɴᴇ\n"
+        "/football ~ 𝐏ʟᴀʏ ғᴏᴏᴛʙᴧʟʟ\n"
+        "/basketball ~ 𝐏ʟᴀʏ ʙᴧsᴋᴇᴛʙᴀʟʟ\n"
+        "\n_𝐀ʟʟ ᴛʜᴇsᴇ ɢᴀᴍᴇs ᴀʀᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏ ᴇᴠᴇʀʏᴏɴᴇ."
+    ),
+    "group": (
+        "📜 𝐆ʀᴏᴜᴘ 𝐔ᴛɪʟɪᴛʏ 𝐂ᴏᴍᴍᴧɴᴅs:\n"
+        "/mmf text ~ 𝐂ʀᴇᴀᴛᴇ ᴀ sᴛɪᴄᴋᴇʀ ᴡɪᴛʜ ᴛᴇxᴛ (ʀᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ)\n"
+        "/staff ~ 𝐃ɪsᴘʟᴧʏs ɢʀᴏᴜᴘ sᴛᴧғғ ᴍᴇᴍʙᴇʀs\n"
+        "/botlist ~ 𝐂ʜᴇᴄᴋ ʜᴏᴡ ᴍᴀɴʏ ʙᴏᴛs ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ (𝐀ᴅᴍɪɴ ᴏɴʟʏ)"
+        "\n_ʙᴏᴛʟɪsᴛ ʀᴇǫᴜɪʀᴇs ᴀᴅᴍɪɴ. ᴏᴛʜᴇʀs ᴀʀᴇ ғᴏʀ ᴇᴠᴇʀʏᴏɴᴇ."
+    )
 }
 # ----------------- FANCY FONTS END -----------------
 
-# -------- STICKER MAPPING (User provided stickers) --------
-# ** CRITICAL: Replace these PLACEHOLDER values with actual sticker file IDs **
-# You can get a sticker's file ID by forwarding it to a bot like @Get_Sticker_ID_bot
-STICKER_MAPPING = {
-    "sticker_cute_1": "CAACAgQAAx0CeE7b8wABBeo9ZmP0W6hY9rT1L-WlGAA70tAA-N7RAAG3wAABgZf-AAI", # Placeholder
-    "sticker_funny_1": "CAACAgUAAx0CeE7b8wABBeo9ZmP0W6hY9rT1L-WlGAA70tAA-N7RAAG3wAABgZf-AAI", # Placeholder
-    "sticker_anime_1": "CAACAgQAAx0CeE7b8wABBeo9ZmP0W6hY9rT1L-WlGAA70tAA-N7RAAG3wAABgZf-AAI", # Placeholder
-    "sticker_anger_1": "CAACAgUAAx0CeE7b8wABBeo9ZmP0W6hY9rT1L-WlGAA70tAA-N7RAAG3wAABgZf-AAI", # Placeholder
-    "sticker_love_1": "CAACAgEAAx0CeE7b8wABBeo9ZmP0W6hY9rT1L-WlGAA70tAA-N7RAAG3wAABgZf-AAI", # Placeholder
+# -------- NEW STICKER IDS (FIXED) --------
+# Sticker IDs provided by the user are now centralized and used for defaults.
+NEW_STICKER_IDS = {
+    "sticker_cute": [
+        "CAACAgEAAxkBAAEPgu9o4USg2JWyq8EjIQcHKAJxTISKnAAChwADUSkNOdIrExvjme5qNgQ",
+        "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE"
+    ],
+    "sticker_funny": [
+        "CAACAgQAAxkBAAEPguto4USNgkueY_8UUvG1qR0HO8pVJAAC8hEAAuKyeVAr0E__1DsLxTYE",
+        "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE"
+    ],
+    "sticker_anger": [
+        "CAACAgUAAxkBAAEPgudo4UR5HlLeS-qX6SPZa68uWVYxXAACNBAAAvyQWFdWZPeCGuC2gjYE",
+        "CAACAgUAAxkBAAEPgulo4USHqBw08BmrpRAczQX6nqkQXQACsQIAAmfVCVXVlV0wAWPSXDYE"
+    ],
+    "sticker_anime": [
+        # Using one of the "baki" stickers as a general default/fallback for 'anime' if the list is empty
+        "CAACAgQAAxkBAAEPgu1o4USZaO5ewrgQV8bLpU6Y8z0d9AACXA4AAj9T-FN3FZM9W24oiTYE"
+    ]
 }
 
 # --- Load Replies & Known Chats ---
@@ -109,13 +119,27 @@ try:
     with open("conversation.json", "r", encoding="utf-8") as f:
         DATA = json.load(f)
 except:
-    # If the JSON file is missing, use a minimal default structure
+    # If the JSON file is missing, use a minimal default structure and inject new stickers
     DATA = {
-        "daily": ["Hello 👋", "Hey there!", "Hi!"],
-        "love": ["I love you too!", "Aww, sending virtual hugs."],
-        "sticker_cute": [STICKER_MAPPING["sticker_cute_1"]],
-        "sticker_funny": [STICKER_MAPPING["sticker_funny_1"]],
+        "daily": ["Hello 👋", "Hey there!", "Hi!", "I am listening..."],
+        "love": ["I love you too!", "Aww, sending virtual hugs.", "Be my Valentine! <3"],
+        "sad": ["I'm here for you.", "Don't be sad.", "Cheer up!"],
+        "happy": ["That's great!", "Keep smiling! :D", "Awesome news!"],
+        "bye": ["See ya!", "Bye for now.", "Take care!"],
+        "thanks": ["You're welcome!", "Anytime, happy to help."],
+        "morning": ["Good morning sunshines!", "Gm to you too!"],
+        "night": ["Sweet dreams!", "Good night!", "Sleep tight!"],
+        "abuse": ["That's not nice!", "Please be polite.", "Abusing is forbidden."],
+        "question": ["I'm a chatbot! How can I help?", "I am here to serve you.", "What do you want to know?"],
+        "anger": ["Take a deep breath.", "Stay calm.", "I'm sorry if I made you angry."],
+        # Inject new sticker IDs into the default DATA structure
+        **NEW_STICKER_IDS
     }
+
+# Ensure required sticker categories exist even if JSON loads by merging
+for key, values in NEW_STICKER_IDS.items():
+    if key not in DATA or not isinstance(DATA[key], list) or not DATA[key]:
+        DATA[key] = values
 
 if "daily" not in DATA:
     DATA["daily"] = ["Hello 👋", "Hey there!", "Hi!"]
@@ -143,11 +167,13 @@ KEYWORDS = {
     "kaisa hai": "question", "kya kar raha": "question", "who are you": "question", "bot": "question",
     "gussa": "anger", "angry": "anger", "gali": "anger",
 
-    # Sticker Replies (New Categories)
+    # Sticker Replies
     "hahaha": "sticker_funny", "lol": "sticker_funny", "rofl": "sticker_funny", "funny": "sticker_funny",
     "cute": "sticker_cute", "aww": "sticker_cute", "so sweet": "sticker_cute", "baby": "sticker_cute",
     "anime": "sticker_anime", "manga": "sticker_anime",
     "i hate you": "sticker_anger", "go away": "sticker_anger", "mad": "sticker_anger",
+    "wow": "sticker_anime", # Using a generic sticker category for wow/nice
+    "nice": "sticker_anime",
 }
 
 # -------- Utility Functions --------
@@ -163,7 +189,7 @@ def get_reply(text: str):
     
     for word, cat in KEYWORDS.items():
         if word in text:
-            if cat.startswith("sticker_") and cat in DATA:
+            if cat.startswith("sticker_") and cat in DATA and DATA[cat]: # Check if list is not empty
                 # Returns a random sticker ID from the category
                 sticker_id = random.choice(DATA[cat])
                 return (sticker_id, True) 
@@ -517,7 +543,7 @@ async def tagall_cmd(client, message):
     elif message.reply_to_message:
         msg = "𝐓ᴀɢɢɪɴɢ ғʀᴏᴍ ʀᴇᴘʟɪᴇᴅ ᴍᴇssᴀɢᴇ!"
     else:
-        msg = "𝐀ᴛᴛᴇɴᴛɪᴏɴ!"
+        msg = "𝐀ᴛᴛᴇɴᴛɪᴏ𝐍!"
         
     m = await message.reply_text("𝐓ᴀɢɢɪɴɢ 𝐒ᴛᴀʀᴛᴇᴅ !! ♥")
     
@@ -529,7 +555,7 @@ async def tagall_cmd(client, message):
                 member_list.append(member.user)
     except Exception:
         TAGGING[chat_id] = False
-        return await m.edit_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫s: 𝐌𝐚𝐲𝐛𝐞 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩 𝐢𝐬 𝐭𝐨𝐨 𝐛𝐢𝐠 𝐨𝐫 𝐈 𝐝𝐨𝐧'𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧𝐬.")
+        return await m.edit_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫s: 𝐌𝐚𝐲𝐛𝐞 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩 𝐢s 𝐭𝐨𝐨 𝐛𝐢𝐠 𝐨𝐫 𝐈 𝐝𝐨𝐧'𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s.")
 
     # Start tagging in chunks
     chunk_size = 5
@@ -634,13 +660,14 @@ async def afk_cmd(client, message):
     
     # Check if user is already AFK (meaning they are typing /afk to return)
     if user_id in AFK_USERS:
-        # User is coming back
-        afk_data = AFK_USERS.pop(user_id)
-        time_afk = get_readable_time(int(time.time() - afk_data["time"]))
-        await message.reply_text(
-            f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀʀᴇ ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏʀ: {time_afk}) 😉",
-            parse_mode=enums.ParseMode.MARKDOWN
-        )
+        # User is coming back (handled in group_reply_and_afk_checker for better UX)
+        if message.chat.type == enums.ChatType.PRIVATE:
+            afk_data = AFK_USERS.pop(user_id)
+            time_afk = get_readable_time(int(time.time() - afk_data["time"]))
+            await message.reply_text(
+                f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀʀᴇ ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏʀ: {time_afk}) 😉",
+                parse_mode=enums.ParseMode.MARKDOWN
+            )
         return # Stop execution after returning
         
     # If user is not AFK, they are setting AFK status
@@ -670,7 +697,7 @@ async def mmf_cmd(client, message):
         
     await message.reply_text(
         "❌ 𝐒𝐭𝐢𝐜𝐤𝐞𝐫 𝐓𝐞𝐱𝐭 𝐅𝐞𝐚𝐭𝐮𝐫𝐞 𝐔𝐧𝐚𝐯𝐚𝐢𝐥𝐚𝐛𝐥𝐞\n"
-        "𝐏𝐥𝐞𝐚𝐬𝐞 𝐧𝐨𝐭𝐞: 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐭𝐞𝐦𝐩𝐨𝐫𝐚𝐫𝐢𝐥𝐲 𝐝𝐢𝐬𝐚𝐛𝐥𝐞𝐝 𝐝𝐮𝐞 𝐭𝐨 𝐦𝐢𝐬𝐬𝐢𝐧𝐠 𝐢𝐦𝐚𝐠𝐞 𝐩𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠 𝐥𝐢𝐛𝐫𝐚𝐫𝐢𝐞𝐬. "
+        "𝐏𝐥𝐞𝐚𝐬𝐞 𝐧𝐨𝐭𝐞: 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢s 𝐭𝐞𝐦𝐩𝐨𝐫𝐚𝐫𝐢𝐥𝐲 𝐝𝐢𝐬𝐚𝐛𝐥𝐞𝐝 𝐝𝐮𝐞 𝐭𝐨 𝐦𝐢𝐬𝐬𝐢𝐧𝐠 𝐢𝐦𝐚𝐠𝐞 𝐩𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠 𝐥𝐢𝐛𝐫𝐚𝐫𝐢𝐞s. "
         "𝐈 ᴀᴍ ᴡᴏʀᴋɪɴɢ ᴏɴ ɪᴛ!"
     ) 
 
@@ -736,10 +763,10 @@ async def football_cmd(client, message):
 async def basketball_cmd(client, message):
     await app.send_dice(message.chat.id, "🏀")
 
-# -------- Private Auto Reply --------
+# -------- Private Auto Reply (FIXED) --------
 @app.on_message(filters.text & filters.private, group=0)
 async def private_reply(client, message):
-    await save_chat_id(message.chat.id, "privates")
+    # FIX: Missing the call to get_reply and assignment of response/is_sticker
     response, is_sticker = get_reply(message.text)
     
     if is_sticker:
@@ -747,16 +774,15 @@ async def private_reply(client, message):
     else:
         await message.reply_text(response)
 
-# -------- Group Auto Reply & AFK Checker --------
+# -------- Group Auto Reply & AFK Checker (FIXED) --------
 @app.on_message(filters.text & filters.group, group=1)
 async def group_reply_and_afk_checker(client, message: Message):
     await save_chat_id(message.chat.id, "groups")
     
-    # 1. Check if the user sending a regular message is AFK (Coming back)
-    if (message.from_user and 
-        message.from_user.id in AFK_USERS and 
+    # --- 1. User is returning from AFK (FIXED LOGIC) ---
+    if (message.from_user.id in AFK_USERS and 
         message.text and 
-        not message.text.startswith("/afk")):
+        not message.text.lower().startswith("/afk")):
         
         user_id = message.from_user.id
         
@@ -770,38 +796,35 @@ async def group_reply_and_afk_checker(client, message: Message):
             f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀʀᴇ ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏʀ: {time_afk}) 😉",
             parse_mode=enums.ParseMode.MARKDOWN
         )
-        # Note: We don't return here, as the message might still need to trigger other actions (like AFK tagging)
 
-    # 2. AFK Tag/Reply Check
+    # --- 2. AFK Tag/Reply Check (Checking mentions and replies) ---
     users_to_check = []
     
-    # Check replied user
-    if message.reply_to_message and message.reply_to_message.from_user:
-        replied_user_id = message.reply_to_message.from_user.id
-        if replied_user_id in AFK_USERS:
-            users_to_check.append(replied_user_id)
+    # Check reply
+    if message.reply_to_message:
+        # Check if the replied message author is AFK
+        replied_user = message.reply_to_message.from_user
+        if replied_user and replied_user.id in AFK_USERS:
+            users_to_check.append(replied_user.id)
             
-    # Check text mentions
+    # Check text mentions (FIXED LOGIC)
     if message.text and message.entities:
         for entity in message.entities:
-            # Check for both TEXT_MENTION (user object embedded) and MENTION (username only)
-            if entity.type == enums.MessageEntityType.TEXT_MENTION and entity.user and entity.user.id in AFK_USERS:
-                if entity.user.id not in users_to_check:
+            # Check for TEXT_MENTION (user object is available)
+            if entity.type == enums.MessageEntityType.TEXT_MENTION and entity.user:
+                if entity.user.id in AFK_USERS:
                     users_to_check.append(entity.user.id)
-            elif entity.type == enums.MessageEntityType.MENTION and message.text and message.text[entity.offset:entity.offset+entity.length].strip('@') in AFK_USERS:
-                # This requires a more complex lookup (not strictly necessary for AFK, but good to handle)
-                # Since AFK_USERS only stores IDs, we rely mainly on TEXT_MENTION for accuracy.
-                pass 
-                
-    for afk_id in users_to_check:
-        afk_data = AFK_USERS.get(afk_id)
-        if afk_data:
-            user_name = afk_data["username"]
-            reason = afk_data["reason"]
-            time_afk = get_readable_time(int(time.time() - afk_data["time"]))
             
+    # Send AFK notice for checked users
+    for afk_id in set(users_to_check):
+        if afk_id in AFK_USERS:
+            afk_data = AFK_USERS[afk_id]
+            reason = afk_data["reason"]
+            user_name = afk_data["username"]
+            time_afk = get_readable_time(int(time.time() - afk_data["time"]))
+
             await message.reply_text(
-                f"⚠️ [{user_name}](tg://user?id={afk_id}) 𝐢𝐬 𝐀ғᴋ! ◉‿◉\n"
+                f"⚠️ [{user_name}](tg://user?id={afk_id}) 𝐢s 𝐀ғᴋ! ◉‿◉\n"
                 f"𝐑ᴇᴀsᴏɴ: *{reason}*\n"
                 f"𝐓ɪᴍᴇ: *{time_afk}*",
                 parse_mode=enums.ParseMode.MARKDOWN
@@ -809,104 +832,31 @@ async def group_reply_and_afk_checker(client, message: Message):
             # Only send one AFK notice per message to avoid spam
             break 
             
-    # 3. Chatbot Auto-Reply Logic
+    # --- 3. Chatbot Auto-Reply Logic (FIXED - This was missing) ---
     me = await client.get_me()
     
-    # CRITICAL: Bot must be able to reply (need basic permissions)
-    is_bot_capable = await is_bot_admin(message.chat.id) if message.chat.type != enums.ChatType.PRIVATE else True
-    if not is_bot_capable:
-        return
-        
-    is_chatbot_on = CHATBOT_STATUS.get(message.chat.id, True)
-    is_reply_to_bot = message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id == me.id
-    is_direct_mention = message.text and any(m in message.text for m in [f"@{me.username}", me.first_name, me.last_name]) if me.username else False
+    is_chatbot_enabled = CHATBOT_STATUS.get(message.chat.id, False)
+    is_reply_to_bot = message.reply_to_message and message.reply_to_message.from_user.id == me.id
     
-    if is_chatbot_on:
-        if is_reply_to_bot or is_direct_mention:
-            # Always reply if the bot is directly addressed
-            response, is_sticker = get_reply(message.text)
+    # Check for explicit mention of the bot in the message text
+    is_bot_mentioned = (
+        message.text and me.username and (
+            f"@{me.username.lower()}" in message.text.lower() or
+            me.first_name.lower() in message.text.lower()
+        )
+    )
+
+    # The bot replies if the chatbot is enabled OR if the message is a reply/mention to the bot
+    if is_chatbot_enabled or is_reply_to_bot or is_bot_mentioned:
+        
+        # Determine the text to reply to (use message text for general keywords)
+        text_for_reply = message.text
+        
+        response, is_sticker = get_reply(text_for_reply)
+        
+        # Reply only if a meaningful response was generated
+        if response: 
             if is_sticker:
                 await message.reply_sticker(response)
             else:
                 await message.reply_text(response)
-            
-        elif random.random() < 0.2: # Low chance (20%) for general group conversation
-            # Don't reply if it's a reply to another non-bot user, to avoid conversation hijacking
-            is_reply_to_other_user = (
-                message.reply_to_message and 
-                message.reply_to_message.from_user and 
-                message.reply_to_message.from_user.id != me.id and 
-                not message.reply_to_message.from_user.is_bot
-            )
-            
-            if not is_reply_to_other_user:
-                response, is_sticker = get_reply(message.text)
-                if is_sticker:
-                    await message.reply_sticker(response)
-                else:
-                    await message.reply_text(response) 
-
-# -------- Voice Chat Notifications (FIXED) --------
-@app.on_message(filters.video_chat_started | filters.video_chat_ended | filters.video_chat_members_invited, group=2)
-async def vc_notifications(client, message: Message):
-    if message.chat.type not in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
-        return
-
-    if message.video_chat_started:
-        await message.reply_text("🎤 𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐒ᴛᴀʀᴛᴇᴅ! 𝐓ɪᴍᴇ ᴛᴏ ᴊᴏɪɴ!")
-        
-    elif message.video_chat_ended:
-        # Get duration safely
-        duration = get_readable_time(message.video_chat_ended.duration) if message.video_chat_ended.duration else "ᴀ sʜᴏʀᴛ ᴛɪᴍᴇ"
-        await message.reply_text(f"❌ 𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐄ɴᴅᴇᴅ! 𝐈ᴛ ʟᴀsᴛᴇᴅ ғᴏʀ {duration}.")
-        
-    elif message.video_chat_members_invited:
-        inviter = message.from_user.mention
-        
-        # List of users invited
-        invited_users = [
-            f"[{user.first_name}](tg://user?id={user.id})"
-            for user in message.video_chat_members_invited.users
-            if not user.is_bot # only mention non-bot users
-        ]
-        
-        me = await client.get_me()
-        bot_invited = any(user.id == me.id for user in message.video_chat_members_invited.users)
-
-        if bot_invited:
-            await message.reply_text(f"📣 𝐇ᴇʏ {inviter}, ᴛʜᴀɴᴋs ғᴏʀ ɪɴᴠɪᴛɪɴɢ ᴍᴇ ᴛᴏ ᴛʜᴇ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ! 👋")
-        
-        elif invited_users:
-            invited_mentions = ", ".join(invited_users)
-            await message.reply_text(
-                f"🗣️ {inviter} invited {invited_mentions} to the voice chat! Join now!",
-                parse_mode=enums.ParseMode.MARKDOWN
-            )
-        else:
-            # If only bots were invited or list is empty for some other reason
-             await message.reply_text(f"📣 {inviter} invited new members to the voice chat!")
-
-
-# -------- Health Check --------
-PORT = int(os.environ.get("PORT", 8080))
-class _H(BaseHTTPRequestHandler):
-    """Simple HTTP server handler for health checks."""
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/plain')
-        self.end_headers()
-        self.wfile.write(b"Bot is running.")
-
-def run_server():
-    """Starts the simple HTTP server in a separate thread."""
-    server_address = ('', PORT)
-    httpd = HTTPServer(server_address, _H)
-    httpd.serve_forever()
-
-# Start the health check server in a thread
-threading.Thread(target=run_server, daemon=True).start()
-
-# -------- Run Bot --------
-if __name__ == "__main__":
-    print("Bot is starting...")
-    app.run()
