@@ -106,14 +106,15 @@ HELP_COMMANDS_TEXT_MAP = {
 		"/dice ~ 𝐑ᴏʟʟ ᴧ ᴅɪᴄᴇ (🎲)\n"
 		"/jackpot ~ 𝐉ᴧᴄᴋᴘᴏᴛ ᴍᴀᴄʜɪɴᴇ (🎰)\n"
 		"/football ~ 𝐏ʟᴀʏ ғᴏᴏᴛʙᴧʟʟ (⚽)\n"
-		"/basketball ~ 𝐏ʟᴀʏ ʙᴧsᴋᴇᴛʙᴀʟʟ (🏀)\n"
+		"/basketball ~ 𝐏ʟᴀʏ sʙᴧsᴋᴇᴛʙᴀʟʟ (🏀)\n"
 		"/bowling ~ 𝐏ʟᴀʏ ʙᴏᴡʟɪɴɢ (🎳)\n"
 		"\n_𝐀ʟʟ ᴛʜᴇsᴇ ɢᴀᴍᴇs ᴀʀᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏ ᴇᴠᴇʀʏᴏɴᴇ."
 	),
 	"group": (
 		"📜 𝐆ʀᴏᴜᴘ 𝐔ᴛɪʟɪᴛʏ 𝐂ᴏᴍᴍᴧɴᴅs:\n"
 		"/staff ~ 𝐃ɪsᴘʟᴧʏs ɢʀᴏᴜᴘ sᴛᴧғғ ᴍᴇᴍʙᴇʀs\n"
-		"/botlist ~ 𝐂ʜᴇᴄᴋ ʜᴏᴡ ᴍᴀɴʏ ʙᴏᴛs ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ (𝐀ᴅᴍɪɴ ᴏɴʟʏ)"
+		"/botlist ~ 𝐂ʜᴇᴄᴋ ʜᴏᴡ ᴍᴀɴʏ ʙᴏᴛs ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ (𝐀ᴅᴍɪɴ ᴏɴʟʏ)\n"
+		"**𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐍𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧s** ᴀʀᴇ ᴀʟsᴏ ᴀᴜᴛᴏᴍᴀᴛɪᴄ."
 		"\n_ʙᴏᴛʟɪsᴛ ʀᴇǫᴜɪʀᴇs ᴀᴅᴍɪɴ. ᴏᴛʜᴇʀs ᴀʀᴇ ғᴏʀ ᴇᴠᴇʀʏᴏɴᴇ."
 	)
 }
@@ -123,15 +124,15 @@ HELP_COMMANDS_TEXT_MAP = {
 STICKER_MAPPING = {
 	# Cute Stickers
 	"sticker_cute_1": "CAACAgEAAxkBAAEPgu9o4USg2JWyq8EjIQcHKAJxTISKnAAChwADUSkNOdIrExvjme5qNgQ",
-	"sticker_cute_2": "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE", 
+	"sticker_cute_2": "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE", 
 	# Funny Stickers
 	"sticker_funny_1": "CAACAgQAAxkBAAEPguto4USNgkueY_8UUvG1qR0HO8pVJAAC8hEAAuKyeVAr0E__1DsLxTYE",
-	"sticker_funny_2": "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE", 
+	"sticker_funny_2": "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE", 
 	# Angry Stickers
 	"sticker_anger_1": "CAACAgUAAxkBAAEPgudo4UR5HlLeS-qX6SPZa68uWVYxXAACNBAAAvyQWFdWZPeCGuC2gjYE",
 	"sticker_anger_2": "CAACAgUAAxkBAAEPgulo4USHqBw08BmrpRAczQX6nqkQXQACsQIAAmfVCVXVlV0wAWPSXDYE",
 	# Other/General Stickers - Mapped as placeholders for other categories
-	"sticker_love_1": "CAACAgQAAxkBAAEPgu1o4USZaO5ewrgQV8bLpU6Y8z0d9AACXA4AAj9T-FN3FZM9W24oiTYE", 
+	"sticker_love_1": "CAACAgQAAxkBAAEPgu1o4USZaO5ewrgQV8bLpU6Y8z0d9AACXA4AAj9T-FN3FZM9W24oiTYE", 
 	"sticker_anime_1": "CAACAgEAAxkBAAEPgu9o4USg2JWyq8EjIQcHKAJxTISKnAAChwADUSkNOdIrExvjme5qNgQ",
 }
 
@@ -218,7 +219,7 @@ def get_reply(text: str):
 	text = text.lower()
 	
 	# Simple normalization: remove non-alphanumeric except spaces for better keyword matching
-	text = re.sub(r'[^\w\s]', '', text) 
+	text = re.sub(r'[^\w\s]', '', text) 
 	
 	for word, cat in KEYWORDS.items():
 		# Check if keyword is a substring of the message text
@@ -226,7 +227,7 @@ def get_reply(text: str):
 			if cat.startswith("sticker_") and cat in DATA and DATA[cat]:
 				# Returns a random sticker ID from the category (is_sticker=True)
 				sticker_id = random.choice(DATA[cat])
-				return (sticker_id, True) 
+				return (sticker_id, True) 
 			elif cat in DATA and DATA[cat]:
 				# Returns a random text reply (is_sticker=False)
 				return (random.choice(DATA[cat]), False)
@@ -379,7 +380,7 @@ async def callbacks_handler(client, query):
 	elif data == "close":
 		await query.message.delete()
 	else:
-		await query.answer("𝐓ʜɪs ʙᴜᴛᴛᴏɴ ɪs ɴᴏᴛ ʏᴇᴛ 𝐅ᴜɴᴄᴛɪ𝐎N𝐀𝐋.") 
+		await query.answer("𝐓ʜɪs ʙᴜᴛᴛᴏɴ ɪs ɴᴏᴛ ʏᴇᴛ 𝐅ᴜɴᴄᴛɪ𝐎N𝐀𝐋.") 
 
 # -------- Commands --------
 
@@ -409,7 +410,7 @@ async def start_cmd(client, message):
 		try:
 			await msg.delete()
 		except:
-			pass 
+			pass 
 		
 		await message.reply_photo(
 			START_PHOTO,
@@ -451,7 +452,7 @@ async def developer_cmd(client, message):
 	try:
 		await m.delete()
 	except:
-		pass 
+		pass 
 		
 	buttons = InlineKeyboardMarkup([
 		[InlineKeyboardButton("𝐃ᴇᴠᴇʟᴏᴘᴇʀ ღ", url=f"https://t.me/{DEVELOPER_HANDLE.strip('@')}")]
@@ -474,7 +475,7 @@ async def developer_cmd(client, message):
 			reply_markup=buttons,
 			parse_mode=enums.ParseMode.MARKDOWN
 		)
-		print(f"Error sending developer photo: {e}") # Log the error 
+		print(f"Error sending developer photo: {e}") # Log the error 
 
 # -------- /ping Command --------
 @app.on_message(filters.command("ping"))
@@ -508,7 +509,7 @@ async def ping_cmd(client, message):
 		caption=f"𝐏ɪɴɢ ➳ {ping_ms} 𝐦𝐬\n"
 				f"𝐔ᴘᴛɪᴍᴇ ➳ {uptime_readable}",
 		reply_markup=buttons
-	) 
+	) 
 
 # -------- /id Command --------
 @app.on_message(filters.command("id"))
@@ -545,9 +546,9 @@ async def broadcast_cmd(client, message):
 	for chat_type in ["privates", "groups"]:
 		for chat_id_str in KNOWN_CHATS[chat_type]:
 			try:
-				chat_id = int(chat_id_str) 
+				chat_id = int(chat_id_str) 
 			except ValueError:
-				continue 
+				continue 
 				
 			try:
 				if content_to_send:
@@ -559,7 +560,7 @@ async def broadcast_cmd(client, message):
 			except Exception as e:
 				# print(f"Failed to broadcast to {chat_id}: {e}") # Debugging line
 				failed += 1
-				continue 
+				continue 
 				
 	await m.edit_text(f"✅ 𝐁ʀᴏᴀᴅᴄᴀsᴛ ᴅᴏɴᴇ!\n𝐒ᴇɴᴛ ᴛᴏ {sent} ᴄʜᴀᴛs.\n𝐅ᴀɪʟᴇᴅ ɪɴ {failed} ᴄʜᴀᴛs.")
 
@@ -587,7 +588,7 @@ async def chatbot_toggle(client, message):
 	else:
 		return await message.reply_text("𝐔sᴀɢᴇ: /ᴄʜᴀᴛʙᴏᴛ ᴇɴᴀʙʟᴇ ᴏʀ /ᴄʜᴀᴛʙᴏᴛ ᴅɪsᴀʙʟᴇ")
 		
-	await save_chat_id(message.chat.id, "groups") 
+	await save_chat_id(message.chat.id, "groups") 
 
 # -------- /tagall Command --------
 @app.on_message(filters.command("tagall") & filters.group)
@@ -647,7 +648,7 @@ async def tagall_cmd(client, message):
 	# Final message update
 	if TAGGING.get(chat_id):
 		await m.edit_text("𝐓ᴀɢɢɪɴɢ 𝐂ᴏᴍᴘʟᴇᴛᴇᴅ !! ◉‿◉")
-		TAGGING[chat_id] = False 
+		TAGGING[chat_id] = False 
 
 # -------- /stop Tagging --------
 @app.on_message(filters.command("stop") & filters.group)
@@ -685,7 +686,7 @@ async def couples_cmd(client, message):
 	love_percent = random.randint(30, 99)
 	
 	await message.reply_text(
-		f"💘 𝐍ᴇᴡ 𝐂ᴏᴜᴘ𝐥𝐞 ᴏғ ᴛʜᴇ 𝐃ᴀʏ!\n\n"
+		f"💘 𝐍ᴇᴡ 𝐂ᴏᴜᴘ𝐥ᴇ ᴏғ ᴛʜᴇ 𝐃ᴀʏ!\n\n"
 		f"[{user1.first_name}](tg://user?id={user1.id}) 💖 [{user2.first_name}](tg://user?id={user2.id})\n"
 		f"𝐋ᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}%! 🎉",
 		parse_mode=enums.ParseMode.MARKDOWN
@@ -720,7 +721,7 @@ async def love_cmd(client, message):
 			 f"{names[0]} & {names[1]}’𝐬 ʟᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}% 😉"
 			
 	buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
-	await message.reply_text(text, reply_markup=buttons) 
+	await message.reply_text(text, reply_markup=buttons) 
 
 # -------- /afk Command (FIXED) --------
 @app.on_message(filters.command("afk"))
@@ -734,7 +735,7 @@ async def afk_cmd(client, message):
 		afk_data = AFK_USERS.pop(user_id)
 		time_afk = get_readable_time(int(time.time() - afk_data["time"]))
 		await message.reply_text(
-			f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ 𝐚𝐫𝐞 ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏ𝐫: {time_afk}) 😉",
+			f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ 𝐚𝐫𝐞 ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏʀ: {time_afk}) 😉",
 			parse_mode=enums.ParseMode.MARKDOWN
 		)
 		return # Stop execution after returning
@@ -742,7 +743,7 @@ async def afk_cmd(client, message):
 	# 2. If not returning, user is setting AFK status
 	try:
 		# Get the reason if provided
-		reason = message.text.split(None, 1)[1] 
+		reason = message.text.split(None, 1)[1] 
 	except IndexError:
 		reason = "𝐍ᴏ ʀᴇᴀsᴏɴ ɢɪᴠᴇɴ."
 	
@@ -796,7 +797,7 @@ async def staff_cmd(client, message):
 		if not admins:
 			staff_list += "𝐍ᴏ 𝐚𝐝𝐦𝐢𝐧s 𝐟𝐨𝐮𝐧𝐝."
 		else:
-			for admin in admins: 
+			for admin in admins: 
 				# Skip deleted accounts
 				if admin.user.is_deleted:
 					continue
@@ -816,12 +817,81 @@ async def staff_cmd(client, message):
 	except Exception as e:
 		print(f"Error fetching staff: {e}")
 		# FIX: Complete the error message from the incomplete snippet
-		await message.reply_text(f"🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐬𝐭𝐚𝐟𝐟 𝐥𝐢𝐬𝐭: 𝐈 𝐦𝐚𝐲 𝐧𝐨𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧𝐬 𝐭𝐨 𝐯𝐢𝐞𝐰 𝐭𝐡𝐞 𝐚𝐝𝐦𝐢𝐧𝐬.")
+		await message.reply_text(f"🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐬𝐭𝐚𝐟𝐟 𝐥𝐢𝐬𝐭: 𝐈 𝐦𝐚𝐲 𝐧𝐨𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s 𝐭𝐨 𝐯𝐢𝐞𝐰 𝐭𝐡𝐞 𝐚𝐝𝐦𝐢𝐧s.")
+
+# -------- /botlist Command (Admin Only) - COMPLETED --------
+@app.on_message(filters.command("botlist") & filters.group)
+async def botlist_cmd(client, message):
+	if not await is_admin(message.chat.id, message.from_user.id):
+		return await message.reply_text("❗ Oɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /ʙᴏᴛʟɪsᴛ.")
+
+	bots_count = 0
+	humans_count = 0
+	
+	try:
+		# Iterate over all chat members
+		async for member in client.get_chat_members(message.chat.id):
+			if member.user.is_bot:
+				bots_count += 1
+			# Also count non-deleted, non-bot users as humans
+			elif not member.user.is_deleted:
+				humans_count += 1
+		
+		total_members = bots_count + humans_count
+		
+		# Prevent division by zero
+		bot_percentage = (bots_count / total_members) * 100 if total_members > 0 else 0
+		
+		await message.reply_text(
+			f"🤖 **𝐁𝐨𝐭 𝐂𝐨𝐮𝐧𝐭 𝐒𝐭𝐚𝐭𝐬**\n\n"
+			f"👥 **𝐓𝐨𝐭𝐚𝐥 𝐌𝐞𝐦𝐛𝐞𝐫𝐬**: {total_members}\n"
+			f"👤 **𝐇𝐮𝐦𝐚𝐧𝐬**: {humans_count}\n"
+			f"🤖 **𝐁𝐨𝐭𝐬**: {bots_count}\n"
+			f"📈 **𝐁𝐨𝐭 𝐏𝐞𝐫𝐜𝐞𝐧𝐭𝐚𝐠𝐞**: {bot_percentage:.2f}%",
+			parse_mode=enums.ParseMode.MARKDOWN
+		)
+	except Exception as e:
+		print(f"Error fetching botlist: {e}")
+		await message.reply_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫s: 𝐈 𝐦𝐚𝐲 𝐧𝐨𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s.")
+
+
+# -------- VOICE CHAT NOTIFICATION HANDLERS (New Feature) --------
+
+@app.on_message(filters.voice_chat_started & filters.group)
+async def voice_chat_started_handler(client, message):
+	await message.reply_text("🎤 𝐀 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐡𝐚𝐬 𝐛𝐞𝐞𝐧 𝐬𝐭𝐚𝐫𝐭𝐞𝐝! 𝐉𝐨𝐢𝐧 𝐭𝐡𝐞 𝐜𝐨𝐧𝐯𝐞𝐫𝐬𝐚𝐭𝐢𝐨𝐧.")
+
+@app.on_message(filters.voice_chat_ended & filters.group)
+async def voice_chat_ended_handler(client, message):
+	# voice_chat_ended attribute contains 'duration'
+	if message.voice_chat_ended:
+		duration_seconds = message.voice_chat_ended.duration
+		duration_readable = get_readable_time(duration_seconds)
+		await message.reply_text(f"🛑 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐞𝐧𝐝𝐞𝐝 𝐚𝐟𝐭𝐞𝐫 {duration_readable}.")
+
+@app.on_message(filters.voice_chat_members_invited & filters.group)
+async def voice_chat_invited_handler(client, message):
+	# Get list of invited users
+	invited_users = []
+	if message.voice_chat_members_invited and message.voice_chat_members_invited.users:
+		for user in message.voice_chat_members_invited.users:
+			invited_users.append(f"[{user.first_name}](tg://user?id={user.id})")
+			
+	if invited_users:
+		invited_list = ", ".join(invited_users)
+		# User who performed the invitation
+		inviter_name = f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})" if message.from_user else "Someone"
+		
+		await message.reply_text(
+			f"✉️ **{inviter_name}** 𝐢𝐧𝐯𝐢𝐭𝐞𝐝 𝐭𝐡𝐞𝐬𝐞 𝐮𝐬𝐞𝐫𝐬 𝐭𝐨 𝐭𝐡𝐞 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭: {invited_list}",
+			parse_mode=enums.ParseMode.MARKDOWN
+		)
 
 
 # -------- Main Chatbot Reply Handler (FIXED/ADDED) --------
+# FIX: filters.not_bot changed to ~filters.bot
 @app.on_message(
-	(filters.text | filters.sticker) & filters.not_bot & 
+	(filters.text | filters.sticker) & ~filters.bot & 
 	(filters.private | filters.mentioned | filters.reply | is_chatbot_enabled)
 )
 async def handle_messages(client, message):
@@ -834,7 +904,7 @@ async def handle_messages(client, message):
 		if message.text and not message.text.lower().startswith("/afk"):
 			time_afk = get_readable_time(int(time.time() - afk_data["time"]))
 			await message.reply_text(
-				f"𝐖ᴇʟᴄᴏᴍᴇ 𝐁ᴀᴄᴋ, [{afk_data['first_name']}](tg://user?id={user_id})! (𝐀ғᴋ ғᴏ𝐫: {time_afk})",
+				f"𝐖ᴇʟᴄᴏᴍᴇ 𝐁ᴀᴄᴋ, [{afk_data['first_name']}](tg://user?id={user_id})! (𝐀ғᴋ ғᴏʀ: {time_afk})",
 				parse_mode=enums.ParseMode.MARKDOWN
 			)
 	
@@ -853,13 +923,13 @@ async def handle_messages(client, message):
 					parse_mode=enums.ParseMode.MARKDOWN
 				)
 				# Only trigger the AFK reply once per mention/reply
-				break 
+				break 
 
 	# 3. Handle incoming stickers (User request: reply to sticker with a sticker)
 	if message.sticker:
 		sticker_cats = ["sticker_cute", "sticker_funny", "sticker_anime", "sticker_love"]
 		
-		# Collect all defined sticker IDs from the categories
+		# Collect all unique sticker IDs from categories
 		available_stickers = [
 			s_id for cat in sticker_cats for s_id in DATA.get(cat, []) if s_id
 		]
@@ -870,71 +940,25 @@ async def handle_messages(client, message):
 				await message.reply_sticker(reply_sticker)
 			except Exception as e:
 				print(f"Failed to send reply sticker: {e}")
-		return # Stop execution after sticker reply
+		return # Stop execution after sticker reply (since we don't process sticker content for text replies)
 
 	# 4. Handle incoming text
 	if message.text:
-		# Check if the bot should reply based on chat type and status
-		should_reply = (
-			message.chat.type == enums.ChatType.PRIVATE or
-			await filters.mentioned(client, message) or # Bot is mentioned
-			(message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.is_self) or # Bot is replied to
-			CHATBOT_STATUS.get(message.chat.id, False) # Chatbot is enabled
-		)
-
-		if should_reply:
-			reply, is_sticker = get_reply(message.text)
-			
-			if is_sticker:
-				try:
-					await message.reply_sticker(reply)
-				except Exception as e:
-					print(f"Failed to send keyword sticker: {e}")
-					# Fallback to text if sticker fails to send (e.g., if sticker is invalid or banned)
-					await message.reply_text(random.choice(DATA.get("daily", ["Hello!"])))
-			else:
-				await message.reply_text(reply)
-
-# -------- /botlist Command (Admin Only) --------
-@app.on_message(filters.command("botlist") & filters.group)
-async def botlist_cmd(client, message):
-	if not await is_admin(message.chat.id, message.from_user.id):
-		return await message.reply_text("❗ Oɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /ʙᴏᴛʟɪsᴛ.")
-
-	try:
-		bots = []
-		human_count = 0
-		total_count = 0
+		# Since the decorator already filters messages for us, we just need to reply.
+		reply, is_sticker = get_reply(message.text)
 		
-		m = await message.reply_text("🔎 𝐂𝐨𝐮𝐧𝐭𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫s 𝐚𝐧𝐝 𝐛𝐨𝐭s...")
-		
-		async for member in client.get_chat_members(message.chat.id):
-			total_count += 1
-			if member.user.is_bot:
-				bots.append(f"• 🤖 [{member.user.first_name}](tg://user?id={member.user.id})")
-			else:
-				human_count += 1
-		
-		bot_count = len(bots)
-		bot_list_text = "\n".join(bots) if bots else "𝐍𝐨 𝐨𝐭𝐡𝐞𝐫 𝐛𝐨𝐭s 𝐟𝐨𝐮𝐧𝐝."
+		if is_sticker:
+			try:
+				await message.reply_sticker(reply)
+			except Exception as e:
+				# Fallback if sticker fails
+				await message.reply_text(random.choice(DATA.get("daily", ["Hello!"])))
+				print(f"Sticker reply failed: {e}")
+		else:
+			await message.reply_text(reply)
 
-		reply_text = (
-			"📊 𝐆ʀᴏᴜᴘ 𝐌ᴇᴍʙᴇʀ 𝐒ᴛᴀᴛs:\n\n"
-			f"👥 𝐓𝐨𝐭𝐚𝐥 𝐌𝐞𝐦𝐛𝐞𝐫𝐬: {total_count}\n"
-			f"👤 𝐇𝐮𝐦𝐚𝐧 𝐌𝐞𝐦𝐛𝐞𝐫𝐬: {human_count}\n"
-			f"🤖 𝐓𝐨𝐭𝐚𝐥 𝐁𝐨𝐭𝐬: {bot_count}\n\n"
-			f"--- 𝐁𝐨𝐭 𝐋𝐢𝐬𝐭 ---\n"
-			f"{bot_list_text}"
-		)
-		await m.edit_text(reply_text, parse_mode=enums.ParseMode.MARKDOWN)
-
-	except Exception as e:
-		print(f"Error fetching botlist: {e}")
-		await m.edit_text("🚫 𝐄𝐫𝐫𝐨𝐫: 𝐂𝐨𝐮𝐥𝐝 𝐧𝐨𝐭 𝐟𝐞𝐭𝐜𝐡 𝐦𝐞𝐦𝐛𝐞𝐫 𝐥𝐢𝐬𝐭. 𝐌𝐚𝐤𝐞 𝐬𝐮𝐫𝐞 𝐈 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧𝐬.")
-		
-# -------- END Commands --------
-
-# Always run the bot
+# -------- Bot Start --------
 if __name__ == "__main__":
 	print("Bot is starting...")
 	app.run()
+	print("Bot has stopped.")
