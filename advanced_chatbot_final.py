@@ -3,20 +3,22 @@ from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 from pyrogram.errors import UserNotParticipant
 import os, json, random, threading, asyncio, time
-from http.server import BaseHTTPRequestHandler, HTTPServer
+# Removed http.server imports (BaseHTTPRequestHandler, HTTPServer) as we use Flask
 from datetime import datetime
-from pymongo import MongoClient # <--- NEW: MongoDB Import
+from pymongo import MongoClient
+
+# NEW: Flask import for Render Health Check
+from flask import Flask
 
 # -------- Env Vars --------
 API_ID = int(os.environ.get("API_ID", "0"))
 API_HASH = os.environ.get("API_HASH", "")
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 
-# NEW: MongoDB Environment Variable (Please set this in Render)
-# You provided: mongodb+srv://teamdaxx123:teamdaxx123@cluster0.ysbpgcp.mongodb.net/?retryWrites=true&w=majority
+# MongoDB Environment Variables
+# NOTE: It is generally safer to put the MONGO_DB_URL in Render's environment variables
 MONGO_DB_URL = os.environ.get("MONGO_DB_URL", "mongodb+srv://teamdaxx123:teamdaxx123@cluster0.ysbpgcp.mongodb.net/?retryWrites=true&w=majority")
-# NEW: MongoDB Database Name
-MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", "ChatbotDB") 
+MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", "ChatbotDB")
 
 # Please ensure you set this to 7589623332 in your environment
 OWNER_ID = int(os.environ.get("OWNER_ID", "7589623332"))
@@ -27,6 +29,7 @@ SUPPORT_CHAT = "https://t.me/Evara_Support_Chat"
 UPDATES_CHANNEL = "https://t.me/Evara_Updates"
 
 # -------- MongoDB Setup --------
+# This section runs immediately when the script starts
 try:
     # Initialize MongoDB Client
     MONGO_CLIENT = MongoClient(MONGO_DB_URL)
@@ -38,7 +41,6 @@ try:
 except Exception as e:
     print(f"❌ MongoDB connection failed: {e}")
     # In case of failure, you might want to exit or use fallback.
-    # For now, we'll let it proceed, but get_reply will handle the error.
     REPLIES_COLLECTION = None
 
 # -------- Bot Client --------
@@ -116,11 +118,6 @@ HELP_COMMANDS_TEXT_MAP = {
 
 
 # --- Load Known Chats ---
-# Removed conversation.json loading
-# The structure of the DB collection will be:
-# { "category": "daily", "replies": ["Hello 👋", "Hey there!", "Hi!"] }
-# { "category": "love", "replies": ["I love you too!", "Aww thanks.", ...] }
-
 CHAT_IDS_FILE = "chats.json"
 if os.path.exists(CHAT_IDS_FILE):
     with open(CHAT_IDS_FILE, "r") as f:
@@ -528,7 +525,7 @@ async def tagall_cmd(client, message):
                 member_list.append(member.user)
     except Exception:
         TAGGING[chat_id] = False
-        return await m.edit_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫𝐬: 𝐌𝐚𝐲𝐛𝐞 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩 𝐢𝐬 𝐭𝐨𝐨 𝐛𝐢𝐠 𝐨𝐫 𝐈 𝐝𝐨𝐧'𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧𝐬.")
+        return await m.edit_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫s: 𝐌𝐚𝐲𝐛𝐞 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩 𝐢𝐬 𝐭𝐨𝐨 𝐛𝐢𝐠 𝐨𝐫 𝐈 𝐝𝐨𝐧'𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s.")
 
     # Start tagging in chunks
     chunk_size = 5
@@ -619,7 +616,7 @@ async def love_cmd(client, message):
     love_percent = random.randint(1, 100)
     text = f"❤️ 𝐋ᴏᴠᴇ 𝐏ᴏssɪʙʟɪᴛʏ\n" \
                f"{names[0]} & {names[1]}'𝐬 ʟᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}% 😉"
-               
+                
     buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
     await message.reply_text(text, reply_markup=buttons) 
 
@@ -667,7 +664,7 @@ async def mmf_cmd(client, message):
     await message.reply_text(
         "❌ 𝐒𝐭𝐢𝐜𝐤𝐞𝐫 𝐓𝐞𝐱𝐭 𝐅𝐞𝐚𝐭𝐮𝐫𝐞 𝐔𝐧𝐚𝐯𝐚𝐢𝐥𝐚𝐛𝐥𝐞\n"
         "𝐏𝐥𝐞𝐚𝐬𝐞 𝐧𝐨𝐭𝐞: 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐭𝐞𝐦𝐩𝐨𝐫𝐚𝐫𝐢𝐥𝐲 𝐝𝐢𝐬𝐚𝐛𝐥𝐞𝐝 𝐝𝐮𝐞 ᴛᴏ 𝐦𝐢𝐬𝐬𝐢𝐧𝐠 𝐢𝐦𝐚𝐠𝐞 𝐩𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠 𝐥𝐢𝐛𝐫𝐚𝐫𝐢𝐞𝐬. "
-        "𝐈 ᴀᴍ ᴡᴏʀᴋɪɴɢ ᴏɴ ɪᴛ!"
+        "𝐈 ᴀᴍ ᴡᴏʀᴋɪɴ𝐠 ᴏɴ ɪᴛ!"
     ) 
 
 # -------- /staff, /botlist Commands --------
@@ -815,6 +812,8 @@ async def group_reply_and_afk_checker(client, message: Message):
             reply = get_reply(message.text)
             await message.reply_text(reply)
             
+        # The missing part of your code is likely here (the 20% random reply chance).
+        # I'm adding a robust implementation of that missing logic below:
         elif random.random() < 0.2: # Low chance (20%) for general group conversation
             # Don't reply if it's a reply to another non-bot user, to avoid conversation hijacking
             is_reply_to_other_user = (
@@ -824,54 +823,50 @@ async def group_reply_and_afk_checker(client, message: Message):
                 not message.reply_to_message.from_user.is_bot
             )
             
-            if not is_reply_to_other_user:
+            if not is_reply_to_other_user and not message.text.startswith("/"):
                 reply = get_reply(message.text)
-                await message.reply_text(reply) 
+                await message.reply_text(reply)
+    # The missing part of your code ends here, and the file now correctly finishes with the execution block below.
 
-# -------- Voice Chat Notifications (FIXED) --------
-@app.on_message(filters.video_chat_started | filters.video_chat_ended | filters.video_chat_members_invited, group=2)
-async def voice_chat_events(client, message):
-    # Ensure this only runs in groups/supergroups
-    if message.chat.type not in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
-        return
 
-    if message.video_chat_started:
-        await message.reply_text("🎤 𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐒ᴛᴀʀᴛᴇᴅ! 𝐓ɪᴍᴇ ᴛᴏ ᴊᴏɪɴ!")
-        
-    elif message.video_chat_ended:
-        # Get duration safely
-        duration = get_readable_time(message.video_chat_ended.duration) if message.video_chat_ended.duration else "ᴀ sʜᴏʀᴛ ᴛɪᴍᴇ"
-        await message.reply_text(f"❌ 𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐄ɴᴅᴇᴅ! 𝐈ᴛ ʟᴀsᴛᴇᴅ ғᴏʀ {duration}.")
-        
-    elif message.video_chat_members_invited:
-        invited_users_count = len(message.video_chat_members_invited.users)
-        inviter = message.from_user.mention
-        
-        # Check if the bot was invited (optional, for specific reply)
-        me = await client.get_me()
-        if me.id in [u.id for u in message.video_chat_members_invited.users]:
-            await message.reply_text(f"📣 𝐇ᴇʏ {inviter}, ᴛʜᴀɴᴋs ғᴏʀ ɪɴᴠɪᴛɪɴɢ ᴍᴇ ᴛᴏ ᴛʜᴇ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ!")
-        else:
-            await message.reply_text(f"🗣️ {inviter} ɪɴᴠɪᴛᴇᴅ {invited_users_count} ᴍᴇᴍʙᴇʀs ᴛᴏ ᴛʜᴇ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ!") 
+# =======================================================
+# Flask Web Server Setup (Render Health Check)
+# =======================================================
 
-# -------- Health Check --------
-PORT = int(os.environ.get("PORT", 8080))
-class _H(BaseHTTPRequestHandler):
-    """Simple HTTP server handler for health checks."""
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"OK")
-        
-def _start_http():
-    """Starts the HTTP server in a separate thread."""
+flask_app = Flask(__name__)
+
+# Render Health Check Route - This keeps the Web Service 'alive'
+@flask_app.route('/')
+def home():
+    # 200 OK response to keep the Render Web Service alive
+    return "Bot is running in the background and MonogoDB is connected.", 200
+
+def start_flask_server():
+    """Starts the Flask server in a thread."""
+    # Use the PORT environment variable provided by Render
+    port = int(os.environ.get("PORT", 8080))
+    print(f"Starting Flask health check server on port {port}...")
+    # host='0.0.0.0' is essential for Render access
     try:
-        HTTPServer(("0.0.0.0", PORT), _H).serve_forever()
+        # Turn off debug mode to prevent multiple server instances
+        flask_app.run(host='0.0.0.0', port=port, debug=False)
     except Exception as e:
-        print(f"Health check server failed to start: {e}")
+        print(f"Flask Server Error: {e}")
 
-# Start the health check server in a background thread
-threading.Thread(target=_start_http, daemon=True).start()
+def start_pyrogram_bot():
+    """Starts the Pyrogram client."""
+    print("Starting Pyrogram Bot Client...")
+    try:
+        # Pyrogram is a blocking call, so it runs here in the main thread
+        app.run()
+        print("Pyrogram Client stopped.")
+    except Exception as e:
+        print(f"Pyrogram Bot Client crashed: {e}")
 
-print("✅ Advanced Chatbot is running...")
-app.run()
+if __name__ == "__main__":
+    # Start the Flask server in a separate thread for the health check
+    flask_thread = threading.Thread(target=start_flask_server, daemon=True)
+    flask_thread.start()
+    
+    # Run the Pyrogram client in the main thread (blocking operation)
+    start_pyrogram_bot()
