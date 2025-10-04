@@ -5,11 +5,18 @@ from pyrogram.errors import UserNotParticipant
 import os, json, random, threading, asyncio, time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from datetime import datetime
+from pymongo import MongoClient # <--- NEW: MongoDB Import
 
 # -------- Env Vars --------
 API_ID = int(os.environ.get("API_ID", "0"))
 API_HASH = os.environ.get("API_HASH", "")
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
+
+# NEW: MongoDB Environment Variable (Please set this in Render)
+# You provided: mongodb+srv://teamdaxx123:teamdaxx123@cluster0.ysbpgcp.mongodb.net/?retryWrites=true&w=majority
+MONGO_DB_URL = os.environ.get("MONGO_DB_URL", "mongodb+srv://teamdaxx123:teamdaxx123@cluster0.ysbpgcp.mongodb.net/?retryWrites=true&w=majority")
+# NEW: MongoDB Database Name
+MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", "ChatbotDB") 
 
 # Please ensure you set this to 7589623332 in your environment
 OWNER_ID = int(os.environ.get("OWNER_ID", "7589623332"))
@@ -18,6 +25,21 @@ DEVELOPER_USERNAME = "Voren"
 DEVELOPER_HANDLE = "@TheXVoren"
 SUPPORT_CHAT = "https://t.me/Evara_Support_Chat"
 UPDATES_CHANNEL = "https://t.me/Evara_Updates"
+
+# -------- MongoDB Setup --------
+try:
+    # Initialize MongoDB Client
+    MONGO_CLIENT = MongoClient(MONGO_DB_URL)
+    # Use the specified database
+    DB = MONGO_CLIENT[MONGO_DB_NAME]
+    # Connect to the 'replies' collection for chatbot data
+    REPLIES_COLLECTION = DB.replies
+    print("✅ MongoDB connected successfully.")
+except Exception as e:
+    print(f"❌ MongoDB connection failed: {e}")
+    # In case of failure, you might want to exit or use fallback.
+    # For now, we'll let it proceed, but get_reply will handle the error.
+    REPLIES_COLLECTION = None
 
 # -------- Bot Client --------
 app = Client("advanced_chatbot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
@@ -93,15 +115,11 @@ HELP_COMMANDS_TEXT_MAP = {
 # ----------------- FANCY FONTS END -----------------
 
 
-# --- Load Replies & Known Chats ---
-try:
-    with open("conversation.json", "r", encoding="utf-8") as f:
-        DATA = json.load(f)
-except:
-    DATA = {}
-
-if "daily" not in DATA:
-    DATA["daily"] = ["Hello 👋", "Hey there!", "Hi!"]
+# --- Load Known Chats ---
+# Removed conversation.json loading
+# The structure of the DB collection will be:
+# { "category": "daily", "replies": ["Hello 👋", "Hey there!", "Hi!"] }
+# { "category": "love", "replies": ["I love you too!", "Aww thanks.", ...] }
 
 CHAT_IDS_FILE = "chats.json"
 if os.path.exists(CHAT_IDS_FILE):
@@ -124,11 +142,36 @@ KEYWORDS = {
 
 # -------- Utility Functions --------
 def get_reply(text: str):
+    """Fetches a random reply from MongoDB based on keywords."""
+    if not REPLIES_COLLECTION:
+        return "Sorry, the database connection is currently unavailable. 🥺"
+
     text = text.lower()
+    category = "daily" # Default category
+
     for word, cat in KEYWORDS.items():
-        if word in text and cat in DATA:
-            return random.choice(DATA[cat])
-    return random.choice(DATA.get("daily", ["Hello 👋"]))
+        if word in text:
+            category = cat
+            break
+            
+    try:
+        # Find the document for the determined category
+        document = REPLIES_COLLECTION.find_one({"category": category})
+        
+        if document and "replies" in document and document["replies"]:
+            return random.choice(document["replies"])
+        else:
+            # Fallback if category is found but replies list is empty/missing
+            default_doc = REPLIES_COLLECTION.find_one({"category": "daily"})
+            if default_doc and "replies" in default_doc and default_doc["replies"]:
+                return random.choice(default_doc["replies"])
+            
+    except Exception as e:
+        print(f"MongoDB fetch error: {e}")
+        
+    # Final fallback if MongoDB fails or has no data
+    return "Hello 👋 I'm active! How can I help you today? (DB failed)"
+
 
 def get_readable_time(seconds: int) -> str:
     result = ''
@@ -575,8 +618,8 @@ async def love_cmd(client, message):
     # The rest of the logic is fine
     love_percent = random.randint(1, 100)
     text = f"❤️ 𝐋ᴏᴠᴇ 𝐏ᴏssɪʙʟɪᴛʏ\n" \
-              f"{names[0]} & {names[1]}'𝐬 ʟᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}% 😉"
-              
+               f"{names[0]} & {names[1]}'𝐬 ʟᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}% 😉"
+               
     buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
     await message.reply_text(text, reply_markup=buttons) 
 
@@ -616,14 +659,14 @@ async def mmf_cmd(client, message):
     # Since the full functionality is not implemented, we provide a clean, non-buggy error/status message.
     
     if not message.reply_to_message or not message.reply_to_message.sticker:
-        return await message.reply_text("❗ 𝐑ᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ ᴀɴᴅ ᴘʀᴏᴠɪᴅᴇ ᴛᴇxᴛ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.\n\n*(𝐍ᴏᴛᴇ: ᴛʜɪs ғᴇᴀᴛᴜʀᴇ ɪs ᴄᴜʀᴇɴᴛʟʏ ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴀɴᴄᴇ)*")
+        return await message.reply_text("❗ 𝐑ᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ ᴀɴᴅ ᴘʀᴏᴠɪᴅᴇ ᴛᴇxᴛ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.\n\n*(𝐍ᴏᴛᴇ: ᴛʜɪs ғᴇᴀᴛᴜʀᴇ ɪs ᴄᴜʀᴇɴᴛʟʏ ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴇɴᴀɴᴄᴇ)*")
         
     if len(message.command) < 2:
         return await message.reply_text("❗ 𝐏𝐫𝐨𝐯𝐢𝐝𝐞 𝐭𝐡𝐞 𝐭𝐞𝐱𝐭 𝐲𝐨𝐮 𝐰𝐚𝐧𝐭 𝐨𝐧 𝐭𝐡𝐞 𝐬𝐭𝐢𝐜𝐤𝐞𝐫.")
         
     await message.reply_text(
         "❌ 𝐒𝐭𝐢𝐜𝐤𝐞𝐫 𝐓𝐞𝐱𝐭 𝐅𝐞𝐚𝐭𝐮𝐫𝐞 𝐔𝐧𝐚𝐯𝐚𝐢𝐥𝐚𝐛𝐥𝐞\n"
-        "𝐏𝐥𝐞𝐚𝐬𝐞 𝐧𝐨𝐭𝐞: 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐭𝐞𝐦𝐩𝐨𝐫𝐚𝐫𝐢𝐥𝐲 𝐝𝐢𝐬𝐚𝐛𝐥𝐞𝐝 𝐝𝐮𝐞 𝐭𝐨 𝐦𝐢𝐬𝐬𝐢𝐧𝐠 𝐢𝐦𝐚𝐠𝐞 𝐩𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠 𝐥𝐢𝐛𝐫𝐚𝐫𝐢𝐞𝐬. "
+        "𝐏𝐥𝐞𝐚𝐬𝐞 𝐧𝐨𝐭𝐞: 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐭𝐞𝐦𝐩𝐨𝐫𝐚𝐫𝐢𝐥𝐲 𝐝𝐢𝐬𝐚𝐛𝐥𝐞𝐝 𝐝𝐮𝐞 ᴛᴏ 𝐦𝐢𝐬𝐬𝐢𝐧𝐠 𝐢𝐦𝐚𝐠𝐞 𝐩𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠 𝐥𝐢𝐛𝐫𝐚𝐫𝐢𝐞𝐬. "
         "𝐈 ᴀᴍ ᴡᴏʀᴋɪɴɢ ᴏɴ ɪᴛ!"
     ) 
 
