@@ -1,1 +1,3 @@
-pyrogram>=2.0.106
+pyrogram==2.0.106
+tgcrypto==1.3.2
+pymongo==4.7.1
