@@ -7,6 +7,30 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from datetime import datetime
 import re # For advanced text processing
 
+# -------- Keep-Alive Web Server for Render/Cloud Deployments --------
+# THIS IS THE FIX FOR "No open ports detected" ERROR
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(b"Bot is running and healthy!")
+
+def keep_alive():
+    # Use the port specified by the environment, default to 8080 if not set
+    # Render requires a service to bind to a port to stay running.
+    port = int(os.environ.get("PORT", 8080))
+    try:
+        server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
+        print(f"Starting keep-alive server on port {port}")
+        server.serve_forever()
+    except Exception as e:
+        print(f"Could not start health check server: {e}")
+
+# Start the web server thread before starting the bot
+threading.Thread(target=keep_alive, daemon=True).start()
+# -------- END Keep-Alive Web Server --------
+
 # -------- Env Vars --------
 API_ID = int(os.environ.get("API_ID", "0"))
 API_HASH = os.environ.get("API_HASH", "")
@@ -25,16 +49,17 @@ app = Client("advanced_chatbot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT
 
 # -------- Global Vars --------
 START_TIME = datetime.now()
-CHATBOT_STATUS = {}
-TAGGING = {}
-AFK_USERS = {} # {user_id: {"reason": str, "chat_id": int, "username": str, "time": float}}
+CHATBOT_STATUS = {} # {chat_id: True/False}
+TAGGING = {} # {chat_id: True/False}
+# {user_id: {"reason": str, "chat_id": int, "username": str, "time": float}}
+AFK_USERS = {}
 
 # New image URLs and text
 START_PHOTO = "https://iili.io/KVzgS44.jpg"
 PING_PHOTO = "https://iili.io/KVzbu4t.jpg"
 DEVELOPER_PHOTO = "https://iili.io/KVzmgWl.jpg"
 
-# ----------------- NEW FANCY FONTS APPLIED HERE (Non-Breaking Spaces FIXED) -----------------
+# ----------------- FANCY FONTS APPLIED HERE -----------------
 INTRO_TEXT_TEMPLATE = (
     "𝐇ᴇʏ {mention_name}\n"
     "✦ 𝐈 ᴧᴍ ᴧɴ ᴧᴅᴠᴀɴᴄᴇᴅ ᴄʜᴧᴛ ʙᴏᴛ ᴡɪᴛʜ sᴏᴍᴇ ғᴇᴀᴛᴜʀᴇs. \n"
@@ -51,7 +76,7 @@ ABOUT_TEXT = (
     "● 𝐀ᴅᴅ ᴍᴇ ɴᴏᴡ ʙᴧʙʏ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘs."
 )
 
-# --- Sub-Help Menu Content (Applied Font, Non-Breaking Spaces FIXED) ---
+# --- Sub-Help Menu Content ---
 HELP_COMMANDS_TEXT_MAP = {
     "couple": (
         "📜 𝐂ᴏᴜᴘʟᴇ & 𝐋ᴏᴠᴇ 𝐂ᴏᴍᴍᴀɴᴅs:\n"
@@ -94,7 +119,6 @@ HELP_COMMANDS_TEXT_MAP = {
 # ----------------- FANCY FONTS END -----------------
 
 # -------- STICKER MAPPING (User provided stickers) --------
-# ** CRITICAL: The user's provided sticker IDs are added here. **
 STICKER_MAPPING = {
     # Cute Stickers
     "sticker_cute_1": "CAACAgEAAxkBAAEPgu9o4USg2JWyq8EjIQcHKAJxTISKnAAChwADUSkNOdIrExvjme5qNgQ",
@@ -481,24 +505,31 @@ async def broadcast_cmd(client, message):
     if not (message.reply_to_message or len(message.command) > 1):
         return await message.reply_text("ᴜsᴀɢᴇ: /ʙʀᴏᴀᴅᴄᴀsᴛ ᴏʀ ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇssᴀɢᴇ.")
     
-    text = message.text.split(None, 1)[1] if len(message.command) > 1 else None
-    
+    # Extract content to broadcast
+    if message.reply_to_message:
+        content_to_send = message.reply_to_message
+        text = None
+    elif len(message.command) > 1:
+        text = message.text.split(None, 1)[1]
+        content_to_send = None
+    else:
+        return # Should be caught by the first check, but for safety
+
     sent = 0
     failed = 0
     m = await message.reply_text("𝐒ᴛᴀʀᴛɪɴɢ 𝐁ʀᴏᴀᴅᴄᴀsᴛ...")
     
     for chat_type in ["privates", "groups"]:
         for chat_id_str in KNOWN_CHATS[chat_type]:
-            # Use integer chat ID for Pyrogram methods
             try:
                 chat_id = int(chat_id_str) 
             except ValueError:
-                continue # Skip invalid chat IDs
+                continue 
                 
             try:
-                if message.reply_to_message:
-                    await message.reply_to_message.copy(chat_id)
-                else:
+                if content_to_send:
+                    await content_to_send.copy(chat_id)
+                elif text:
                     await app.send_message(chat_id, text)
                 sent += 1
             except Exception as e:
@@ -616,7 +647,7 @@ async def couples_cmd(client, message):
         return await message.reply_text("🚫 𝐂𝐚𝐧𝐧𝐨𝐭 𝐟𝐞𝐭𝐜𝐡 𝐦𝐞𝐦𝐛𝐞𝐫s 𝐝𝐮𝐞 𝐭𝐨 𝐫𝐞𝐬𝐭𝐫𝐢𝐜𝐭𝐢𝐨𝐧s.")
 
     if len(member_list) < 2:
-        return await message.reply_text("❗ 𝐍ᴇᴇᴅ ᴀᴛ ʟᴇᴀsᴛ ᴛᴡᴏ ᴍᴇᴍʙᴇʀs ᴛᴏ ғᴏʀᴍ ᴀ 𝐂ᴏᴜᴘʟᴇ.")
+        return await message.reply_text("❗ 𝐍ᴇᴇᴅ ᴀᴛ ʟᴇᴀsᴛ ᴛᴡᴏ ᴍᴇᴍʙᴇʀs ᴛᴏ ғᴏʀᴍ ᴀ 𝐂ᴏᴜᴘ𝐥ᴇ.")
         
     # Pick two random unique members
     couple = random.sample(member_list, 2)
@@ -627,7 +658,7 @@ async def couples_cmd(client, message):
     love_percent = random.randint(30, 99)
     
     await message.reply_text(
-        f"💘 𝐍ᴇᴡ 𝐂ᴏᴜᴘʟᴇ ᴏғ ᴛʜᴇ 𝐃ᴀʏ!\n\n"
+        f"💘 𝐍ᴇᴡ 𝐂ᴏᴜᴘ𝐥ᴇ ᴏғ ᴛʜᴇ 𝐃ᴀʏ!\n\n"
         f"[{user1.first_name}](tg://user?id={user1.id}) 💖 [{user2.first_name}](tg://user?id={user2.id})\n"
         f"𝐋ᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}%! 🎉",
         parse_mode=enums.ParseMode.MARKDOWN
@@ -639,7 +670,7 @@ async def cute_cmd(client, message):
     user = message.from_user
     # FIX: Ensure user mention works
     user_mention = f"[{user.first_name}](tg://user?id={user.id})"
-    text = f"{user_mention}'𝐬 ᴄᴜᴛᴇɴᴇss ʟᴇᴠᴇʟ ɪs {cute_level}% 💖"
+    text = f"{user_mention}’𝐬 ᴄᴜᴛᴇɴᴇss ʟᴇᴠᴇʟ ɪs {cute_level}% 💖"
     buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
     await message.reply_text(text, reply_markup=buttons, parse_mode=enums.ParseMode.MARKDOWN)
 
@@ -658,7 +689,7 @@ async def love_cmd(client, message):
     # The rest of the logic is fine
     love_percent = random.randint(1, 100)
     text = f"❤️ 𝐋ᴏᴠᴇ 𝐏ᴏssɪʙʟɪᴛʏ\n" \
-               f"{names[0]} & {names[1]}'𝐬 ʟᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}% 😉"
+               f"{names[0]} & {names[1]}’𝐬 ʟᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}% 😉"
             
     buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
     await message.reply_text(text, reply_markup=buttons) 
@@ -675,7 +706,7 @@ async def afk_cmd(client, message):
         afk_data = AFK_USERS.pop(user_id)
         time_afk = get_readable_time(int(time.time() - afk_data["time"]))
         await message.reply_text(
-            f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀʀᴇ ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏʀ: {time_afk}) 😉",
+            f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀ𝐫ᴇ ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏ𝐫: {time_afk}) 😉",
             parse_mode=enums.ParseMode.MARKDOWN
         )
         return # Stop execution after returning
@@ -690,14 +721,13 @@ async def afk_cmd(client, message):
     
     # Send the AFK message
     await message.reply_text(
-        f"𝐇ᴇʏ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀʀᴇ 𝐀ғᴋ! (𝐑ᴇᴀsᴏɴ: {reason})",
+        f"𝐇ᴇʏ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀ𝐫ᴇ 𝐀ғᴋ! (𝐑ᴇᴀsᴏɴ: {reason})",
         parse_mode=enums.ParseMode.MARKDOWN
     )
 
 # -------- /mmf Command (FIXED - Simple reply) --------
 @app.on_message(filters.command("mmf") & filters.group)
 async def mmf_cmd(client, message):
-    # This feature requires complex external tools/logic (e.g., Pillow).
     
     if not message.reply_to_message or not message.reply_to_message.sticker:
         return await message.reply_text("❗ 𝐑ᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ ᴀɴᴅ ᴘʀᴏᴠɪᴅᴇ ᴛᴇxᴛ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.\n\n*(𝐍ᴏᴛᴇ: ᴛʜɪs ғᴇᴀᴛᴜʀᴇ ɪs ᴄᴜʀʀᴇɴᴛʟʏ ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴀɴᴄᴇ)*")
@@ -776,7 +806,6 @@ async def basketball_cmd(client, message):
 # -------- Private Auto Reply --------
 @app.on_message(filters.text & filters.private, group=0)
 async def private_reply(client, message: Message):
-    # Logic completed to call get_reply and use the result
     if not message.text:
         return
     
@@ -787,84 +816,68 @@ async def private_reply(client, message: Message):
     else:
         await message.reply_text(response)
 
-# -------- Group Auto Reply & AFK Checker (FIXED LOGIC) --------
+# -------- Group Auto Reply & AFK Checker (COMPLETE AND FIXED LOGIC) --------
+# Group 1 ensures this runs after command handlers (Group 0)
 @app.on_message(filters.text & filters.group, group=1)
-async def group_reply_and_afk_checker(client, message: Message):
+async def group_message_handler(client, message: Message):
     user_id = message.from_user.id
-
+    me = await client.get_me()
+    
     # 1. AFK Return Check (User sends any message while AFK)
     if user_id in AFK_USERS:
-        # User is coming back, remove them and inform the group
-        afk_data = AFK_USERS.pop(user_id) 
+        afk_data = AFK_USERS.pop(user_id)
         time_afk = get_readable_time(int(time.time() - afk_data["time"]))
         user_name = afk_data["username"]
         
-        await message.reply_text(
-            f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀʀᴇ ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏʀ: {time_afk}) 😉",
+        # Only send the "back" message once, then stop processing this message
+        return await message.reply_text(
+            f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀ𝐫ᴇ ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏ𝐫: {time_afk}) 😉",
             parse_mode=enums.ParseMode.MARKDOWN
         )
 
-    # 2. AFK Tagged/Reply Check (User replies to or mentions an AFK user)
-    
-    # Use a dictionary to store unique AFK users (user_id as key)
-    unique_afk_users = {}
+    # 2. AFK Tagged/Reply Check
+    afk_mentions = []
     
     # Check replied user
     if message.reply_to_message and message.reply_to_message.from_user:
         replied_user_id = message.reply_to_message.from_user.id
         if replied_user_id in AFK_USERS:
-            unique_afk_users[replied_user_id] = AFK_USERS[replied_user_id]
-             
-    # Check mentions/text links in the message itself
-    if message.entities:
-        for entity in message.entities:
-            # Check for text mentions (user must be provided) or text links pointing to a user
-            if entity.user and entity.user.id in AFK_USERS:
-                unique_afk_users[entity.user.id] = AFK_USERS[entity.user.id]
-                     
-    if unique_afk_users:
-        reply_text = "👋 𝐒ᴏᴍᴇᴏɴᴇ ʏᴏᴜ ᴀʀᴇ ᴛʀʏɪɴɢ ᴛᴏ ᴄᴏɴᴛᴀᴄᴛ ɪs 𝐀ғᴋ:\n"
+            afk_mentions.append(AFK_USERS[replied_user_id])
+            
+    # Check mentions/text links in the message text
+    if message.text:
+        # Check text mentions (e.g. @username)
+        for entity in message.entities or []:
+            if entity.type == enums.MessageEntityType.MENTION and message.text[entity.offset:entity.offset+entity.length].strip('@') == me.username:
+                # Ignore mention of the bot itself
+                continue
+            
+            if entity.type == enums.MessageEntityType.TEXT_MENTION:
+                mentioned_user_id = entity.user.id
+                if mentioned_user_id in AFK_USERS:
+                    afk_mentions.append(AFK_USERS[mentioned_user_id])
+            
+            # Additional logic can be added here for raw @mentions if needed,
+            # but Pyrogram often resolves these to TEXT_MENTION for user IDs.
+
+    # Remove duplicates
+    unique_afk_mentions = {m["username"]: m for m in afk_mentions}.values()
+
+    # Send AFK warning messages
+    for afk_data in unique_afk_mentions:
+        time_afk = get_readable_time(int(time.time() - afk_data["time"]))
+        await message.reply_text(
+            f"[{afk_data['username']}](tg://user?id={afk_data['chat_id']}) is 𝐀ғᴋ!\n"
+            f"𝐑ᴇᴀsᴏɴ: {afk_data['reason']}\n"
+            f"𝐓𝐢𝐦𝐞: {time_afk} ᴀɢᴏ",
+            parse_mode=enums.ParseMode.MARKDOWN
+        )
         
-        for user_id, data in unique_afk_users.items():
-            time_afk = get_readable_time(int(time.time() - data["time"]))
-            reply_text += (
-                f"[{data['username']}](tg://user?id={user_id}) "
-                f"ɪs 𝐀ғᴋ (𝐑ᴇᴀsᴏɴ: {data['reason']}) ғᴏʀ {time_afk}.\n"
-            )
-            
-        await message.reply_text(reply_text, parse_mode=enums.ParseMode.MARKDOWN)
-
-
-    # 3. Chatbot Auto Reply Logic
-    chat_id = message.chat.id
-    me = await client.get_me()
+    # 3. Chatbot Reply Logic (Only if message is a reply to the bot or mentions the bot)
+    is_reply_to_bot = message.reply_to_message and message.reply_to_message.from_user.id == me.id
+    is_mentioning_bot = f"@{me.username.lower()}" in message.text.lower()
     
-    # Check if chatbot is enabled in this group
-    is_chatbot_enabled = CHATBOT_STATUS.get(chat_id, False) # Default to False if not set
-    
-    # Check if bot is directly mentioned or replied to, or if in private chat (handled by other decorator)
-    is_me_replied = (
-        message.reply_to_message and 
-        message.reply_to_message.from_user and 
-        message.reply_to_message.from_user.id == me.id
-    )
-    
-    is_me_mentioned = False
-    if message.entities:
-        for e in message.entities:
-            # Check for direct text mention like @BotUsername
-            if e.type == enums.MessageEntityType.MENTION and message.text[e.offset:e.offset+e.length].strip('@') == me.username:
-                 is_me_mentioned = True
-                 break
-            # Check for text mentions (which include user ID)
-            if e.type == enums.MessageEntityType.TEXT_MENTION and e.user and e.user.id == me.id:
-                 is_me_mentioned = True
-                 break
-
-    if is_chatbot_enabled and (is_me_replied or is_me_mentioned):
-        if not message.text:
-            return # Ignore non-text messages
-            
+    if CHATBOT_STATUS.get(message.chat.id, False) and (is_reply_to_bot or is_mentioning_bot):
         response, is_sticker = get_reply(message.text)
         
         if is_sticker:
@@ -872,23 +885,8 @@ async def group_reply_and_afk_checker(client, message: Message):
         else:
             await message.reply_text(response)
 
-# -------- Run the Bot --------
-# Pyrogram has a built-in run method, but here we define a simple runner 
-# for environment compatibility.
-
-async def main():
-    print("Starting bot...")
-    await app.start()
-    print("Bot started. Press Ctrl+C to stop.")
-    # Keep the script running until interrupted
-    await asyncio.Event().wait() 
-
-# Since the environment likely runs the file directly, we use a standard check.
-# If the environment handles running the Pyrogram client externally, this part can be omitted.
+# -------- Start Bot --------
 if __name__ == "__main__":
-    # If not running in an environment that handles client start/stop, use the main loop.
-    # We will assume the deployment environment handles the execution loop based on the platform's conventions.
-    try:
-        app.run()
-    except Exception as e:
-        print(f"An error occurred during bot execution: {e}")
+    print("Starting Advanced Chatbot...")
+    # The keep_alive thread is already started above.
+    app.run()
