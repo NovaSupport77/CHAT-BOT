@@ -1,4 +1,1 @@
-pyrogram==2.0.106
-tgcrypto==1.2.5
-pymongo==4.7.1
-dnspython==2.3.0
+pyrogram==2.0.106tgcrypto==1.2.5pymongo==4.7.1dnspython==2.3.0pyaes==1.6.1pysocks==1.7.1flask # यह लाइन जोड़ें
