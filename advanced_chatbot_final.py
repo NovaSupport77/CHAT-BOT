@@ -60,7 +60,7 @@ DEVELOPER_PHOTO = "https://iili.io/KVzmgWl.jpg"
 # ----------------- NEW FANCY FONTS APPLIED HERE -----------------
 INTRO_TEXT_TEMPLATE = (
     "𝐇ᴇʏ {mention_name}\n"
-    "✦ 𝐈 ᴧᴍ ᴧɴ ᴧᴅᴠᴀɴᴄᴇᴅ ᴄʜᴧᴛ ʙᴏᴛ ᴡɪᴛʜ sᴏᴍᴇ ғᴇᴀᴛᴜʀᴇs. \n"
+    "✦ 𝐈 ᴧᴍ ᴧɴ ᴧᴅᴠᴧɴᴄᴇᴅ ᴄʜᴧᴛ ʙᴏᴛ ᴡɪᴛʜ sᴏᴍᴇ ғᴇᴀᴛᴜʀᴇs. \n"
     "✦ 𝐑ᴇᴘʟʏ ɪɴ ɢʀᴏᴜᴘs & ᴘʀɪᴠᴧᴛᴇs 🥀\n"
     "✦ 𝐍ᴏ ᴧʙᴜsɪɴɢ & ᴢᴇʀᴏ ᴅᴏᴡɴᴛɪᴍᴇ\n"
     "✦ 𝐂ʟɪᴄᴋ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ғᴏʀ ᴄᴏᴍᴍᴧɴᴅs ❤️\n"
@@ -140,7 +140,10 @@ KEYWORDS = {
 # -------- Utility Functions --------
 def get_reply(text: str):
     """Fetches a random reply from MongoDB based on keywords."""
-    if not REPLIES_COLLECTION:
+    # FIX: Changed 'if not REPLIES_COLLECTION' to 'if REPLIES_COLLECTION is None'
+    # PyMongo Collection objects do not support boolean evaluation.
+    if REPLIES_COLLECTION is None:
+        print("ERROR: REPLIES_COLLECTION is not initialized or MongoDB connection failed.")
         return "Sorry, the database connection is currently unavailable. 🥺"
 
     text = text.lower()
@@ -525,7 +528,7 @@ async def tagall_cmd(client, message):
                 member_list.append(member.user)
     except Exception:
         TAGGING[chat_id] = False
-        return await m.edit_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫s: 𝐌𝐚𝐲𝐛𝐞 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩 𝐢𝐬 𝐭𝐨𝐨 𝐛𝐢𝐠 𝐨𝐫 𝐈 𝐝𝐨𝐧'𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s.")
+        return await m.edit_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫s: 𝐌𝐚𝐲𝐛𝐞 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩 𝐢𝐬 𝐭𝐨𝐨 big 𝐨𝐫 𝐈 𝐝𝐨𝐧'𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s.")
 
     # Start tagging in chunks
     chunk_size = 5
@@ -659,12 +662,12 @@ async def mmf_cmd(client, message):
         return await message.reply_text("❗ 𝐑ᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ ᴀɴᴅ ᴘʀᴏᴠɪᴅᴇ ᴛᴇxᴛ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.\n\n*(𝐍ᴏᴛᴇ: ᴛʜɪs ғᴇᴀᴛᴜʀᴇ ɪs ᴄᴜʀᴇɴᴛʟʏ ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴇɴᴀɴᴄᴇ)*")
         
     if len(message.command) < 2:
-        return await message.reply_text("❗ 𝐏𝐫𝐨𝐯𝐢𝐝𝐞 𝐭𝐡𝐞 𝐭𝐞𝐱𝐭 𝐲𝐨𝐮 𝐰𝐚𝐧𝐭 𝐨𝐧 𝐭𝐡𝐞 𝐬𝐭𝐢𝐜𝐤𝐞𝐫.")
+        return await message.reply_text("❗ 𝐏𝐫𝐨𝐯𝐢𝐝𝐞 𝐭𝐡𝐞 𝐭𝐞𝐱𝐭 𝐲𝐨𝐮 w𝐚𝐧𝐭 𝐨𝐧 𝐭𝐡𝐞 𝐬𝐭𝐢𝐜𝐤𝐞𝐫.")
         
     await message.reply_text(
         "❌ 𝐒𝐭𝐢𝐜𝐤𝐞𝐫 𝐓𝐞𝐱𝐭 𝐅𝐞𝐚𝐭𝐮𝐫𝐞 𝐔𝐧𝐚𝐯𝐚𝐢𝐥𝐚𝐛𝐥𝐞\n"
         "𝐏𝐥𝐞𝐚𝐬𝐞 𝐧𝐨𝐭𝐞: 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐭𝐞𝐦𝐩𝐨𝐫𝐚𝐫𝐢𝐥𝐲 𝐝𝐢𝐬𝐚𝐛𝐥𝐞𝐝 𝐝𝐮𝐞 ᴛᴏ 𝐦𝐢𝐬𝐬𝐢𝐧𝐠 𝐢𝐦𝐚𝐠𝐞 𝐩𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠 𝐥𝐢𝐛𝐫𝐚𝐫𝐢𝐞𝐬. "
-        "𝐈 ᴀᴍ ᴡᴏʀᴋɪɴ𝐠 ᴏɴ ɪᴛ!"
+        "𝐈 ᴀᴍ ᴡᴏʀᴋɪɴɢ ᴏɴ ɪᴛ!"
     ) 
 
 # -------- /staff, /botlist Commands --------
@@ -812,8 +815,7 @@ async def group_reply_and_afk_checker(client, message: Message):
             reply = get_reply(message.text)
             await message.reply_text(reply)
             
-        # The missing part of your code is likely here (the 20% random reply chance).
-        # I'm adding a robust implementation of that missing logic below:
+        # The 20% random reply chance logic:
         elif random.random() < 0.2: # Low chance (20%) for general group conversation
             # Don't reply if it's a reply to another non-bot user, to avoid conversation hijacking
             is_reply_to_other_user = (
@@ -823,50 +825,35 @@ async def group_reply_and_afk_checker(client, message: Message):
                 not message.reply_to_message.from_user.is_bot
             )
             
-            if not is_reply_to_other_user and not message.text.startswith("/"):
+            # This is the completed logic block:
+            if not is_reply_to_other_user:
                 reply = get_reply(message.text)
-                await message.reply_text(reply)
-    # The missing part of your code ends here, and the file now correctly finishes with the execution block below.
+                # Check if get_reply returned a valid response before sending
+                if reply:
+                    await message.reply_text(reply)
 
+# -------- Flask Health Check Server --------
+# This is required by Render to know your service is running correctly.
+app_flask = Flask("advanced_chatbot_final")
+health_check_port = int(os.environ.get("PORT", 10000)) # Use PORT environment variable or 10000
 
-# =======================================================
-# Flask Web Server Setup (Render Health Check)
-# =======================================================
+@app_flask.route('/')
+def health_check():
+    # Simple check to confirm the server is running
+    return "Bot is running!", 200
 
-flask_app = Flask(__name__)
+def run_flask_app():
+    print(f"Starting Flask health check server on port {health_check_port}...")
+    # Use 0.0.0.0 for binding on Render
+    from waitress import serve
+    serve(app_flask, host='0.0.0.0', port=health_check_port)
+    # NOTE: The default Werkzeug development server (app_flask.run) is replaced with waitress for production.
 
-# Render Health Check Route - This keeps the Web Service 'alive'
-@flask_app.route('/')
-def home():
-    # 200 OK response to keep the Render Web Service alive
-    return "Bot is running in the background and MonogoDB is connected.", 200
-
-def start_flask_server():
-    """Starts the Flask server in a thread."""
-    # Use the PORT environment variable provided by Render
-    port = int(os.environ.get("PORT", 8080))
-    print(f"Starting Flask health check server on port {port}...")
-    # host='0.0.0.0' is essential for Render access
-    try:
-        # Turn off debug mode to prevent multiple server instances
-        flask_app.run(host='0.0.0.0', port=port, debug=False)
-    except Exception as e:
-        print(f"Flask Server Error: {e}")
-
-def start_pyrogram_bot():
-    """Starts the Pyrogram client."""
-    print("Starting Pyrogram Bot Client...")
-    try:
-        # Pyrogram is a blocking call, so it runs here in the main thread
-        app.run()
-        print("Pyrogram Client stopped.")
-    except Exception as e:
-        print(f"Pyrogram Bot Client crashed: {e}")
-
+# -------- Main Run Block --------
 if __name__ == "__main__":
-    # Start the Flask server in a separate thread for the health check
-    flask_thread = threading.Thread(target=start_flask_server, daemon=True)
-    flask_thread.start()
+    # Start the Flask app in a separate thread so Pyrogram can run in the main thread.
+    threading.Thread(target=run_flask_app, daemon=True).start()
     
-    # Run the Pyrogram client in the main thread (blocking operation)
-    start_pyrogram_bot()
+    # Start the Pyrogram client.
+    print("Starting Pyrogram Bot Client...")
+    app.run()
