@@ -1,25 +1,35 @@
 # -*- coding: utf-8 -*-
+import os
+import json
+import random
+import threading
+import asyncio
+import time
+import logging
+
 from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 from pyrogram.errors import UserNotParticipant
-import os, json, random, threading, asyncio, time
-# --- NEW IMPORTS FOR FLASK ---
 from datetime import datetime
 from pymongo import MongoClient
-from flask import Flask, request, jsonify # Added request and jsonify for better health check responses
-from waitress import serve # Added after the requirements.txt fix
+from flask import Flask, request, jsonify 
+from waitress import serve
+
+# Configure logging for better error visibility
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # -------- Env Vars --------
+# API Credentials (Must be set in Render Environment Variables)
 API_ID = int(os.environ.get("API_ID", "0"))
 API_HASH = os.environ.get("API_HASH", "")
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 
 # MongoDB Environment Variables
-# NOTE: It is generally safer to put the MONGO_DB_URL in Render's environment variables
-MONGO_DB_URL = os.environ.get("MONGO_DB_URL", "mongodb+srv://teamdaxx123:teamdaxx123@cluster0.ysbpgcp.mongodb.net/?retryWrites=true&w=majority")
+MONGO_DB_URL = os.environ.get("MONGO_DB_URL", "") # CRITICAL: Empty default forces reliance on Render env var
 MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", "ChatbotDB")
 
-# Please ensure you set this to 7589623332 in your environment
+# Owner ID for admin commands
 OWNER_ID = int(os.environ.get("OWNER_ID", "7589623332"))
 
 DEVELOPER_USERNAME = "Voren"
@@ -32,19 +42,25 @@ MONGO_CLIENT = None
 DB = None
 REPLIES_COLLECTION = None
 
-try:
-    # Initialize MongoDB Client
-    MONGO_CLIENT = MongoClient(MONGO_DB_URL, serverSelectionTimeoutMS=5000) # Added timeout
-    # Try to ping the database to check connection immediately
-    MONGO_CLIENT.admin.command('ping')
-    # Use the specified database
-    DB = MONGO_CLIENT[MONGO_DB_NAME]
-    # Connect to the 'replies' collection for chatbot data
-    REPLIES_COLLECTION = DB.replies
-    print("✅ MongoDB connected successfully.")
-except Exception as e:
-    print(f"❌ MongoDB connection failed: {e}")
-    # REPLIES_COLLECTION remains None
+if MONGO_DB_URL:
+    try:
+        # Initialize MongoDB Client with a timeout
+        MONGO_CLIENT = MongoClient(MONGO_DB_URL, serverSelectionTimeoutMS=10000)
+        
+        # Try to ping the database to check connection immediately
+        MONGO_CLIENT.admin.command('ping')
+        
+        # Use the specified database and collection
+        DB = MONGO_CLIENT[MONGO_DB_NAME]
+        REPLIES_COLLECTION = DB.replies
+        
+        logger.info("✅ MongoDB connected successfully.")
+    except Exception as e:
+        logger.error(f"❌ MongoDB connection failed: {e}") 
+        REPLIES_COLLECTION = None 
+else:
+    logger.warning("⚠️ MONGO_DB_URL not set in environment variables. Database functionality is disabled.")
+    REPLIES_COLLECTION = None
 
 # -------- Bot Client --------
 app = Client("advanced_chatbot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
@@ -143,8 +159,8 @@ KEYWORDS = {
 # -------- Utility Functions --------
 def get_reply(text: str):
     """Fetches a random reply from MongoDB based on keywords."""
-    # FIX: Using 'is None' instead of 'not REPLIES_COLLECTION' to fix PyMongo error
     if REPLIES_COLLECTION is None:
+        logger.warning("DB is unavailable. Returning fallback message.")
         return "Sorry, the database connection is currently unavailable. 🥺"
 
     text = text.lower()
@@ -168,10 +184,10 @@ def get_reply(text: str):
                 return random.choice(default_doc["replies"])
             
     except Exception as e:
-        print(f"MongoDB fetch error: {e}")
+        logger.error(f"MongoDB fetch error: {e}")
         
     # Final fallback if MongoDB fails or has no data
-    return "Hello 👋 I'm active! How can I help you today? (DB failed)"
+    return "Hello 👋 I'm active! How can I help you today? (DB issue)"
 
 
 def get_readable_time(seconds: int) -> str:
@@ -202,7 +218,6 @@ async def is_bot_admin(chat_id):
     try:
         me = await app.get_me()
         member = await app.get_chat_member(chat_id, me.id)
-        # Bot only needs to check for itself, not other admins
         return member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
     except Exception:
         return False
@@ -375,7 +390,7 @@ async def developer_cmd(client, message):
     try:
         await m.delete()
     except:
-        pass # Ignore if the animation message is already deleted/edited/not found
+        pass 
         
     buttons = InlineKeyboardMarkup([
         [InlineKeyboardButton("𝐃ᴇᴠᴇʟᴏᴘᴇʀ ღ", url=f"https://t.me/{DEVELOPER_HANDLE.strip('@')}")]
@@ -398,7 +413,7 @@ async def developer_cmd(client, message):
             reply_markup=buttons,
             parse_mode=enums.ParseMode.MARKDOWN
         )
-        print(f"Error sending developer photo: {e}") # Log the error 
+        logger.error(f"Error sending developer photo: {e}") # Log the error 
 
 # -------- /ping Command --------
 @app.on_message(filters.command("ping"))
@@ -466,7 +481,6 @@ async def broadcast_cmd(client, message):
                     await app.send_message(chat_id, text)
                 sent += 1
             except Exception as e:
-                # print(f"Failed to broadcast to {chat_id}: {e}") # Debugging line
                 failed += 1
                 continue
                 
@@ -528,9 +542,10 @@ async def tagall_cmd(client, message):
         async for member in app.get_chat_members(chat_id):
             if not (member.user.is_bot or member.user.is_deleted):
                 member_list.append(member.user)
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error fetching members for tagall: {e}")
         TAGGING[chat_id] = False
-        return await m.edit_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫s: 𝐌𝐚𝐲𝐛𝐞 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩 𝐢s 𝐭𝐨𝐨 𝐛𝐢𝐠 𝐨𝐫 𝐈 𝐝𝐨𝐧'𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s.")
+        return await m.edit_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫s: 𝐌𝐚𝐲𝐛𝐞 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩 𝐢s 𝐭𝐨𝐨 𝐛𝐢𝐠 𝐨𝐫 𝐈 𝐝𝐨𝐧't 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s.")
 
     # Start tagging in chunks
     chunk_size = 5
@@ -592,8 +607,9 @@ async def couples_cmd(client, message):
     
     await message.reply_text(
         f"💘 𝐍ᴇᴡ 𝐂ᴏᴜᴘʟᴇ ᴏғ ᴛʜᴇ 𝐃ᴀʏ!\n\n"
-        f"{user1.first_name} 💖 {user2.first_name}\n"
-        f"𝐋ᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}%! 🎉"
+        f"[{user1.first_name}](tg://user?id={user1.id}) 💖 [{user2.first_name}](tg://user?id={user2.id})\n"
+        f"𝐋ᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}%! 🎉",
+        disable_web_page_preview=True
     )
 
 @app.on_message(filters.command("cute"))
@@ -620,7 +636,7 @@ async def love_cmd(client, message):
     love_percent = random.randint(1, 100)
     text = f"❤️ 𝐋ᴏᴠᴇ 𝐏ᴏssɪʙʟɪᴛʏ\n" \
                f"{names[0]} & {names[1]}'𝐬 ʟᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}% 😉"
-                
+                 
     buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
     await message.reply_text(text, reply_markup=buttons) 
 
@@ -651,13 +667,11 @@ async def afk_cmd(client, message):
         f"𝐇ᴇʏ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀʀᴇ 𝐀ғᴋ! (𝐑ᴇᴀsᴏɴ: {reason})",
         parse_mode=enums.ParseMode.MARKDOWN
     )
-    # The automatic "I'm back" message when they send a non-/afk message is handled in group_reply_and_afk_checker 
 
 # -------- /mmf Command (FIXED - Simple reply) --------
 @app.on_message(filters.command("mmf") & filters.group)
 async def mmf_cmd(client, message):
-    # This feature requires complex external tools/logic (e.g., Pillow).
-    # Since the full functionality is not implemented, we provide a clean, non-buggy error/status message.
+    # This feature is placeholder due to missing image processing libs
     
     if not message.reply_to_message or not message.reply_to_message.sticker:
         return await message.reply_text("❗ 𝐑ᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ ᴀɴᴅ ᴘʀᴏᴠɪᴅᴇ ᴛᴇxᴛ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.\n\n*(𝐍ᴏᴛᴇ: ᴛʜɪs ғᴇᴀᴛᴜʀᴇ ɪs ᴄᴜʀᴇɴᴛʟʏ ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴇɴᴀɴᴄᴇ)*")
@@ -674,13 +688,12 @@ async def mmf_cmd(client, message):
 # -------- /staff, /botlist Commands --------
 @app.on_message(filters.command("staff") & filters.group)
 async def staff_cmd(client, message):
-    # Logic confirmed from previous fix
     try:
         admins = [
             admin async for admin in app.get_chat_members(message.chat.id, filter=enums.ChatMembersFilter.ADMINISTRATORS)
         ]
         
-        staff_list = "👑 𝐆ʀᴏᴜᴘ 𝐒ᴛᴀғғ 𝐌ᴇᴍʙᴇʀs:\n"
+        staff_list = "👑 𝐆ʀᴏᴜp 𝐒ᴛᴀғғ 𝐌ᴇᴍʙᴇʀs:\n"
         for admin in admins:
             if not admin.user.is_bot:
                 tag = f"[{admin.user.first_name}](tg://user?id={admin.user.id})"
@@ -697,13 +710,12 @@ async def botlist_cmd(client, message):
     if not await is_admin(message.chat.id, message.from_user.id):
         return await message.reply_text("❗ ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /ʙᴏᴛʟɪsᴛ.")
         
-    # Logic confirmed from previous fix
     try:
         bots = [
             bot async for bot in app.get_chat_members(message.chat.id, filter=enums.ChatMembersFilter.BOTS)
         ]
         
-        bot_list = "🤖 𝐁ᴏᴛs ɪɴ ᴛʜɪs 𝐆ʀᴏᴜᴘ:\n"
+        bot_list = "🤖 𝐁ᴏᴛs ɪɴ ᴛʜɪs 𝐆ʀᴏᴜp:\n"
         for bot in bots:
             tag = f"[{bot.user.first_name}](tg://user?id={bot.user.id})"
             # Ensure username exists before trying to access it
@@ -740,10 +752,13 @@ async def private_reply(client, message):
     reply = get_reply(message.text)
     await message.reply_text(reply)
 
-# -------- Group Auto Reply & AFK Checker --------
+# -------- Group Auto Reply & AFK Checker (FIXED) --------
 @app.on_message(filters.text & filters.group, group=1)
 async def group_reply_and_afk_checker(client, message: Message):
     await save_chat_id(message.chat.id, "groups")
+    
+    # Get bot info early
+    me = await client.get_me()
     
     # 1. Check if the user sending a regular message is AFK (Coming back)
     if (message.from_user and 
@@ -798,7 +813,6 @@ async def group_reply_and_afk_checker(client, message: Message):
             break 
             
     # 3. Chatbot Auto-Reply Logic
-    me = await client.get_me()
     
     # CRITICAL: Bot must be an admin to reply (as requested)
     if message.chat.type != enums.ChatType.PRIVATE and not await is_bot_admin(message.chat.id):
@@ -807,12 +821,15 @@ async def group_reply_and_afk_checker(client, message: Message):
         
     is_chatbot_on = CHATBOT_STATUS.get(message.chat.id, True)
     is_reply_to_bot = message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id == me.id
-    is_direct_mention = message.text and me.username in message.text if me.username else False
-    
+    is_direct_mention = message.text and me.username and me.username in message.text
+
+    # The actual text being replied to (for the chatbot lookup)
+    text_to_process = message.text
+
     if is_chatbot_on:
         if is_reply_to_bot or is_direct_mention:
             # Always reply if the bot is directly addressed
-            reply = get_reply(message.text)
+            reply = get_reply(text_to_process)
             await message.reply_text(reply)
             
         elif random.random() < 0.2: # Low chance (20%) for general group conversation
@@ -824,45 +841,51 @@ async def group_reply_and_afk_checker(client, message: Message):
                 not message.reply_to_message.from_user.is_bot
             )
             
+            # FIX: Completed the logic here
             if not is_reply_to_other_user:
-                # Randomly reply to the message if the bot is not directly addressed
-                reply = get_reply(message.text)
+                reply = get_reply(text_to_process)
                 await message.reply_text(reply)
 
-# -------- Flask/Waitress Setup for Render --------
 
-# Initialize Flask app
-web_app = Flask(__name__)
+# -------- Flask Server Setup (for Render Health Check) --------
+flask_app = Flask(__name__)
 
-@web_app.route('/')
+@flask_app.route("/")
 def health_check():
-    """Render requires a web route to ensure the app is running."""
-    status = "OK"
-    db_status = "Connected" if REPLIES_COLLECTION is not None else "Disconnected"
-    
-    # Return a JSON status for easier checking
+    """Render health check endpoint."""
+    db_status = "ok" if REPLIES_COLLECTION is not None else "db_failed"
     return jsonify({
-        "status": status,
-        "service": "Advanced Chatbot Pyrogram",
-        "mongodb_status": db_status
-    })
+        "status": "online", 
+        "db_status": db_status
+    }), 200
+
 
 def run_flask_app():
-    """Starts the Waitress server in a separate thread."""
+    """Runs the Flask application using Waitress."""
+    # NOTE: Render requires a web server to bind to 0.0.0.0 and listen on the provided port.
+    port = int(os.environ.get("PORT", 8080))
+    logger.info(f"Starting Flask server on port {port}...")
     try:
-        # Render typically uses the PORT environment variable
-        port = int(os.environ.get("PORT", 8080))
-        print(f"Flask/Waitress server starting on port {port}")
-        serve(web_app, host='0.0.0.0', port=port)
+        # Use Waitress for production serving
+        serve(flask_app, host="0.0.0.0", port=port)
     except Exception as e:
-        print(f"❌ Failed to start Flask/Waitress server: {e}")
+        logger.error(f"Flask server failed to start: {e}")
 
-# -------- Main Run Block --------
-if __name__ == "__main__":
-    # Start the Flask web server in a separate thread
-    # This prevents the web server from blocking the Telegram bot
-    threading.Thread(target=run_flask_app, daemon=True).start()
-    
-    # Start the Pyrogram Telegram Bot
-    print("Starting Pyrogram Bot...")
-    app.run()
+# -------- Main Execution Block (FIXED & COMPLETE) --------
+
+if __name__ == '__main__':
+    # Start Flask in a separate thread
+    flask_thread = threading.Thread(target=run_flask_app)
+    flask_thread.start()
+
+    # Start the Pyrogram bot client
+    try:
+        logger.info("Starting Pyrogram bot client...")
+        # The app.run() call is blocking and keeps the main thread alive
+        app.run()
+    except Exception as e:
+        logger.error(f"Pyrogram bot failed to start: {e}")
+    finally:
+        # Wait for the flask thread to finish before exiting (mostly for graceful shutdown)
+        flask_thread.join()
+        logger.info("Bot application shut down.")
