@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
-from pyrogram.errors import UserNotParticipant
+# from pyrogram.errors import UserNotParticipant # Not used, can be commented out
 import os, json, random, threading, asyncio, time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from datetime import datetime
@@ -102,15 +102,16 @@ HELP_COMMANDS_TEXT_MAP = {
     ),
     "games": (
         "📜 𝐆ᴧᴍᴇs 𝐂ᴏᴍᴍᴧɴᴅs:\n"
-        "/dice ~ 𝐑ᴏʟʟ ᴧ ᴅɪᴄᴇ\n"
-        "/jackpot ~ 𝐉ᴧᴄᴋᴘᴏᴛ ᴍᴀᴄʜɪɴᴇ\n"
-        "/football ~ 𝐏ʟᴀʏ ғᴏᴏᴛʙᴧʟʟ\n"
-        "/basketball ~ 𝐏ʟᴀʏ ʙᴧsᴋᴇᴛʙᴀʟʟ\n"
+        "/dice ~ 𝐑ᴏʟʟ ᴧ ᴅɪᴄᴇ (🎲)\n"
+        "/jackpot ~ 𝐉ᴧᴄᴋᴘᴏᴛ ᴍᴀᴄʜɪɴᴇ (🎰)\n"
+        "/football ~ 𝐏ʟᴀʏ ғᴏᴏᴛʙᴧʟʟ (⚽)\n"
+        "/basketball ~ 𝐏ʟᴀʏ ʙᴧsᴋᴇᴛʙᴀʟʟ (🏀)\n"
+        "/bowling ~ 𝐏ʟᴀʏ ʙᴏᴡʟɪɴɢ (🎳)\n"
         "\n_𝐀ʟʟ ᴛʜᴇsᴇ ɢᴀᴍᴇs ᴀʀᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏ ᴇᴠᴇʀʏᴏɴᴇ."
     ),
     "group": (
         "📜 𝐆ʀᴏᴜᴘ 𝐔ᴛɪʟɪᴛʏ 𝐂ᴏᴍᴍᴧɴᴅs:\n"
-        "/mmf text ~ 𝐂ʀᴇᴀᴛᴇ ᴀ sᴛɪᴄᴋᴇʀ ᴡɪᴛʜ ᴛᴇxᴛ (ʀᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ)\n"
+        "/mmf text ~ 𝐂ʀᴇᴀᴛᴇ ᴀ sᴛɪᴄᴋᴇʀ ᴡɪᴛʜ ᴛᴇxᴛ (ʀᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ) - *Disabled*\n"
         "/staff ~ 𝐃ɪsᴘʟᴧʏs ɢʀᴏᴜᴘ sᴛᴧғғ ᴍᴇᴍʙᴇʀs\n"
         "/botlist ~ 𝐂ʜᴇᴄᴋ ʜᴏᴡ ᴍᴀɴʏ ʙᴏᴛs ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ (𝐀ᴅᴍɪɴ ᴏɴʟʏ)"
         "\n_ʙᴏᴛʟɪsᴛ ʀᴇǫᴜɪʀᴇs ᴀᴅᴍɪɴ. ᴏᴛʜᴇʀs ᴀʀᴇ ғᴏʀ ᴇᴠᴇʀʏᴏɴᴇ."
@@ -210,6 +211,10 @@ def get_reply(text: str):
     Determines the response (text or sticker ID) based on the input text.
     Returns (response, is_sticker)
     """
+    if not text:
+        # If text is empty (e.g., reply to a photo without caption), fall back to daily text
+        return (random.choice(DATA.get("daily", ["Hello 👋"])), False)
+
     text = text.lower()
     
     # Simple normalization: remove non-alphanumeric except spaces for better keyword matching
@@ -491,6 +496,7 @@ async def ping_cmd(client, message):
 # -------- /id Command --------
 @app.on_message(filters.command("id"))
 async def id_cmd(client, message):
+    # Get user from reply or from the message sender itself
     user = message.reply_to_message.from_user if message.reply_to_message else message.from_user
     await message.reply_text(f"👤 {user.first_name}\n🆔 {user.id}")
 
@@ -546,7 +552,9 @@ async def chatbot_toggle(client, message):
         return await message.reply_text("❗ Oɴʟʏ ᴀᴅᴍɪɴs ᴀɴᴅ ᴏᴡɴᴇʀ ᴄᴀɴ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
     
     if len(message.command) < 2:
-        return await message.reply_text("𝐔sᴀɢᴇ: /ᴄʜᴀᴛʙᴏᴛ ᴇɴᴀʙʟᴇ ᴏʀ /ᴄʜᴀᴛʙᴏᴛ ᴅɪsᴀʙʟᴇ")
+        # Show current status if no argument given
+        current_status = "𝐄𝐍𝐀𝐁𝐋𝐄𝐃" if CHATBOT_STATUS.get(message.chat.id, False) else "𝐃𝐈𝐒𝐀𝐁𝐋𝐄𝐃"
+        return await message.reply_text(f"𝐂ʜᴀᴛʙᴏᴛ ɪs ᴄᴜʀʀᴇɴᴛʟʏ {current_status} ✰\n𝐔sᴀɢᴇ: /ᴄʜᴀᴛʙᴏᴛ ᴇɴᴀʙʟᴇ ᴏʀ /ᴄʜᴀᴛʙᴏᴛ ᴅɪsᴀʙʟᴇ")
         
     mode = message.command[1].lower()
     
@@ -582,8 +590,8 @@ async def tagall_cmd(client, message):
     # Get message content
     if len(message.command) > 1:
         msg = message.text.split(None, 1)[1]
-    elif message.reply_to_message:
-        msg = "𝐓ᴀɢɢɪɴɢ ғʀᴏᴍ ʀᴇᴘʟɪᴇᴅ ᴍᴇssᴀɢᴇ!"
+    elif message.reply_to_message and message.reply_to_message.text:
+        msg = f"**{message.reply_to_message.text[:50]}...**" # Preview of replied message text
     else:
         msg = "𝐀ᴛᴛᴇɴᴛɪᴏɴ!"
         
@@ -597,7 +605,7 @@ async def tagall_cmd(client, message):
                 member_list.append(member.user)
     except Exception:
         TAGGING[chat_id] = False
-        return await m.edit_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫s: 𝐌𝐚𝐲𝐛𝐞 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩 𝐢𝐬 𝐭𝐨𝐨 𝐛𝐢𝐠 𝐨𝐫 𝐈 𝐝𝐨𝐧'𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s.")
+        return await m.edit_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫s: 𝐌𝐚𝐲𝐛𝐞 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩 𝐢s 𝐭𝐨𝐨 𝐛𝐢𝐠 𝐨𝐫 𝐈 𝐝𝐨𝐧'𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s.")
 
     # Start tagging in chunks
     chunk_size = 5
@@ -606,7 +614,7 @@ async def tagall_cmd(client, message):
             break
             
         chunk = member_list[i:i + chunk_size]
-        tag_text = f"{msg}\n"
+        tag_text = f"**{msg}**\n\n" # Use bold for emphasis
         
         for user in chunk:
             tag_text += f"[{user.first_name}](tg://user?id={user.id}) "
@@ -730,7 +738,7 @@ async def afk_cmd(client, message):
 async def mmf_cmd(client, message):
     
     if not message.reply_to_message or not message.reply_to_message.sticker:
-        return await message.reply_text("❗ 𝐑ᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ ᴀɴᴅ ᴘʀᴏᴠɪᴅᴇ ᴛᴇxᴛ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.\n\n*(𝐍ᴏᴛᴇ: ᴛʜɪs ғᴇᴀᴛᴜʀᴇ ɪs ᴄᴜʀʀᴇɴᴛʟʏ ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴀɴᴄᴇ)*")
+        return await message.reply_text("❗ 𝐑ᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ ᴀɴᴅ ᴘʀᴏᴠɪᴅᴇ ᴛᴇxᴛ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.\n\n*(𝐍ᴏᴛᴇ: ᴛʜɪs ғᴇᴀᴛᴜʀᴇ ɪs ᴄᴜʀʀᴇɴᴛʟʏ ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴇɴᴄᴇ)*")
         
     if len(message.command) < 2:
         return await message.reply_text("❗ 𝐏𝐫𝐨𝐯𝐢𝐝𝐞 𝐭𝐡𝐞 𝐭𝐞𝐱𝐭 𝐲𝐨𝐮 w𝐚𝐧𝐭 𝐨𝐧 𝐭𝐡𝐞 𝐬𝐭𝐢𝐜𝐤𝐞𝐫.")
@@ -741,7 +749,7 @@ async def mmf_cmd(client, message):
         "𝐈 ᴀᴍ ᴡᴏʀᴋɪɴɢ ᴏɴ ɪᴛ!"
     ) 
 
-# -------- /staff, /botlist Commands --------
+# -------- /staff, /botlist Commands (FIXED) --------
 @app.on_message(filters.command("staff") & filters.group)
 async def staff_cmd(client, message):
     # Logic confirmed from previous fix
@@ -760,39 +768,44 @@ async def staff_cmd(client, message):
         await message.reply_text(staff_list, disable_web_page_preview=True, parse_mode=enums.ParseMode.MARKDOWN)
         
     except Exception as e:
-        await message.reply_text(f"🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐬𝐭𝐚𝐟𝐟: {e}")
+        await message.reply_text(f"🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐬𝐭𝐚𝐟𝐟: I might not have permission to list admins.")
 
 @app.on_message(filters.command("botlist") & filters.group)
 async def botlist_cmd(client, message):
     if not await is_admin(message.chat.id, message.from_user.id):
         return await message.reply_text("❗ ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /ʙᴏᴛʟɪsᴛ.")
         
-    # Logic confirmed from previous fix
     try:
+        # CORRECTED: Using the proper Pyrogram constant and call
         bots = [
-            bot async for bot in app.get_chat_members(message.chat.id, filter=enums.ChatMembersFilter.BOTS)
+            member async for member in app.get_chat_members(message.chat.id, filter=enums.ChatMembersFilter.BOTS)
         ]
         
         bot_list = "🤖 𝐁ᴏᴛs ɪɴ ᴛʜɪs 𝐆ʀᴏᴜᴘ:\n"
-        for bot in bots:
-            tag = f"[{bot.user.first_name}](tg://user?id={bot.user.id})"
-            # Ensure username exists before trying to access it
-            username_part = f" (@{bot.user.username})" if bot.user.username else ""
-            bot_list += f"• {tag}{username_part}\n"
-            
+        if not bots:
+            bot_list += "𝐍ᴏ ʙᴏᴛs ғᴏᴜɴᴅ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ."
+        else:
+            for bot_member in bots:
+                bot_user = bot_member.user
+                # Correctly construct the tag and handle optional username
+                tag = f"[{bot_user.first_name}](tg://user?id={bot_user.id})"
+                username_part = f" (@{bot_user.username})" if bot_user.username else ""
+                bot_list += f"• {tag}{username_part}\n"
+                
         await message.reply_text(bot_list, disable_web_page_preview=True, parse_mode=enums.ParseMode.MARKDOWN)
         
     except Exception as e:
         # Catch any remaining fetch errors
-        await message.reply_text(f"🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐛𝐨𝐭 𝐥𝐢𝐬𝐭: {e}") 
+        await message.reply_text(f"🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐛𝐨𝐭 𝐥𝐢𝐬𝐭: 𝐈 𝐦𝐢𝐠𝐡𝐭 𝐧𝐞𝐞𝐝 𝐚𝐝𝐦𝐢𝐧 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s.") 
 
-# -------- Game Commands --------
+# -------- Game Commands (FIXED & EXPANDED) --------
 @app.on_message(filters.command("dice"))
 async def dice_cmd(client, message):
     await app.send_dice(message.chat.id, "🎲")
 
 @app.on_message(filters.command("jackpot"))
 async def jackpot_cmd(client, message):
+    # Sends a slot machine emoji dice
     await app.send_dice(message.chat.id, "🎰")
 
 @app.on_message(filters.command("football"))
@@ -802,6 +815,12 @@ async def football_cmd(client, message):
 @app.on_message(filters.command("basketball"))
 async def basketball_cmd(client, message):
     await app.send_dice(message.chat.id, "🏀")
+
+@app.on_message(filters.command("bowling"))
+async def bowling_cmd(client, message):
+    # Sends a bowling emoji dice
+    await app.send_dice(message.chat.id, "🎳")
+
 
 # -------- Private Auto Reply --------
 @app.on_message(filters.text & filters.private, group=0)
@@ -816,77 +835,91 @@ async def private_reply(client, message: Message):
     else:
         await message.reply_text(response)
 
-# -------- Group Auto Reply & AFK Checker (COMPLETE AND FIXED LOGIC) --------
-# Group 1 ensures this runs after command handlers (Group 0)
+# -------- Group Auto Reply & AFK Checker (REVISED LOGIC) --------
 @app.on_message(filters.text & filters.group, group=1)
 async def group_message_handler(client, message: Message):
     user_id = message.from_user.id
+    chat_id = message.chat.id
     me = await client.get_me()
     
-    # 1. AFK Return Check (User sends any message while AFK)
+    # 1. AFK Return Check: If the sender was AFK, announce their return.
     if user_id in AFK_USERS:
         afk_data = AFK_USERS.pop(user_id)
         time_afk = get_readable_time(int(time.time() - afk_data["time"]))
-        user_name = afk_data["username"]
-        
-        # Only send the "back" message once, then stop processing this message
-        return await message.reply_text(
-            f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀ𝐫ᴇ ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏ𝐫: {time_afk}) 😉",
-            parse_mode=enums.ParseMode.MARKDOWN
-        )
-
-    # 2. AFK Tagged/Reply Check
-    afk_mentions = []
-    
-    # Check replied user
-    if message.reply_to_message and message.reply_to_message.from_user:
-        replied_user_id = message.reply_to_message.from_user.id
-        if replied_user_id in AFK_USERS:
-            afk_mentions.append(AFK_USERS[replied_user_id])
-            
-    # Check mentions/text links in the message text
-    if message.text:
-        # Check text mentions (e.g. @username)
-        for entity in message.entities or []:
-            if entity.type == enums.MessageEntityType.MENTION and message.text[entity.offset:entity.offset+entity.length].strip('@') == me.username:
-                # Ignore mention of the bot itself
-                continue
-            
-            if entity.type == enums.MessageEntityType.TEXT_MENTION:
-                mentioned_user_id = entity.user.id
-                if mentioned_user_id in AFK_USERS:
-                    afk_mentions.append(AFK_USERS[mentioned_user_id])
-            
-            # Additional logic can be added here for raw @mentions if needed,
-            # but Pyrogram often resolves these to TEXT_MENTION for user IDs.
-
-    # Remove duplicates
-    unique_afk_mentions = {m["username"]: m for m in afk_mentions}.values()
-
-    # Send AFK warning messages
-    for afk_data in unique_afk_mentions:
-        time_afk = get_readable_time(int(time.time() - afk_data["time"]))
         await message.reply_text(
-            f"[{afk_data['username']}](tg://user?id={afk_data['chat_id']}) is 𝐀ғᴋ!\n"
-            f"𝐑ᴇᴀsᴏɴ: {afk_data['reason']}\n"
-            f"𝐓𝐢𝐦𝐞: {time_afk} ᴀɢᴏ",
+            f"𝐘ᴇᴀʜ, [{message.from_user.first_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀ𝐫ᴇ ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏ𝐫: {time_afk}) 😉",
             parse_mode=enums.ParseMode.MARKDOWN
         )
-        
-    # 3. Chatbot Reply Logic (Only if message is a reply to the bot or mentions the bot)
-    is_reply_to_bot = message.reply_to_message and message.reply_to_message.from_user.id == me.id
-    is_mentioning_bot = f"@{me.username.lower()}" in message.text.lower()
+        return # Stop execution to prevent further bot replies
     
-    if CHATBOT_STATUS.get(message.chat.id, False) and (is_reply_to_bot or is_mentioning_bot):
+    # 2. AFK Tagging Check: If the message replies to an AFK user.
+    if message.reply_to_message:
+        target_id = message.reply_to_message.from_user.id
+        if target_id in AFK_USERS:
+            afk_data = AFK_USERS[target_id]
+            time_afk = get_readable_time(int(time.time() - afk_data["time"]))
+            await message.reply_text(
+                f"❗ **{afk_data['username']}** ɪs 𝐀ғᴋ!\n"
+                f"✦ **𝐑ᴇᴀsᴏɴ**: {afk_data['reason']}\n"
+                f"✦ **𝐓ɪᴍᴇ 𝐀ғᴋ**: {time_afk}",
+                parse_mode=enums.ParseMode.MARKDOWN
+            )
+            return # Stop execution after AFK notification
+
+    # Ensure message has text content and is not a command
+    if not message.text or message.text.startswith('/'):
+        return
+
+    is_chatbot_enabled = CHATBOT_STATUS.get(chat_id, False)
+    if not is_chatbot_enabled:
+        return # Do nothing if chatbot is disabled
+
+    me_username = me.username.lower() if me.username else ""
+    is_for_me = (message.reply_to_message and message.reply_to_message.from_user.id == me.id) or \
+                (me_username and f"@{me_username}" in message.text.lower())
+    
+    # Start the reply process if either condition is met
+    should_reply = False
+    
+    # A. High-Priority Reply: If the bot is explicitly addressed (reply or mention)
+    if is_for_me:
+        should_reply = True
+        
+    # B. General Conversation Reply (Addressing the user's request)
+    # If the bot is NOT explicitly addressed, try a low-probability general reply (15% chance).
+    elif random.random() < 0.15: 
+        should_reply = True
+
+    if should_reply:
         response, is_sticker = get_reply(message.text)
         
-        if is_sticker:
-            await message.reply_sticker(response)
-        else:
-            await message.reply_text(response)
+        try:
+            if is_sticker:
+                await message.reply_sticker(response)
+            else:
+                await message.reply_text(response)
+        except Exception as e:
+             # Fallback to text if sticker fails (e.g., bot lacks send sticker permission)
+             print(f"Error sending reply (sticker={is_sticker}): {e}. Falling back to text if applicable.")
+             if not is_sticker:
+                # If it was meant to be text and failed, log error
+                print(f"Text reply failed: {e}")
+             else:
+                # If sticker failed, try sending a default text reply
+                await message.reply_text(random.choice(DATA.get("daily", ["Hello 👋"])))
+                
+    await save_chat_id(chat_id, "groups")
 
-# -------- Start Bot --------
+
+# -------- Run the bot --------
+# Removed the redundant app.run() which is handled by the overall service
+# if __name__ == "__main__":
+#     print("Starting bot...")
+#     # app.run() # This line is usually managed by the deployment environment
+#     # We rely on the deployment system to call app.run() or similar entry point.
+#     # For standalone testing, you'd uncomment app.run() or start the asyncio loop.
+
+# --- Keep the bot running in Pyrogram structure ---
+# This block is added for completeness, assuming a standard deployment structure
 if __name__ == "__main__":
-    print("Starting Advanced Chatbot...")
-    # The keep_alive thread is already started above.
     app.run()
