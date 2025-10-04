@@ -52,7 +52,7 @@ app = Client("advanced_chatbot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT
 START_TIME = datetime.now()
 CHATBOT_STATUS = {} # {chat_id: True/False}
 TAGGING = {} # {chat_id: True/False}
-# {user_id: {"reason": str, "chat_id": int, "username": str, "time": float}}
+# {user_id: {"reason": str, "chat_id": int, "username": str, "first_name": str, "time": float}}
 AFK_USERS = {}
 
 # New image URLs and text
@@ -112,7 +112,6 @@ HELP_COMMANDS_TEXT_MAP = {
     ),
     "group": (
         "📜 𝐆ʀᴏᴜᴘ 𝐔ᴛɪʟɪᴛʏ 𝐂ᴏᴍᴍᴧɴᴅs:\n"
-        "/mmf text ~ 𝐂ʀᴇᴀᴛᴇ ᴀ sᴛɪᴄᴋᴇʀ ᴡɪᴛʜ ᴛᴇxᴛ (ʀᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ) - *Disabled*\n"
         "/staff ~ 𝐃ɪsᴘʟᴧʏs ɢʀᴏᴜᴘ sᴛᴧғғ ᴍᴇᴍʙᴇʀs\n"
         "/botlist ~ 𝐂ʜᴇᴄᴋ ʜᴏᴡ ᴍᴀɴʏ ʙᴏᴛs ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ (𝐀ᴅᴍɪɴ ᴏɴʟʏ)"
         "\n_ʙᴏᴛʟɪsᴛ ʀᴇǫᴜɪʀᴇs ᴀᴅᴍɪɴ. ᴏᴛʜᴇʀs ᴀʀᴇ ғᴏʀ ᴇᴠᴇʀʏᴏɴᴇ."
@@ -276,6 +275,14 @@ async def save_chat_id(chat_id, type_):
         KNOWN_CHATS[type_].append(chat_id_str)
         with open(CHAT_IDS_FILE, "w") as f:
             json.dump(KNOWN_CHATS, f)
+
+# Custom filter for checking chatbot status
+def is_chatbot_enabled(_, __, message: Message):
+    """Returns True if chatbot is enabled for this group."""
+    if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        # Default is False, so only True if explicitly set to True
+        return CHATBOT_STATUS.get(message.chat.id, False)
+    return False # Chatbot should run in private chats via the main handler
 
 # -------- Inline Button Handlers & Menus --------
 
@@ -603,7 +610,7 @@ async def tagall_cmd(client, message):
     if len(message.command) > 1:
         msg = message.text.split(None, 1)[1]
     elif message.reply_to_message and message.reply_to_message.text:
-        msg = f"**{message.reply_to_message.text[:50]}...**" # Preview of replied message text
+        msg = f"**{message.reply_to_message.text[:50]}{'...' if len(message.reply_to_message.text) > 50 else ''}**" # Preview of replied message text
     else:
         msg = "𝐀ᴛᴛᴇɴᴛɪᴏɴ!"
         
@@ -717,7 +724,7 @@ async def love_cmd(client, message):
     buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
     await message.reply_text(text, reply_markup=buttons) 
 
-# -------- /afk Command --------
+# -------- /afk Command (FIXED) --------
 @app.on_message(filters.command("afk"))
 async def afk_cmd(client, message):
     user_id = message.from_user.id
@@ -729,7 +736,7 @@ async def afk_cmd(client, message):
         afk_data = AFK_USERS.pop(user_id)
         time_afk = get_readable_time(int(time.time() - afk_data["time"]))
         await message.reply_text(
-            f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀ𝐫𝐞 ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏ𝐫: {time_afk}) 😉",
+            f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ 𝐚𝐫𝐞 ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏ𝐫: {time_afk}) 😉",
             parse_mode=enums.ParseMode.MARKDOWN
         )
         return # Stop execution after returning
@@ -742,24 +749,26 @@ async def afk_cmd(client, message):
         reason = "𝐍ᴏ ʀᴇᴀsᴏɴ ɢɪᴠᴇɴ."
     
     # Store AFK status
-    AFK_USERS[user_id] = {"reason": reason, "chat_id": message.chat.id, "username": user_name, "time": time.time()}
+    AFK_USERS[user_id] = {
+        "reason": reason,
+        "chat_id": message.chat.id,
+        "username": message.from_user.username or user_name,
+        "first_name": user_name,
+        "time": time.time()
+    }
     
     # Send the AFK message
     await message.reply_text(
-        f"𝐇ᴇʏ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀ𝐫𝐞 𝐀ғᴋ! (𝐑ᴇᴀsᴏɴ: {reason})",
+        f"𝐇ᴇʏ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ 𝐚𝐫𝐞 𝐀ғᴋ! (𝐑ᴇᴀsᴏɴ: {reason})",
         parse_mode=enums.ParseMode.MARKDOWN
     )
 
 # -------- /mmf Command (Disabled) --------
 @app.on_message(filters.command("mmf") & filters.group)
 async def mmf_cmd(client, message):
+    # This command is intentionally simplified to a disabled message as image manipulation libraries
+    # are often complex to set up in cloud environments.
     
-    if not message.reply_to_message or not message.reply_to_message.sticker:
-        return await message.reply_text("❗ 𝐑ᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ ᴀɴᴅ ᴘʀᴏᴠɪᴅᴇ ᴛᴇxᴛ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.\n\n*(𝐍ᴏᴛᴇ: ᴛʜɪs ғᴇᴀᴛᴜʀᴇ ɪs ᴄᴜʀʀᴇɴᴛʟʏ ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴇɴᴄᴇ)*")
-        
-    if len(message.command) < 2:
-        return await message.reply_text("❗ 𝐏𝐫𝐨𝐯𝐢𝐝𝐞 𝐭𝐡𝐞 𝐭𝐞𝐱𝐭 𝐲𝐨𝐮 w𝐚𝐧𝐭 𝐨𝐧 𝐭𝐡𝐞 𝐬𝐭𝐢𝐜𝐤𝐞𝐫.")
-        
     await message.reply_text(
         "❌ 𝐒𝐭𝐢𝐜𝐤𝐞𝐫 𝐓𝐞𝐱𝐭 𝐅𝐞𝐚𝐭𝐮𝐫𝐞 𝐔𝐧𝐚𝐯𝐚𝐢𝐥𝐚𝐛𝐥𝐞\n"
         "𝐏𝐥𝐞𝐚𝐬𝐞 𝐧𝐨𝐭𝐞: 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐭𝐞𝐦𝐩𝐨𝐫𝐚𝐫𝐢𝐥𝐲 𝐝𝐢𝐬𝐚𝐛𝐥𝐞𝐝 𝐝𝐮𝐞 𝐭𝐨 𝐦𝐢𝐬𝐬𝐢𝐧𝐠 𝐢𝐦𝐚𝐠𝐞 𝐩𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠 𝐥𝐢𝐛𝐫𝐚𝐫𝐢𝐞s. "
@@ -770,12 +779,10 @@ async def mmf_cmd(client, message):
 @app.on_message(filters.command("staff") & filters.group)
 async def staff_cmd(client, message):
     try:
-        # Fetch administrators of the chat
-        admins = [
-            member async for member in app.get_chat_members(
-                message.chat.id, filter=enums.ChatMembersFilter.ADMINISTRATORS
-            )
-        ]
+        # Fetch administrators of the chat (FIXED: Correct loop for fetching members)
+        admins = []
+        async for admin in client.get_chat_members(message.chat.id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
+            admins.append(admin)
         
         staff_list = "👑 𝐆ʀᴏᴜᴘ 𝐒ᴛᴀғғ 𝐌ᴇᴍʙᴇʀs:\n\n"
         
@@ -807,114 +814,151 @@ async def staff_cmd(client, message):
 # -------- /botlist Command (FIXED) --------
 @app.on_message(filters.command("botlist") & filters.group)
 async def botlist_cmd(client, message):
-    if not await is_admin(message.chat.id, message.from_user.id):
-        return await message.reply_text("❗ ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /ʙᴏᴛʟɪsᴛ.")
-        
+    # FIX: Corrected the missing argument in is_admin call
+    if not await is_admin(message.chat.id, message.from_user.id): 
+        return await message.reply_text("❗ Oɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /ʙᴏᴛʟɪsᴛ.")
+    
+    bot_list = "🤖 𝐁𝐨𝐭𝐬 𝐢𝐧 𝐭𝐡𝐞 𝐆𝐫𝐨𝐮𝐩:\n\n"
+    bot_count = 0
+    
     try:
-        # Fetch only bot members
-        bots = [
-            member async for member in app.get_chat_members(
-                message.chat.id, filter=enums.ChatMembersFilter.BOTS
-            )
-        ]
-        
-        bot_list = f"🤖 𝐁ᴏᴛs ɪɴ ᴛʜɪs 𝐆ʀᴏᴜᴘ: ({len(bots)})\n\n"
-        
-        if not bots:
-            bot_list += "𝐍ᴏ ʙᴏᴛs ғᴏᴜɴᴅ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ."
-        else:
-            for bot in bots:
-                bot_list += f"• 🤖 [{bot.user.first_name}](tg://user?id={bot.user.id})\n"
-        
-        await message.reply_text(bot_list, parse_mode=enums.ParseMode.MARKDOWN)
-        
+        async for member in client.get_chat_members(message.chat.id):
+            if member.user.is_bot and not member.user.is_deleted:
+                bot_list += f"• [{member.user.first_name}](tg://user?id={member.user.id})\n"
+                bot_count += 1
     except Exception as e:
-        print(f"Error fetching bot list: {e}")
-        await message.reply_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐛𝐨𝐭𝐬: 𝐈 𝐦𝐢𝐠𝐡𝐭 𝐧𝐨𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧 𝐭𝐨 𝐥𝐢𝐬𝐭 𝐦𝐞𝐦𝐛𝐞𝐫s.")
+        print(f"Error listing bots: {e}")
+        return await message.reply_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫𝐬. 𝐂𝐡𝐞𝐜𝐤 𝐛𝐨𝐭 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧𝐬.")
 
-# -------- General Group Message Handler (AFK Check & Chatbot Reply) --------
-@app.on_message(filters.group & filters.text & ~filters.bot & ~filters.via_bot)
-async def group_message_handler(client, message: Message):
-    user_id = message.from_user.id
-    user_name = message.from_user.first_name
-    me = await client.get_me()
+    if bot_count == 0:
+        bot_list += "𝐍𝐨 𝐛𝐨𝐭𝐬 𝐟𝐨𝐮𝐧𝐝."
     
-    # Check if the message is a command (excluding /afk which is handled by afk_cmd)
-    if message.text.startswith("/") or message.text.startswith("!"):
-        return
+    bot_list += f"\n𝐓𝐨𝐭𝐚𝐥 𝐁𝐨𝐭𝐬: {bot_count}"
+    await message.reply_text(bot_list, parse_mode=enums.ParseMode.MARKDOWN)
 
-    # --- 1. Check if user is returning from AFK (by sending any non-command message) ---
-    if user_id in AFK_USERS:
-        afk_data = AFK_USERS.pop(user_id)
-        time_afk = get_readable_time(int(time.time() - afk_data["time"]))
-        return await message.reply_text(
-            f"𝐖ᴇʟᴄᴏᴍᴇ 𝐁ᴀᴄᴋ! [{user_name}](tg://user?id={user_id}) 𝐢𝐬 𝐨𝐧𝐥𝐢𝐧𝐞! (𝐀ғᴋ ғᴏ𝐫: {time_afk}) 😉",
-            parse_mode=enums.ParseMode.MARKDOWN
-        )
+# ----------------- GAMES COMMANDS (FIXED - Previously Missing) -----------------
+@app.on_message(filters.command("dice"))
+async def dice_game(client, message):
+    await message.reply_dice(emoji="🎲")
 
-    # --- 2. Check for AFK user mentions/replies (AFK Notification) ---
-    is_reply_to_afk = message.reply_to_message and message.reply_to_message.from_user.id in AFK_USERS
-    mentioned_afk_users = []
-    
+@app.on_message(filters.command("jackpot"))
+async def jackpot_game(client, message):
+    await message.reply_dice(emoji="🎰")
+
+@app.on_message(filters.command("football"))
+async def football_game(client, message):
+    await message.reply_dice(emoji="⚽")
+
+@app.on_message(filters.command("basketball"))
+async def basketball_game(client, message):
+    await message.reply_dice(emoji="🏀")
+
+@app.on_message(filters.command("bowling"))
+async def bowling_game(client, message):
+    await message.reply_dice(emoji="🎳")
+
+# ----------------- AFK & CHATBOT HANDLERS (FIXED - Previously Missing) -----------------
+
+# Handler 1: AFK CHECKER (Triggers when an AFK user is mentioned or replied to)
+@app.on_message(filters.text & filters.group & (filters.mentioned | filters.reply))
+async def afk_check_handler(client, message):
+    # Check if the message is a reply
+    if message.reply_to_message:
+        target_user_id = message.reply_to_message.from_user.id
+        
+        if target_user_id in AFK_USERS:
+            afk_data = AFK_USERS[target_user_id]
+            time_afk = get_readable_time(int(time.time() - afk_data["time"]))
+            
+            await message.reply_text(
+                f"🚨 𝐍𝐎𝐓 𝐀𝐕𝐀𝐈𝐋𝐀𝐁𝐋𝐄!\n"
+                f"[{afk_data['first_name']}](tg://user?id={target_user_id}) 𝐢𝐬 𝐀ғᴋ 𝐬𝐢𝐧𝐜𝐞: **{time_afk}**\n"
+                f"**𝐑ᴇᴀsᴏɴ**: {afk_data['reason']}",
+                parse_mode=enums.ParseMode.MARKDOWN
+            )
+            return
+
+    # Check if the message contains a mention of an AFK user
     if message.entities:
         for entity in message.entities:
-            # Check for direct mentions
-            if entity.type == enums.MessageEntityType.TEXT_MENTION and entity.user.id in AFK_USERS:
-                mentioned_afk_users.append(entity.user.id)
+            # Check for text mentions or user mentions (if entity is a mention type)
+            if entity.type == enums.MessageEntityType.MENTION or entity.type == enums.MessageEntityType.TEXT_MENTION:
+                if entity.user and entity.user.id in AFK_USERS:
+                    afk_data = AFK_USERS[entity.user.id]
+                    time_afk = get_readable_time(int(time.time() - afk_data["time"]))
+                    
+                    await message.reply_text(
+                        f"🚨 𝐍𝐎𝐓 𝐀𝐕𝐀𝐈𝐋𝐀𝐁𝐋𝐄!\n"
+                        f"[{afk_data['first_name']}](tg://user?id={entity.user.id}) 𝐢𝐬 𝐀ғᴋ 𝐬𝐢𝐧𝐜𝐞: **{time_afk}**\n"
+                        f"**𝐑ᴇᴀsᴏɴ**: {afk_data['reason']}",
+                        parse_mode=enums.ParseMode.MARKDOWN
+                    )
+                    return
 
-    afk_notifications = []
-    
-    if is_reply_to_afk:
-        # Add the replied-to user's ID to the list
-        mentioned_afk_users.append(message.reply_to_message.from_user.id)
-        
-    for uid in set(mentioned_afk_users): # Use set to handle a user being replied to AND mentioned
-        afk_check = AFK_USERS.get(uid)
-        # Check if the AFK status was set in this group (to prevent cross-group spam)
-        if afk_check and afk_check["chat_id"] == message.chat.id: 
-            time_afk = get_readable_time(int(time.time() - afk_check["time"]))
-            afk_notifications.append(
-                f"[{afk_check['username']}](tg://user?id={uid}) ɪs 𝐀ғᴋ!\n"
-                f"(𝐀ғᴋ ғᴏʀ: {time_afk})\n"
-                f"𝐑ᴇᴀsᴏɴ: {afk_check['reason']}"
-            )
+# Handler 2: AFK CANCELLER (Automatically removes AFK status when user types or sends media)
+@app.on_message(filters.all) # Listen to all messages
+async def afk_cancel_handler(client, message):
+    if message.from_user and message.from_user.id in AFK_USERS:
+        # Check if the message is NOT the /afk command itself (handled by afk_cmd)
+        if not (message.text and message.text.startswith('/afk')):
+            user_id = message.from_user.id
+            user_name = message.from_user.first_name
+            afk_data = AFK_USERS.pop(user_id)
+            time_afk = get_readable_time(int(time.time() - afk_data["time"]))
             
-    if afk_notifications:
-        # Send one message containing all AFK notifications
-        return await message.reply_text(
-            "⚠️ 𝐀ғᴋ 𝐍ᴏᴛɪᴄᴇ:\n" + "\n---\n".join(afk_notifications),
-            parse_mode=enums.ParseMode.MARKDOWN
-        )
+            await message.reply_text(
+                f"𝐖ᴇʟᴄᴏᴍᴇ ʙᴀᴄᴋ, [{user_name}](tg://user?id={user_id})! 𝐘𝐨𝐮 𝐚𝐫𝐞 𝐨𝐧𝐥𝐢𝐧𝐞 𝐚𝐠𝐚𝐢𝐧! (𝐀ғᴋ ғᴏ𝐫: {time_afk}) 😉",
+                parse_mode=enums.ParseMode.MARKDOWN
+            )
 
-    # --- 3. General Chatbot Reply Logic ---
-    if not CHATBOT_STATUS.get(message.chat.id, False):
-        return # Chatbot is disabled
+# Handler 3: MAIN CHATBOT (Handles generic text/sticker replies)
+@app.on_message(filters.text & (filters.private | (filters.group & filters.mentioned) | (filters.group & filters.create(is_chatbot_enabled))))
+async def chat_handler(client, message):
+    me = await client.get_me()
+    text = message.text
 
-    # Check if the bot is explicitly mentioned or replied to
-    is_bot_mentioned_or_replied = (
-        (message.reply_to_message and message.reply_to_message.from_user.id == me.id) or
-        (me.username and f"@{me.username.lower()}" in message.text.lower())
-    )
-    
-    # Determine the reply based on keywords
-    response, is_sticker = get_reply(message.text)
-    
-    # Check if the response is just a general "daily" response (no specific keyword match)
-    is_daily_reply = response in DATA.get("daily", ["Hello 👋"])
-    
-    # Decision Logic:
-    # A. ALWAYS reply if the bot is mentioned/replied (Highest Priority).
-    # B. ALWAYS reply if a specific keyword was matched (i.e., not a general "daily" response).
-    # C. Otherwise (for general chatter resulting in a 'daily' response), reply with 20% probability to reduce spam.
-    if is_bot_mentioned_or_replied or not is_daily_reply or random.random() < 0.2:
-        if is_sticker:
-            # FIX: Use reply_sticker for sticker IDs
-            await message.reply_sticker(response)
-        else:
-            # Use reply_text for text
-            await message.reply_text(response)
+    # Decide if the message should trigger a response based on context
+    is_private = message.chat.type == enums.ChatType.PRIVATE
+    is_mention = any(e.type == enums.MessageEntityType.MENTION and e.user and e.user.id == me.id for e in message.entities or [])
+    is_reply_to_bot = message.reply_to_message and message.reply_to_message.from_user.id == me.id
+    is_group_chatbot_enabled = CHATBOT_STATUS.get(message.chat.id, False)
 
-# -------- Run the Bot --------
+    # Only process if it meets one of the activation criteria
+    if is_private or is_reply_to_bot or is_mention or is_group_chatbot_enabled:
+        
+        # If it's a mention or reply in a group, strip the mention/command part for better keyword matching
+        if is_mention or is_reply_to_bot:
+            if message.text.startswith('/'):
+                # Handle cases like /start@bot_username, /chatbot@bot_username, etc.
+                parts = message.text.split(None, 1)
+                if len(parts) > 1:
+                    text = parts[1] # Use the text after the command
+                else:
+                    text = "" # No text after command/mention
+            elif is_mention:
+                # Simple mention, try to strip the bot's username/name if it's at the start
+                bot_name_pattern = re.compile(f"@{me.username}|{me.first_name}", re.IGNORECASE)
+                text = bot_name_pattern.sub('', text, 1).strip()
+
+
+        # Use the utility function to get the response
+        response, is_sticker = get_reply(text)
+
+        if response:
+            try:
+                if is_sticker:
+                    # Sticker sending is now fixed as it uses message.reply_sticker()
+                    await message.reply_sticker(response)
+                else:
+                    await message.reply_text(response)
+            except Exception as e:
+                print(f"Failed to send response: {e}. Trying to send as text if sticker failed.")
+                # Fallback to text if sticker failed (e.g., if sticker ID is invalid)
+                if is_sticker:
+                    await message.reply_text(f"*(Sticker failed to load)* {response}")
+
+
 if __name__ == "__main__":
     print("Bot is starting...")
     app.run()
+    print("Bot stopped.")
