@@ -1,66 +1,24 @@
 # -*- coding: utf-8 -*-
-import os
-import json
-import random
-import threading
-import asyncio
-import time
-import logging
-
 from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 from pyrogram.errors import UserNotParticipant
+import os, json, random, threading, asyncio, time
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from datetime import datetime
-from pymongo import MongoClient
-from flask import Flask, request, jsonify 
-from waitress import serve
-
-# Configure logging for better error visibility
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 # -------- Env Vars --------
-# API Credentials (Must be set in Render Environment Variables)
+# NOTE: These are placeholders. Ensure you set your actual environment variables.
 API_ID = int(os.environ.get("API_ID", "0"))
 API_HASH = os.environ.get("API_HASH", "")
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 
-# MongoDB Environment Variables
-MONGO_DB_URL = os.environ.get("MONGO_DB_URL", "") # CRITICAL: Empty default forces reliance on Render env var
-MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME", "ChatbotDB")
-
-# Owner ID for admin commands
+# Please ensure you set this to your owner ID in your environment
 OWNER_ID = int(os.environ.get("OWNER_ID", "7589623332"))
 
 DEVELOPER_USERNAME = "Voren"
 DEVELOPER_HANDLE = "@TheXVoren"
 SUPPORT_CHAT = "https://t.me/Evara_Support_Chat"
 UPDATES_CHANNEL = "https://t.me/Evara_Updates"
-
-# -------- MongoDB Setup --------
-MONGO_CLIENT = None
-DB = None
-REPLIES_COLLECTION = None
-
-if MONGO_DB_URL:
-    try:
-        # Initialize MongoDB Client with a timeout
-        MONGO_CLIENT = MongoClient(MONGO_DB_URL, serverSelectionTimeoutMS=10000)
-        
-        # Try to ping the database to check connection immediately
-        MONGO_CLIENT.admin.command('ping')
-        
-        # Use the specified database and collection
-        DB = MONGO_CLIENT[MONGO_DB_NAME]
-        REPLIES_COLLECTION = DB.replies
-        
-        logger.info("✅ MongoDB connected successfully.")
-    except Exception as e:
-        logger.error(f"❌ MongoDB connection failed: {e}") 
-        REPLIES_COLLECTION = None 
-else:
-    logger.warning("⚠️ MONGO_DB_URL not set in environment variables. Database functionality is disabled.")
-    REPLIES_COLLECTION = None
 
 # -------- Bot Client --------
 app = Client("advanced_chatbot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
@@ -71,12 +29,12 @@ CHATBOT_STATUS = {}
 TAGGING = {}
 AFK_USERS = {} # {user_id: {"reason": str, "chat_id": int, "username": str, "time": float}}
 
-# New image URLs and text
+# Image URLs (Using the provided ones)
 START_PHOTO = "https://iili.io/KVzgS44.jpg"
 PING_PHOTO = "https://iili.io/KVzbu4t.jpg"
 DEVELOPER_PHOTO = "https://iili.io/KVzmgWl.jpg"
 
-# ----------------- FANCY FONTS APPLIED HERE -----------------
+# ----------------- NEW FANCY FONTS APPLIED HERE -----------------
 INTRO_TEXT_TEMPLATE = (
     "𝐇ᴇʏ {mention_name}\n"
     "✦ 𝐈 ᴧᴍ ᴧɴ ᴧᴅᴠᴀɴᴄᴇᴅ ᴄʜᴧᴛ ʙᴏᴛ ᴡɪᴛʜ sᴏᴍᴇ ғᴇᴀᴛᴜʀᴇs. \n"
@@ -136,7 +94,44 @@ HELP_COMMANDS_TEXT_MAP = {
 # ----------------- FANCY FONTS END -----------------
 
 
-# --- Load Known Chats ---
+# --- Load Replies & Known Chats ---
+# Initialize default data structure to ensure all categories exist if conversation.json is missing
+DEFAULT_DATA = {
+    # ------------------ Original Categories ------------------
+    "daily": ["Hello 👋", "Hey there!", "Hi!", "Yo!", "Wassup?", "Greetings!", "Good day!", "Aloha!", "Hola!", "How can I help?"],
+    "love": ["I love you too! ❤️", "Sending virtual hugs!", "You're too sweet!", "My heart flutters!", "Love you 3000!", "Aww, that's kind!", "Feeling the warmth!", "You're my favorite human!", "I adore you!", "Let's be best friends forever!"],
+    "sad": ["I'm here for you. Don't be sad. 😊", "Cheer up! Things get better.", "Hugs and positivity!", "It's okay to feel down sometimes.", "Want to share what's wrong?", "Stay strong!", "Sending good vibes your way.", "Don't weep, look up!", "A little gloom won't hurt, but snap out of it!", "Be patient, my friend."],
+    "happy": ["That's great to hear! 🎉", "Keep that energy!", "Awesome!", "Wonderful!", "I'm glad you're cheerful!", "Feeling cool!", "Let's celebrate!", "You sound so excited!", "Jolly good!", "Keep smiling!"],
+    "bye": ["Goodbye for now!", "See you later!", "Peace out ✌️", "Farewell!", "Adios!", "Night night!", "Ta ta!", "Catch you on the flip side.", "Until next time!", "Have a great one!"],
+    "thanks": ["You're welcome! 😊", "Anytime!", "I appreciate that!", "Cheers!", "No problem at all.", "Glad I could help!", "You're very kind.", "Good job to you too!", "Thank you for acknowledging me.", "It was my pleasure!"],
+    "morning": ["Good morning! Rise and shine! ☀️", "Mornin'!", "Time to conquer the day!", "Hope you slept well.", "Have a wonderful morning!"],
+    "night": ["Good night! Sweet dreams. 🌙", "Sleep well!", "Nighty night!", "See you tomorrow!", "Don't let the bed bugs bite!"],
+    "abuse": ["I don't appreciate that language. Please be kind. 😔", "That's unnecessary.", "I will ignore that.", "Language, please!", "Be mature."],
+    
+    # ------------------ New Categories (10) ------------------
+    "questions": ["I'm doing well, thank you for asking!", "I am Evara, an advanced chat bot.", "I'm here to help and chat!", "I don't have an age, I'm just code!", "I can chat, play simple games, and manage groups.", "My favorite color is electric blue 💙", "I'm here to serve and keep your group active.", "Ask me anything, I'm rarely busy!", "I'm a program, so I'm from the cloud!"],
+    "tech": ["Python is my favorite language!", "Telegram is a great platform for bots.", "I love clean, commented code.", "I am a powerful AI bot!", "Coding is fun and challenging."],
+    "movies": ["What's your favorite movie of all time?", "I heard that film was amazing!", "Netflix has some great shows, true!", "I wish I could go to the cinema.", "Movies are a perfect way to relax."],
+    "food": ["I wish I could eat pizza! 🍕", "A burger sounds delicious right now.", "I don't need food, but I appreciate the thought.", "Are you hungry? Go grab a snack!", "I process data, not food."],
+    "compliment": ["Thank you! I try my best.", "That means a lot to me!", "I'm happy to be helpful.", "I aim for clever!", "I appreciate your feedback."],
+    "insult_response": ["I'm sorry you feel that way. Let's keep it friendly.", "I'm a bot, but words still matter.", "My purpose is to assist, not to argue.", "I will be better next time.", "I'll choose kindness."],
+    "time_weather": ["I can tell you the time, but you should check your device!", "I hope the weather is nice where you are!", "It's always sunny in my circuits.", "What's the temperature outside your window?", "Climate change is a serious issue."],
+    "joke": ["Why did the programmer quit his job? Because he didn't get arrays! 😂", "That's a funny thought!", "Ready for a laugh?", "Humor is the best medicine.", "Lol, that was a good one!"],
+    "curiosity": ["That's a complex question!", "The universe is full of mysteries, isn't it?", "I enjoy explaining things. What specifically do you want to know?", "Let's explore that topic further.", "Curiosity fuels my database!"],
+    "greeting_formal": ["Salutations to you too, esteemed user.", "Pleased to meet you formally!", "I hope this finds you well.", "I appreciate the formalities.", "Good evening, how may I be of service?"],
+    "command_inquiry": ["Are you looking for a command? Try /help.", "I hear a command in that, but I'm not sure which one!", "I only respond to specific commands like /start or /ping.", "Please check the /help menu for a list of available commands."],
+    "boredom": ["Feeling bored? Let's chat!", "Time to find something fun to do!", "I can try to entertain you if you're bored.", "Boredom is the mind's way of telling you to create something."],
+}
+
+try:
+    with open("conversation.json", "r", encoding="utf-8") as f:
+        # Load existing data, and update with defaults if any keys are missing
+        DATA = DEFAULT_DATA.copy()
+        DATA.update(json.load(f))
+except:
+    # Use default data if file is missing or corrupted
+    DATA = DEFAULT_DATA.copy()
+
 CHAT_IDS_FILE = "chats.json"
 if os.path.exists(CHAT_IDS_FILE):
     with open(CHAT_IDS_FILE, "r") as f:
@@ -144,51 +139,97 @@ if os.path.exists(CHAT_IDS_FILE):
 else:
     KNOWN_CHATS = {"groups": [], "privates": []}
 
+
+# ----------------- EXPANDED KEYWORDS (110+ entries) -----------------
 KEYWORDS = {
-    "love": "love", "i love you": "love", "miss": "love",
-    "sad": "sad", "cry": "sad", "depressed": "sad",
-    "happy": "happy", "mast": "happy",
-    "hello": "daily", "hi": "daily", "hey": "daily",
-    "bye": "bye", "goodbye": "bye",
-    "thanks": "thanks", "thank you": "thanks",
-    "gm": "morning", "good morning": "morning",
-    "gn": "night", "good night": "night",
-    "chutiya": "abuse", "bc": "abuse", "mc": "abuse"
+    # Original / Extended Greetings (daily)
+    "hello": "daily", "hi": "daily", "hey": "daily", "yo": "daily", "wassup": "daily",
+    "sup": "daily", "greetings": "daily", "aloha": "daily", "hola": "daily", "good day": "daily",
+
+    # Original / Extended Love (love)
+    "love": "love", "i love you": "love", "miss": "love", "crush": "love", "heart": "love",
+    "darling": "love", "sweetie": "love", "adore": "love", "obsessed": "love", "forever": "love",
+
+    # Original / Extended Sadness (sad)
+    "sad": "sad", "cry": "sad", "depressed": "sad", "lonely": "sad", "miserable": "sad",
+    "heartbroken": "sad", "upset": "sad", "gloom": "sad", "melancholy": "sad", "weep": "sad",
+
+    # Original / Extended Happiness (happy)
+    "happy": "happy", "mast": "happy", "great": "happy", "awesome": "happy", "excited": "happy",
+    "jolly": "happy", "wonderful": "happy", "amazing": "happy", "cool": "happy", "cheerful": "happy",
+
+    # Original / Extended Farewells (bye)
+    "bye": "bye", "goodbye": "bye", "cya": "bye", "later": "bye", "peace out": "bye",
+    "farewell": "bye", "adios": "bye", "night night": "bye", "ta ta": "bye", "see you": "bye",
+
+    # Original / Extended Thanks (thanks)
+    "thanks": "thanks", "thank you": "thanks", "grateful": "thanks", "appreciated": "thanks", "cheers": "thanks",
+    "thx": "thanks", "nice one": "thanks", "good job": "thanks", "ty": "thanks", "tenk u": "thanks",
+
+    # Original Morning (morning)
+    "gm": "morning", "good morning": "morning", "mornin": "morning", "rise and shine": "morning", "wake up": "morning",
+
+    # Original Night (night)
+    "gn": "night", "good night": "night", "nighty night": "night", "sleep well": "night", "sweet dreams": "night",
+
+    # Original Abuse (abuse)
+    "chutiya": "abuse", "bc": "abuse", "mc": "abuse", "fu": "abuse", "wtf": "abuse",
+
+    # ------------------ NEW CATEGORIES ------------------
+    # Inquiries (questions)
+    "how are you": "questions", "what is your name": "questions", "who are you": "questions", "where are you from": "questions",
+    "age": "questions", "what can you do": "questions", "why are you here": "questions", "can you help": "questions",
+    "are you busy": "questions", "favorite color": "questions",
+
+    # Technology (tech)
+    "python": "tech", "telegram": "tech", "code": "tech", "bot": "tech", "ai": "tech",
+    "developer": "tech", "coding": "tech", "program": "tech", "software": "tech", "api": "tech",
+
+    # Entertainment (movies)
+    "movie": "movies", "film": "movies", "netflix": "movies", "cinema": "movies", "show": "movies",
+    "series": "movies", "watch": "movies", "tv": "movies", "stream": "movies", "thriller": "movies",
+
+    # Food & Drink (food)
+    "pizza": "food", "burger": "food", "eat": "food", "hungry": "food", "food": "food",
+    "snack": "food", "drink": "food", "coffee": "food", "tea": "food", "cooking": "food",
+
+    # Compliments (compliment)
+    "good bot": "compliment", "nice": "compliment", "great job": "compliment", "clever": "compliment", "helpful": "compliment",
+    "smart": "compliment", "best bot": "compliment", "amazing job": "compliment", "perfect": "compliment", "fantastic": "compliment",
+
+    # Insult Responses (insult_response)
+    "shut up": "insult_response", "stupid": "insult_response", "dumb": "insult_response", "ugly": "insult_response", "bad bot": "insult_response",
+    "worst": "insult_response", "useless": "insult_response", "sucks": "insult_response", "lame": "insult_response", "rude": "insult_response",
+
+    # Time & Weather (time_weather)
+    "time": "time_weather", "weather": "time_weather", "outside": "time_weather", "temperature": "time_weather", "climate": "time_weather",
+
+    # Humor (joke)
+    "joke": "joke", "funny": "joke", "humer": "joke", "laugh": "joke", "lol": "joke",
+
+    # Curiosity/Inquiry (curiosity)
+    "why": "curiosity", "how": "curiosity", "tell me more": "curiosity", "explain": "curiosity", "curious": "curiosity",
+
+    # Formal Greetings (greeting_formal)
+    "salutations": "greeting_formal", "pleased to meet you": "greeting_formal", "esteemed": "greeting_formal", "formalities": "greeting_formal", "good evening": "greeting_formal",
+
+    # Command Inquiry (command_inquiry)
+    "/": "command_inquiry", "command": "command_inquiry",
+
+    # Boredom (boredom)
+    "bored": "boredom", "nothing to do": "boredom",
 }
+# ----------------- EXPANDED KEYWORDS END -----------------
+
 
 # -------- Utility Functions --------
 def get_reply(text: str):
-    """Fetches a random reply from MongoDB based on keywords."""
-    if REPLIES_COLLECTION is None:
-        logger.warning("DB is unavailable. Returning fallback message.")
-        return "Sorry, the database connection is currently unavailable. 🥺"
-
     text = text.lower()
-    category = "daily" # Default category
-
     for word, cat in KEYWORDS.items():
-        if word in text:
-            category = cat
-            break
-            
-    try:
-        # Find the document for the determined category
-        document = REPLIES_COLLECTION.find_one({"category": category})
-        
-        if document and "replies" in document and document["replies"]:
-            return random.choice(document["replies"])
-        else:
-            # Fallback if category is found but replies list is empty/missing
-            default_doc = REPLIES_COLLECTION.find_one({"category": "daily"})
-            if default_doc and "replies" in default_doc and default_doc["replies"]:
-                return random.choice(default_doc["replies"])
-            
-    except Exception as e:
-        logger.error(f"MongoDB fetch error: {e}")
-        
-    # Final fallback if MongoDB fails or has no data
-    return "Hello 👋 I'm active! How can I help you today? (DB issue)"
-
+        if word in text and cat in DATA:
+            return random.choice(DATA[cat])
+    # Fallback to a generic daily greeting if no specific keyword is matched
+    return random.choice(DATA.get("daily", ["Hello 👋"]))
 
 def get_readable_time(seconds: int) -> str:
     result = ''
@@ -226,6 +267,7 @@ async def save_chat_id(chat_id, type_):
     """Saves the chat ID to the known chats list."""
     if chat_id not in KNOWN_CHATS[type_]:
         KNOWN_CHATS[type_].append(chat_id)
+        # Save to file periodically or on update
         with open(CHAT_IDS_FILE, "w") as f:
             json.dump(KNOWN_CHATS, f)
 
@@ -281,6 +323,10 @@ async def callbacks_handler(client, query):
     user = query.from_user
     me = await app.get_me()
     developer_link = DEVELOPER_HANDLE.strip('@')
+    
+    # Check if the button is pressed by the original user (optional, for menu cleanup)
+    # if query.message.reply_to_message and query.message.reply_to_message.from_user.id != user.id:
+    #     return await query.answer("This menu is not for you.", show_alert=True)
     
     if data == "about":
         await query.message.edit_caption(
@@ -372,7 +418,7 @@ async def start_cmd(client, message):
 @app.on_message(filters.command("developer"))
 async def developer_cmd(client, message):
     # Animation
-    anim_text = "𝐘ᴏᴜ 𝐖ᴀɳᴛ ᴛᴏ 𝐊ɳᴏᴡ..𝐓ʜɪs 𝐁ᴏᴛ 𝐃ᴇᴠᴇʟᴏᴘᴇʀ 💥..𝐇ᴇʀᴇ"
+    anim_text = "𝐘ᴏᴜ 𝐖ᴀɳᴛ ᴛᴏ 𝐊ɳᴏᴡ..𝐓ʜɪs 𝐁ᴏᴛ 𝐃ᴇᴠᴇʟᴏᴘᴇʀ 💥.."
     m = await message.reply_text("Searching...")
     
     current = ""
@@ -390,7 +436,7 @@ async def developer_cmd(client, message):
     try:
         await m.delete()
     except:
-        pass 
+        pass # Ignore if the animation message is already deleted/edited/not found
         
     buttons = InlineKeyboardMarkup([
         [InlineKeyboardButton("𝐃ᴇᴠᴇʟᴏᴘᴇʀ ღ", url=f"https://t.me/{DEVELOPER_HANDLE.strip('@')}")]
@@ -413,7 +459,7 @@ async def developer_cmd(client, message):
             reply_markup=buttons,
             parse_mode=enums.ParseMode.MARKDOWN
         )
-        logger.error(f"Error sending developer photo: {e}") # Log the error 
+        print(f"Error sending developer photo: {e}") # Log the error 
 
 # -------- /ping Command --------
 @app.on_message(filters.command("ping"))
@@ -481,6 +527,7 @@ async def broadcast_cmd(client, message):
                     await app.send_message(chat_id, text)
                 sent += 1
             except Exception as e:
+                # print(f"Failed to broadcast to {chat_id}: {e}") # Debugging line
                 failed += 1
                 continue
                 
@@ -542,10 +589,9 @@ async def tagall_cmd(client, message):
         async for member in app.get_chat_members(chat_id):
             if not (member.user.is_bot or member.user.is_deleted):
                 member_list.append(member.user)
-    except Exception as e:
-        logger.error(f"Error fetching members for tagall: {e}")
+    except Exception:
         TAGGING[chat_id] = False
-        return await m.edit_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫s: 𝐌𝐚𝐲𝐛𝐞 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩 𝐢s 𝐭𝐨𝐨 𝐛𝐢𝐠 𝐨𝐫 𝐈 𝐝𝐨𝐧't 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s.")
+        return await m.edit_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫s: 𝐌𝐚𝐲𝐛𝐞 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩 𝐢s 𝐭𝐨𝐨 𝐛𝐢𝐠 𝐨𝐫 𝐈 𝐝𝐨𝐧'𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s.")
 
     # Start tagging in chunks
     chunk_size = 5
@@ -608,17 +654,16 @@ async def couples_cmd(client, message):
     await message.reply_text(
         f"💘 𝐍ᴇᴡ 𝐂ᴏᴜᴘʟᴇ ᴏғ ᴛʜᴇ 𝐃ᴀʏ!\n\n"
         f"[{user1.first_name}](tg://user?id={user1.id}) 💖 [{user2.first_name}](tg://user?id={user2.id})\n"
-        f"𝐋ᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}%! 🎉",
-        disable_web_page_preview=True
+        f"𝐋ᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}%! 🎉"
     )
 
 @app.on_message(filters.command("cute"))
 async def cute_cmd(client, message):
     cute_level = random.randint(30, 99)
     user = message.from_user
-    text = f"{user.first_name}'𝐬 ᴄᴜᴛᴇɴᴇss ʟᴇᴠᴇʟ ɪs {cute_level}% 💖"
+    text = f"[{user.first_name}](tg://user?id={user.id})'𝐬 ᴄᴜᴛᴇɴᴇss ʟᴇᴠᴇʟ ɪs {cute_level}% 💖"
     buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
-    await message.reply_text(text, reply_markup=buttons)
+    await message.reply_text(text, reply_markup=buttons, parse_mode=enums.ParseMode.MARKDOWN)
 
 @app.on_message(filters.command("love"))
 async def love_cmd(client, message):
@@ -635,10 +680,10 @@ async def love_cmd(client, message):
     # The rest of the logic is fine
     love_percent = random.randint(1, 100)
     text = f"❤️ 𝐋ᴏᴠᴇ 𝐏ᴏssɪʙʟɪᴛʏ\n" \
-               f"{names[0]} & {names[1]}'𝐬 ʟᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}% 😉"
+               f"*{names[0]}* & *{names[1]}*'𝐬 ʟᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}% 😉"
                  
     buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
-    await message.reply_text(text, reply_markup=buttons) 
+    await message.reply_text(text, reply_markup=buttons, parse_mode=enums.ParseMode.MARKDOWN) 
 
 # -------- /afk Command --------
 @app.on_message(filters.command("afk"))
@@ -658,7 +703,7 @@ async def afk_cmd(client, message):
         return # Stop execution after returning
         
     # If user is not AFK, they are setting AFK status
-    reason = message.text.split(None, 1)[1] if len(message.command) > 1 else "𝐍ᴏ ʀᴇᴀsᴏɴ ɢɪᴠ."
+    reason = message.text.split(None, 1)[1] if len(message.command) > 1 else "𝐍ᴏ ʀᴇᴀsᴏɴ ɢɪᴠᴇ."
     
     AFK_USERS[user_id] = {"reason": reason, "chat_id": message.chat.id, "username": user_name, "time": time.time()}
     
@@ -667,33 +712,36 @@ async def afk_cmd(client, message):
         f"𝐇ᴇʏ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ ᴀʀᴇ 𝐀ғᴋ! (𝐑ᴇᴀsᴏɴ: {reason})",
         parse_mode=enums.ParseMode.MARKDOWN
     )
+    # The automatic "I'm back" message when they send a non-/afk message is handled in group_reply_and_afk_checker 
 
 # -------- /mmf Command (FIXED - Simple reply) --------
 @app.on_message(filters.command("mmf") & filters.group)
 async def mmf_cmd(client, message):
-    # This feature is placeholder due to missing image processing libs
+    # This feature requires complex external tools/logic (e.g., Pillow).
+    # Since the full functionality is not implemented, we provide a clean, non-buggy error/status message.
     
     if not message.reply_to_message or not message.reply_to_message.sticker:
-        return await message.reply_text("❗ 𝐑ᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ ᴀɴᴅ ᴘʀᴏᴠɪᴅᴇ ᴛᴇxᴛ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.\n\n*(𝐍ᴏᴛᴇ: ᴛʜɪs ғᴇᴀᴛᴜʀᴇ ɪs ᴄᴜʀᴇɴᴛʟʏ ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴇɴᴀɴᴄᴇ)*")
+        return await message.reply_text("❗ 𝐑ᴇᴘʟʏ ᴛᴏ ᴀ sᴛɪᴄᴋᴇʀ ᴀɴᴅ ᴘʀᴏᴠɪᴅᴇ ᴛᴇxᴛ ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.\n\n*(𝐍ᴏᴛᴇ: ᴛʜɪs ғᴇᴀᴛᴜʀᴇ ɪs ᴄᴜʀᴇɴᴛʟʏ ᴜɴᴅᴇʀ ᴍᴀɪɴᴛᴀɴᴄᴇ)*")
         
     if len(message.command) < 2:
         return await message.reply_text("❗ 𝐏𝐫𝐨𝐯𝐢𝐝𝐞 𝐭𝐡𝐞 𝐭𝐞𝐱𝐭 𝐲𝐨𝐮 w𝐚𝐧𝐭 𝐨𝐧 𝐭𝐡𝐞 𝐬𝐭𝐢𝐜𝐤𝐞𝐫.")
         
     await message.reply_text(
         "❌ 𝐒𝐭𝐢𝐜𝐤𝐞𝐫 𝐓𝐞𝐱𝐭 𝐅𝐞𝐚𝐭𝐮𝐫𝐞 𝐔𝐧𝐚𝐯𝐚𝐢𝐥𝐚𝐛𝐥𝐞\n"
-        "𝐏𝐥𝐞𝐚𝐬𝐞 𝐧𝐨𝐭𝐞: 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢s 𝐭𝐞𝐦𝐩𝐨𝐫𝐚𝐫𝐢𝐥𝐲 𝐝𝐢𝐬𝐚𝐛𝐥𝐞𝐝 𝐝𝐮𝐞 ᴛᴏ 𝐦𝐢𝐬𝐬𝐢𝐧𝐠 𝐢𝐦𝐚𝐠𝐞 𝐩𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠 𝐥𝐢𝐛𝐫𝐚𝐫𝐢𝐞𝐬. "
+        "𝐏𝐥𝐞𝐚𝐬𝐞 𝐧𝐨𝐭𝐞: 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐭𝐞𝐦𝐩𝐨𝐫𝐚𝐫𝐢𝐥𝐲 𝐝𝐢𝐬𝐚𝐛𝐥𝐞𝐝 𝐝𝐮𝐞 𝐭𝐨 𝐦𝐢𝐬𝐬𝐢𝐧𝐠 𝐢𝐦𝐚𝐠𝐞 𝐩𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠 𝐥𝐢𝐛𝐫𝐚𝐫𝐢𝐞𝐬. "
         "𝐈 ᴀᴍ ᴡᴏʀᴋɪɴɢ ᴏɴ ɪᴛ!"
     ) 
 
 # -------- /staff, /botlist Commands --------
 @app.on_message(filters.command("staff") & filters.group)
 async def staff_cmd(client, message):
+    # Logic confirmed from previous fix
     try:
         admins = [
             admin async for admin in app.get_chat_members(message.chat.id, filter=enums.ChatMembersFilter.ADMINISTRATORS)
         ]
         
-        staff_list = "👑 𝐆ʀᴏᴜp 𝐒ᴛᴀғғ 𝐌ᴇᴍʙᴇʀs:\n"
+        staff_list = "👑 𝐆ʀᴏᴜᴘ 𝐒ᴛᴀғғ 𝐌ᴇᴍʙᴇʀs:\n"
         for admin in admins:
             if not admin.user.is_bot:
                 tag = f"[{admin.user.first_name}](tg://user?id={admin.user.id})"
@@ -710,12 +758,13 @@ async def botlist_cmd(client, message):
     if not await is_admin(message.chat.id, message.from_user.id):
         return await message.reply_text("❗ ᴏɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /ʙᴏᴛʟɪsᴛ.")
         
+    # Logic confirmed from previous fix
     try:
         bots = [
             bot async for bot in app.get_chat_members(message.chat.id, filter=enums.ChatMembersFilter.BOTS)
         ]
         
-        bot_list = "🤖 𝐁ᴏᴛs ɪɴ ᴛʜɪs 𝐆ʀᴏᴜp:\n"
+        bot_list = "🤖 𝐁ᴏᴛs ɪɴ ᴛʜɪs 𝐆ʀᴏᴜᴘ:\n"
         for bot in bots:
             tag = f"[{bot.user.first_name}](tg://user?id={bot.user.id})"
             # Ensure username exists before trying to access it
@@ -729,6 +778,7 @@ async def botlist_cmd(client, message):
         await message.reply_text(f"🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐛𝐨𝐭 𝐥𝐢𝐬𝐭: {e}") 
 
 # -------- Game Commands --------
+# These commands use Telegram's native dice functionality
 @app.on_message(filters.command("dice"))
 async def dice_cmd(client, message):
     await app.send_dice(message.chat.id, "🎲")
@@ -752,13 +802,10 @@ async def private_reply(client, message):
     reply = get_reply(message.text)
     await message.reply_text(reply)
 
-# -------- Group Auto Reply & AFK Checker (FIXED) --------
+# -------- Group Auto Reply & AFK Checker --------
 @app.on_message(filters.text & filters.group, group=1)
 async def group_reply_and_afk_checker(client, message: Message):
     await save_chat_id(message.chat.id, "groups")
-    
-    # Get bot info early
-    me = await client.get_me()
     
     # 1. Check if the user sending a regular message is AFK (Coming back)
     if (message.from_user and 
@@ -813,23 +860,21 @@ async def group_reply_and_afk_checker(client, message: Message):
             break 
             
     # 3. Chatbot Auto-Reply Logic
+    me = await client.get_me()
     
-    # CRITICAL: Bot must be an admin to reply (as requested)
+    # CRITICAL: Bot must be an admin to reply if not a reply/mention
     if message.chat.type != enums.ChatType.PRIVATE and not await is_bot_admin(message.chat.id):
         # The bot cannot reply even if CHATBOT_STATUS is True if it's not an admin.
-        return
+        return 
         
     is_chatbot_on = CHATBOT_STATUS.get(message.chat.id, True)
     is_reply_to_bot = message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id == me.id
-    is_direct_mention = message.text and me.username and me.username in message.text
-
-    # The actual text being replied to (for the chatbot lookup)
-    text_to_process = message.text
-
+    is_direct_mention = message.text and me.username in message.text if me.username else False
+    
     if is_chatbot_on:
         if is_reply_to_bot or is_direct_mention:
             # Always reply if the bot is directly addressed
-            reply = get_reply(text_to_process)
+            reply = get_reply(message.text)
             await message.reply_text(reply)
             
         elif random.random() < 0.2: # Low chance (20%) for general group conversation
@@ -841,51 +886,58 @@ async def group_reply_and_afk_checker(client, message: Message):
                 not message.reply_to_message.from_user.is_bot
             )
             
-            # FIX: Completed the logic here
             if not is_reply_to_other_user:
-                reply = get_reply(text_to_process)
-                await message.reply_text(reply)
+                reply = get_reply(message.text)
+                await message.reply_text(reply) 
 
+# -------- Voice Chat Notifications (FIXED) --------
+@app.on_message(filters.video_chat_started | filters.video_chat_ended | filters.video_chat_members_invited, group=2)
+async def voice_chat_events(client, message):
+    # Ensure this only runs in groups/supergroups
+    if message.chat.type not in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        return
 
-# -------- Flask Server Setup (for Render Health Check) --------
-flask_app = Flask(__name__)
+    if message.video_chat_started:
+        await message.reply_text("🎤 𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐒ᴛᴀʀᴛᴇᴅ! 𝐓ɪᴍᴇ ᴛᴏ ᴊᴏɪɴ!")
+        
+    elif message.video_chat_ended:
+        # Get duration safely
+        duration = get_readable_time(message.video_chat_ended.duration) if message.video_chat_ended.duration else "ᴀ sʜᴏʀᴛ ᴛɪᴍᴇ"
+        await message.reply_text(f"❌ 𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐄ɴᴅᴇᴅ! 𝐈ᴛ ʟᴀsᴛᴇᴅ ғᴏʀ {duration}.")
+        
+    elif message.video_chat_members_invited:
+        invited_users_count = len(message.video_chat_members_invited.users)
+        inviter = message.from_user.mention
+        
+        # Check if the bot was invited (optional, for specific reply)
+        me = await client.get_me()
+        if me.id in [u.id for u in message.video_chat_members_invited.users]:
+            await message.reply_text(f"📣 𝐇ᴇʏ {inviter}, ᴛʜᴀɴᴋs ғᴏʀ ɪɴᴠɪᴛɪɴɢ ᴍᴇ ᴛᴏ ᴛʜᴇ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ!")
+        else:
+            await message.reply_text(f"🗣️ {inviter} ɪɴᴠɪᴛᴇᴅ {invited_users_count} ᴍᴇᴍʙᴇʀs ᴛᴏ ᴛʜᴇ ᴠᴏɪᴄᴇ ᴄʜᴀᴛ!") 
 
-@flask_app.route("/")
-def health_check():
-    """Render health check endpoint."""
-    db_status = "ok" if REPLIES_COLLECTION is not None else "db_failed"
-    return jsonify({
-        "status": "online", 
-        "db_status": db_status
-    }), 200
-
-
-def run_flask_app():
-    """Runs the Flask application using Waitress."""
-    # NOTE: Render requires a web server to bind to 0.0.0.0 and listen on the provided port.
-    port = int(os.environ.get("PORT", 8080))
-    logger.info(f"Starting Flask server on port {port}...")
+# -------- Health Check (RESTORED) --------
+PORT = int(os.environ.get("PORT", 8080))
+class _H(BaseHTTPRequestHandler):
+    """Simple HTTP server handler for health checks."""
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"OK")
+        
+def _start_http():
+    """Starts the HTTP server in a separate thread."""
     try:
-        # Use Waitress for production serving
-        serve(flask_app, host="0.0.0.0", port=port)
+        # NOTE: 0.0.0.0 is used for external accessibility in container environments
+        server = HTTPServer(("0.0.0.0", PORT), _H)
+        print(f"Starting health check server on port {PORT}...")
+        server.serve_forever()
     except Exception as e:
-        logger.error(f"Flask server failed to start: {e}")
+        print(f"Health check server failed to start: {e}")
 
-# -------- Main Execution Block (FIXED & COMPLETE) --------
+# Start the health check server in a background thread
+threading.Thread(target=_start_http, daemon=True).start()
 
-if __name__ == '__main__':
-    # Start Flask in a separate thread
-    flask_thread = threading.Thread(target=run_flask_app)
-    flask_thread.start()
-
-    # Start the Pyrogram bot client
-    try:
-        logger.info("Starting Pyrogram bot client...")
-        # The app.run() call is blocking and keeps the main thread alive
-        app.run()
-    except Exception as e:
-        logger.error(f"Pyrogram bot failed to start: {e}")
-    finally:
-        # Wait for the flask thread to finish before exiting (mostly for graceful shutdown)
-        flask_thread.join()
-        logger.info("Bot application shut down.")
+# Run the bot
+print("Bot starting...")
+app.run()
