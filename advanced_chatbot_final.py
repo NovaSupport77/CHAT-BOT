@@ -941,33 +941,36 @@ from pyrogram.types import Message
 
 # -------- CHAT AND VOICE CHAT HANDLERS (Permanent Notifications) --------
 
+from pyrogram import Client, filters, enums
+from pyrogram.types import Message
 
+# NOTE: The functions 'save_chat_id' is assumed to be defined elsewhere.
+# Assuming 'app' is your Pyrogram Client instance.
 
 # Welcome Message (Permanent, not deleted)
-
 @app.on_message(filters.new_chat_members & filters.group)
-
 async def welcome_handler(client, message: Message):
+    for user in message.new_chat_members:
+        # FIX: 'if' statement is now correctly indented inside the 'for' loop
+        if user.is_self:
+            # Bot was added to the group
+            await message.reply_text(
+                f"**𝐓ʜᴀɴᴋs** ғᴏʀ ᴀᴅᴅɪɴɢ ᴍᴇ ᴛᴏ *{message.chat.title}*! 🎉\n"
+                f"I ᴀᴍ ʜᴇʀᴇ ᴛᴏ ᴋᴇᴇᴘ ᴛʜᴇ ᴄʜᴀᴛ ᴀᴄᴛɪᴠᴇ",
+                parse_mode=enums.ParseMode.MARKDOWN
+            )
+            # Assuming save_chat_id is a function that saves the chat ID
+            await save_chat_id(message.chat.id, "groups")
+        
+        # FIX: 'else' statement is correctly aligned with 'if' inside the 'for' loop
+        else:
+            # New member joined
+            mention = f"[{user.first_name}](tg://user?id={user.id})"
+            await message.reply_text(
+                f"👋 𝐇ᴇʏ, {mention} ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ➳ *{message.chat.title}*! ʜᴀᴠᴇ ᴀ ғᴀɴᴛᴀsᴛɪᴄ ᴅᴀʏ♡.",
+                parse_mode=enums.ParseMode.MARKDOWN
+            )
 
-    for user in message.new_chat_members:
-
-    if user.is_self:
-        # Bot was added to the group
-        await message.reply_text(
-            f"**𝐓ʜᴀɴᴋs** ғᴏʀ ᴀᴅᴅɪɴɢ ᴍᴇ ᴛᴏ *{message.chat.title}*! 🎉\n"
-            f"I ᴀᴍ ʜᴇʀᴇ ᴛᴏ ᴋᴇᴇᴘ ᴛʜᴇ ᴄʜᴀᴛ ᴀᴄᴛɪᴠᴇ",
-            parse_mode=enums.ParseMode.MARKDOWN
-        )
-        # Assuming save_chat_id is a function that saves the chat ID
-        await save_chat_id(message.chat.id, "groups")
-
-    else:
-        # New member joined
-        mention = f"[{user.first_name}](tg://user?id={user.id})"
-        await message.reply_text(
-            f"👋 𝐇ᴇʏ, {mention} ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ➳ *{message.chat.title}*! ʜᴀᴠᴇ ᴀ ғᴀɴᴛᴀsᴛɪᴄ ᴅᴀʏ♡.",
-            parse_mode=enums.ParseMode.MARKDOWN
-        )
 
 
 
