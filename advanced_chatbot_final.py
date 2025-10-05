@@ -948,9 +948,6 @@ CHATBOT_STATUS = {}
 # --- Pyrogram Client Initialization ---
 app = Client(
     "advanced_chatbot",
-    api_id=API_ID,
-    api_hash=API_HASH,
-    bot_token=BOT_TOKEN
 )
 
 # --- 1. Custom Filter Definition (The Fix) ---
