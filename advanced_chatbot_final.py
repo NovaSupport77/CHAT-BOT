@@ -951,37 +951,23 @@ async def welcome_handler(client, message: Message):
 
     for user in message.new_chat_members:
 
-        if user.is_self:
+    if user.is_self:
+        # Bot was added to the group
+        await message.reply_text(
+            f"**𝐓ʜᴀɴᴋs** ғᴏʀ ᴀᴅᴅɪɴɢ ᴍᴇ ᴛᴏ *{message.chat.title}*! 🎉\n"
+            f"I ᴀᴍ ʜᴇʀᴇ ᴛᴏ ᴋᴇᴇᴘ ᴛʜᴇ ᴄʜᴀᴛ ᴀᴄᴛɪᴠᴇ",
+            parse_mode=enums.ParseMode.MARKDOWN
+        )
+        # Assuming save_chat_id is a function that saves the chat ID
+        await save_chat_id(message.chat.id, "groups")
 
-            # Bot was added to the group
-
-            await message.reply_text(
-
-                f"**𝐓ʜᴀɴᴋs** ғᴏʀ ᴀᴅᴅɪɴɢ ᴍᴇ ᴛᴏ *{message.chat.title}*! 🎉\n"
-
-                f"I ᴀᴍ ʜᴇʀᴇ ᴛᴏ ᴋᴇᴇᴘ ᴛʜᴇ ᴄʜᴀᴛ ᴀᴄᴛɪᴠᴇ",
-
-                parse_mode=enums.ParseMode.MARKDOWN
-
-            )
-
-            # Assuming save_chat_id is a function that saves the chat ID
-
-            await save_chat_id(message.chat.id, "groups")
-
-        else:
-
-            # New member joined
-
-            mention = f"[{user.first_name}](tg://user?id={user.id})"
-
-            await message.reply_text(
-
-                f"👋 𝐇ᴇʏ, {mention} ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ➳ *{message.chat.title}*! ʜᴀᴠᴇ ᴀ ғᴀɴᴛᴀsᴛɪᴄ ᴅᴀʏ♡.",
-
-                parse_mode=enums.ParseMode.MARKDOWN
-
-            )
+    else:
+        # New member joined
+        mention = f"[{user.first_name}](tg://user?id={user.id})"
+        await message.reply_text(
+            f"👋 𝐇ᴇʏ, {mention} ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ➳ *{message.chat.title}*! ʜᴀᴠᴇ ᴀ ғᴀɴᴛᴀsᴛɪᴄ ᴅᴀʏ♡.",
+            parse_mode=enums.ParseMode.MARKDOWN
+        )
 
 
 
