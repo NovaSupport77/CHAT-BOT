@@ -947,14 +947,11 @@ async def afk_mention_handler(client, message):
                 return # Only send one AFK reply per message
 
 # Handler 2: Group Chatbot Reply Handler (runs only if enabled)
-
 @app.on_message(
-
-    filters.text & filters.group & is_chatbot_enabled &
-
-    ~filters.via_bot & ~filters.command & ~filters.me
-
+    filters.text & filters.group & is_chatbot_enabled &
+    ~filters.via_bot & ~filters.command & ~filters.me
 )
+
 async def group_chat_reply(client, message):
     me = await client.get_me()
     text_to_analyze = message.text
