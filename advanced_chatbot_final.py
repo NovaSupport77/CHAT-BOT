@@ -381,7 +381,7 @@ async def callbacks_handler(client, query):
         await query.answer("𝐓ʜɪs ʙᴜᴛᴛᴏɴ ɪs ɴᴏᴛ ʏᴇᴛ 𝐅ᴜɴᴄᴛɪ𝐎N𝐀𝐋.") 
 
 # -------- Voice Chat Notifications (New Feature) --------
-@app.on_message(filters.voice_chat_started & filters.group)
+@app.on_message(filters.video_chat_started & filters.group)
 async def voice_chat_started_handler(client, message):
     """Sends a notification when a voice chat starts."""
     chat_id = message.chat.id
@@ -395,7 +395,7 @@ async def voice_chat_started_handler(client, message):
         parse_mode=enums.ParseMode.MARKDOWN
     )
 
-@app.on_message(filters.voice_chat_ended & filters.group)
+@app.on_message(filters.video_chat_ended & filters.group)
 async def voice_chat_ended_handler(client, message):
     """Sends a notification when a voice chat ends."""
     chat_id = message.chat.id
