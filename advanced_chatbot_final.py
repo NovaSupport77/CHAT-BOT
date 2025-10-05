@@ -868,15 +868,14 @@ async def botlist_cmd(client, message):
 
 @app.on_message(filters.voice_chat_started & filters.group)
 async def voice_chat_started_handler(client, message):
-	# The user who started the VC is generally in the service message.
-	user = message.from_user if message.from_user else client.get_me() 
-	vc_starter = f"[{user.first_name}](tg://user?id={user.id})"
-	await message.reply_text(
-		f"📢 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐒𝐭𝐚𝐫𝐭𝐞𝐝!\n\n"
-		f"{vc_starter} 𝐡𝐚𝐬 𝐬𝐭𝐚𝐫𝐭𝐞𝐝 𝐚 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭. 𝐂𝐨𝐦𝐞 𝐣𝐨𝐢𝐧 𝐭𝐡𝐞 𝐜𝐨𝐧𝐯𝐞𝐫𝐬𝐚𝐭𝐢𝐨𝐧! 🎙️",
-		parse_mode=enums.ParseMode.MARKDOWN
-	)
-
+    # The user who started the VC is generally in the service message.
+    user = message.from_user if message.from_user else await client.get_me()
+    vc_starter = f"[{user.first_name}](tg://user?id={user.id})"
+    await message.reply_text(
+        f"📢 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐒𝐭𝐚𝐫𝐭𝐞𝐝!\n\n"
+        f"{vc_starter} 𝐡𝐚𝐬 𝐬𝐭𝐚𝐫𝐭𝐞𝐝 𝐚 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭. 𝐂𝐨𝐦𝐞 𝐣𝐨𝐢𝐧 𝐭𝐡𝐞 𝐜𝐨𝐧𝐯𝐞𝐫𝐬𝐚𝐭𝐢𝐨𝐧! 🎙️",
+        parse_mode=enums.ParseMode.MARKDOWN
+    )
 @app.on_message(filters.voice_chat_ended & filters.group)
 async def voice_chat_ended_handler(client, message):
 	# Telegram usually provides the duration when the VC ends
