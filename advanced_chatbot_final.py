@@ -207,81 +207,86 @@ KEYWORDS = {
 
 # -------- Utility Functions --------
 def get_reply(text: str):
-	"""
-	Determines the response (text or sticker ID) based on the input text.
-	Returns (response, is_sticker)
-	"""
-	if not text:
-		# Fall back to daily text
-		return (random.choice(DATA.get("daily", ["Hello 👋"])), False)
+    """
+    Determines the response (text or sticker ID) based on the input text.
+    Returns (response, is_sticker)
+    """
+    if not text:
+        # Fall back to daily text
+        return (random.choice(DATA.get("daily", ["Hello 👋"])), False)
 
-	text = text.lower()
-	
-	# FIX: Removed the non-printable character U+00A0 from the end of the line
-	text = re.sub(r'[^\w\s]', '', text) 
-	
-	for word, cat in KEYWORDS.items():
-		# Check if keyword is a substring of the message text
-		if word in text:
-			if cat.startswith("sticker_") and cat in DATA and DATA[cat]:
-				# Returns a random sticker ID from the category (is_sticker=True)
-				sticker_id = random.choice(DATA[cat])
-				return (sticker_id, True) 
-			elif cat in DATA and DATA[cat]:
-				# Returns a random text reply (is_sticker=False)
-				return (random.choice(DATA[cat]), False)
-	
-	# If no specific keyword is found, send a general/daily reply
-	return (random.choice(DATA.get("daily", ["Hello 👋"])), False)
+    text = text.lower()
+
+    # FIX: Removed the non-printable character U+00A0 from the end of the line
+    text = re.sub(r'[^\w\s]', '', text)
+
+    for word, cat in KEYWORDS.items():
+        # Check if keyword is a substring of the message text
+        if word in text:
+            if cat.startswith("sticker_") and cat in DATA and DATA[cat]:
+                # Returns a random sticker ID from the category (is_sticker=True)
+                sticker_id = random.choice(DATA[cat])
+                return (sticker_id, True)
+            elif cat in DATA and DATA[cat]:
+                # Returns a random text reply (is_sticker=False)
+                return (random.choice(DATA[cat]), False)
+
+    # If no specific keyword is found, send a general/daily reply
+    return (random.choice(DATA.get("daily", ["Hello 👋"])), False)
+
 
 def get_readable_time(seconds: int) -> str:
-	result = ''
-	(days, remainder) = divmod(seconds, 86400)
-	(hours, remainder) = divmod(remainder, 3600)
-	(minutes, seconds) = divmod(remainder, 60)
-	if days > 0:
-		result += f"{days}d "
-	if hours > 0:
-		result += f"{hours}h "
-	if minutes > 0:
-		result += f"{minutes}m "
-	if seconds > 0:
-		result += f"{seconds}s"
-	return result.strip() or "just now"
+    result = ''
+    (days, remainder) = divmod(seconds, 86400)
+    (hours, remainder) = divmod(remainder, 3600)
+    (minutes, seconds) = divmod(remainder, 60)
+    if days > 0:
+        result += f"{days}d "
+    if hours > 0:
+        result += f"{hours}h "
+    if minutes > 0:
+        result += f"{minutes}m "
+    if seconds > 0:
+        result += f"{seconds}s"
+    return result.strip() or "just now"
+
 
 async def is_admin(chat_id, user_id):
-	"""Checks if a user is an admin or owner of the chat."""
-	try:
-		member = await app.get_chat_member(chat_id, user_id)
-		return member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
-	except Exception:
-		return False
+    """Checks if a user is an admin or owner of the chat."""
+    try:
+        member = await app.get_chat_member(chat_id, user_id)
+        return member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
+    except Exception:
+        return False
+
 
 async def is_bot_admin(chat_id):
-	"""Checks if the bot is an admin in the chat."""
-	try:
-		me = await app.get_me()
-		member = await app.get_chat_member(chat_id, me.id)
-		return member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
-	except Exception:
-		return False
+    """Checks if the bot is an admin in the chat."""
+    try:
+        me = await app.get_me()
+        member = await app.get_chat_member(chat_id, me.id)
+        return member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
+    except Exception:
+        return False
+
 
 async def save_chat_id(chat_id, type_):
-	"""Saves the chat ID to the known chats list."""
-	chat_id_str = str(chat_id)
-	
-	if chat_id_str not in KNOWN_CHATS[type_]:
-		KNOWN_CHATS[type_].append(chat_id_str)
-		with open(CHAT_IDS_FILE, "w") as f:
-			json.dump(KNOWN_CHATS, f)
+    """Saves the chat ID to the known chats list."""
+    chat_id_str = str(chat_id)
+
+    if chat_id_str not in KNOWN_CHATS[type_]:
+        KNOWN_CHATS[type_].append(chat_id_str)
+        with open(CHAT_IDS_FILE, "w") as f:
+            json.dump(KNOWN_CHATS, f)
+
 
 # Custom filter for checking chatbot status
 def is_chatbot_enabled(_, __, message: Message):
-	"""Returns True if chatbot is enabled for this group."""
-	if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
-		# Default is False, so only True if explicitly set to True
-		return CHATBOT_STATUS.get(message.chat.id, False)
-	return False # Chatbot should run in private chats via the main handler
+    """Returns True if chatbot is enabled for this group."""
+    if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        # Default is False, so only True if explicitly set to True
+        return CHATBOT_STATUS.get(message.chat.id, False)
+    return False  # Chatbot should run in private chats via the main handler
 
 # -------- Inline Button Handlers & Menus --------
 
