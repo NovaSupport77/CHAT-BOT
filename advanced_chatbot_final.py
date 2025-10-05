@@ -868,51 +868,61 @@ async def botlist_cmd(client, message):
 
 @app.on_message(filters.voice_chat_started & filters.group)
 async def voice_chat_started_handler(client, message):
-    # The user who started the VC is generally in the service message.
+    """Triggered when a group voice chat is started."""
     user = message.from_user if message.from_user else await client.get_me()
     vc_starter = f"[{user.first_name}](tg://user?id={user.id})"
+
     await message.reply_text(
         f"📢 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐒𝐭𝐚𝐫𝐭𝐞𝐝!\n\n"
         f"{vc_starter} 𝐡𝐚𝐬 𝐬𝐭𝐚𝐫𝐭𝐞𝐝 𝐚 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭. 𝐂𝐨𝐦𝐞 𝐣𝐨𝐢𝐧 𝐭𝐡𝐞 𝐜𝐨𝐧𝐯𝐞𝐫𝐬𝐚𝐭𝐢𝐨𝐧! 🎙️",
         parse_mode=enums.ParseMode.MARKDOWN
     )
+
+
 @app.on_message(filters.voice_chat_ended & filters.group)
 async def voice_chat_ended_handler(client, message):
-	# Telegram usually provides the duration when the VC ends
-	if not message.voice_chat_ended:
-		return
-		
-	duration_seconds = message.voice_chat_ended.duration
-	readable_duration = get_readable_time(duration_seconds)
-	
-	await message.reply_text(
-		f"🛑 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐄𝐧𝐝𝐞𝐝!\n\n"
-		f"𝐓𝐡𝐞 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐥𝐚𝐬𝐭𝐞𝐝 𝐟𝐨𝐫: **{readable_duration}** ⏳",
-		parse_mode=enums.ParseMode.MARKDOWN
-	)
+    """Triggered when a group voice chat ends."""
+    if not getattr(message, "voice_chat_ended", None):
+        return
+
+    duration_seconds = getattr(message.voice_chat_ended, "duration", 0)
+    readable_duration = get_readable_time(duration_seconds)
+
+    await message.reply_text(
+        f"🛑 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐄𝐧𝐝𝐞𝐝!\n\n"
+        f"𝐓𝐡𝐞 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐥𝐚𝐬𝐭𝐞𝐝 𝐟𝐨𝐫: **{readable_duration}** ⏳",
+        parse_mode=enums.ParseMode.MARKDOWN
+    )
+
 
 @app.on_message(filters.voice_chat_members_invited & filters.group)
 async def voice_chat_members_invited_handler(client, message):
-	if not message.voice_chat_members_invited:
-		return
-		
-	user = message.from_user
-	inviter = f"[{user.first_name}](tg://user?id={user.id})"
-	invited_users = [
-		f"[{u.first_name}](tg://user?id={u.id})" for u in message.voice_chat_members_invited.users
-	]
-	
-	# Limit the list of invited users for clean message
-	invited_list = ", ".join(invited_users[:5])
-	
-	if len(invited_users) > 5:
-		invited_list += f" and {len(invited_users) - 5} others"
-		
-	await message.reply_text(
-		f"📣 𝐍𝐞𝐰 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐈𝐧𝐯𝐢𝐭𝐞!\n\n"
-		f"{inviter} 𝐢𝐧𝐯𝐢𝐭𝐞𝐝 𝐭𝐡𝐞𝐬𝐞 𝐮𝐬𝐞𝐫𝐬: {invited_list} 𝐭𝐨 𝐭𝐡𝐞 𝐕𝐂. 𝐆𝐞𝐭 𝐢𝐧 𝐭𝐡𝐞𝐫𝐞! 🎧",
-		parse_mode=enums.ParseMode.MARKDOWN
-	)
+    """Triggered when members are invited to a voice chat."""
+    if not getattr(message, "voice_chat_members_invited", None):
+        return
+
+    user = message.from_user or await client.get_me()
+    inviter = f"[{user.first_name}](tg://user?id={user.id})"
+
+    invited_users = []
+    if hasattr(message.voice_chat_members_invited, "users"):
+        invited_users = [
+            f"[{u.first_name}](tg://user?id={u.id})"
+            for u in message.voice_chat_members_invited.users
+        ]
+
+    if not invited_users:
+        return
+
+    invited_list = ", ".join(invited_users[:5])
+    if len(invited_users) > 5:
+        invited_list += f" and {len(invited_users) - 5} others"
+
+    await message.reply_text(
+        f"📣 𝐍𝐞𝐰 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐈𝐧𝐯𝐢𝐭𝐞!\n\n"
+        f"{inviter} 𝐢𝐧𝐯𝐢𝐭𝐞𝐝 𝐭𝐡𝐞𝐬𝐞 𝐮𝐬𝐞𝐫𝐬: {invited_list} 𝐭𝐨 𝐭𝐡𝐞 𝐕𝐂. 𝐆𝐞𝐭 𝐢𝐧 𝐭𝐡𝐞𝐫𝐞! 🎧",
+        parse_mode=enums.ParseMode.MARKDOWN
+    )
 
 # -------- Main Chatbot/Reply Handler (MISSING - CRITICAL FIX) --------
 @app.on_message(
