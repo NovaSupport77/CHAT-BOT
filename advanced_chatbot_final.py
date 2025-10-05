@@ -32,7 +32,6 @@ threading.Thread(target=keep_alive, daemon=True).start()
 
 # -------- Env Vars --------
 # NOTE: Set these environment variables before running!
-# Owner ID is crucial for owner-only commands (stats, broadcast)
 API_ID = int(os.environ.get("API_ID", "0"))
 API_HASH = os.environ.get("API_HASH", "")
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
@@ -52,7 +51,7 @@ app = Client("advanced_chatbot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT
 START_TIME = datetime.now()
 CHATBOT_STATUS = {} # {chat_id: True/False}
 TAGGING = {} # {chat_id: True/False}
-# {user_id: {"reason": str, "chat_id": int, "username": str, "first_name": str, "time": float}}
+# {user_id: {"reason": str, "first_name": str, "time": float}}
 AFK_USERS = {}
 
 # New image URLs and text
@@ -91,7 +90,7 @@ HELP_COMMANDS_TEXT_MAP = {
 		"/chatbot enable/disable ~ 𝐄ɴᴀʙʟᴇ/ᴅɪsᴀʙʟᴇ ᴄʜᴀᴛʙᴏᴛ\n"
 		"\n"
 		"𝐍ᴏᴛᴇ: ᴏɴʟʏ ᴡᴏʀᴋs ɪɴ ɢʀᴏᴜᴘ ᴀɴᴅ ᴏɴʟʏ ғᴏʀ ᴀᴅᴍɪɴs/ᴏᴡɴᴇʀ.\n"
-		"𝐄xᴀᴍᴘʟᴇ: /chatbot enable"
+		"𝐄xᴀᴍᴘ𝐥𝐞: /chatbot enable"
 	),
 	"tools": (
 		"📜 𝐓ᴏᴏʟs 𝐂ᴏᴍᴍᴧɴᴅs:\n"
@@ -106,7 +105,7 @@ HELP_COMMANDS_TEXT_MAP = {
 		"/dice ~ 𝐑ᴏʟʟ ᴧ ᴅɪᴄᴇ (🎲)\n"
 		"/jackpot ~ 𝐉ᴧᴄᴋᴘᴏᴛ ᴍᴀᴄʜɪɴᴇ (🎰)\n"
 		"/football ~ 𝐏ʟᴀʏ ғᴏᴏᴛʙᴧʟʟ (⚽)\n"
-		"/basketball ~ 𝐏ʟᴀʏ sʙᴧsᴋᴇᴛʙᴀʟʟ (🏀)\n"
+		"/basketball ~ 𝐏ʟᴀʏ ʙᴧsᴋᴇᴛʙᴀʟʟ (🏀)\n"
 		"/bowling ~ 𝐏ʟᴀʏ ʙᴏᴡʟɪɴɢ (🎳)\n"
 		"\n_𝐀ʟʟ ᴛʜᴇsᴇ ɢᴀᴍᴇs ᴀʀᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏ ᴇᴠᴇʀʏᴏɴᴇ."
 	),
@@ -114,27 +113,27 @@ HELP_COMMANDS_TEXT_MAP = {
 		"📜 𝐆ʀᴏᴜᴘ 𝐔ᴛɪʟɪᴛʏ 𝐂ᴏᴍᴍᴧɴᴅs:\n"
 		"/staff ~ 𝐃ɪsᴘʟᴧʏs ɢʀᴏᴜᴘ sᴛᴧғғ ᴍᴇᴍʙᴇʀs\n"
 		"/botlist ~ 𝐂ʜᴇᴄᴋ ʜᴏᴡ ᴍᴀɴʏ ʙᴏᴛs ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ (𝐀ᴅᴍɪɴ ᴏɴʟʏ)\n"
-		"**𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐍𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧s** ᴀʀᴇ ᴀʟsᴏ ᴀᴜᴛᴏᴍᴀᴛɪᴄ."
+        "📢 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐍𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧𝐬 𝐀𝐫𝐞 𝐄𝐧𝐚𝐛𝐥𝐞𝐝\n"
 		"\n_ʙᴏᴛʟɪsᴛ ʀᴇǫᴜɪʀᴇs ᴀᴅᴍɪɴ. ᴏᴛʜᴇʀs ᴀʀᴇ ғᴏʀ ᴇᴠᴇʀʏᴏɴᴇ."
 	)
 }
 # ----------------- FANCY FONTS END -----------------
+
 # -------- STICKER MAPPING (User provided stickers) --------
 STICKER_MAPPING = {
-    # Cute Stickers
-    "sticker_cute_1": "CAACAgEAAxkBAAEPgu9o4USg2JWyq8EjIQcHKAJxTISKnAAChwADUSkNOdIrExvjme5qNgQ",
-    "sticker_cute_2": "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE",
-    # Funny Stickers
-    "sticker_funny_1": "CAACAgQAAxkBAAEPguto4USNgkueY_8UUvG1qR0HO8pVJAAC8hEAAuKyeVAr0E__1DsLxTYE",
-    "sticker_funny_2": "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE",
-    # Angry Stickers
-    "sticker_anger_1": "CAACAgUAAxkBAAEPgudo4UR5HlLeS-qX6SPZa68uWVYxXAACNBAAAvyQWFdWZPeCGuC2gjYE",
-    "sticker_anger_2": "CAACAgUAAxkBAAEPgulo4USHqBw08BmrpRAczQX6nqkQXQACsQIAAmfVCVXVlV0wAWPSXDYE",
-    # Other/General Stickers - Mapped as placeholders for other categories
-    "sticker_love_1": "CAACAgQAAxkBAAEPgu1o4USZaO5ewrgQV8bLpU6Y8z0d9AACXA4AAj9T-FN3FZM9W24oiTYE",
-    "sticker_anime_1": "CAACAgEAAxkBAAEPgu9o4USg2JWyq8EjIQcHKAJxTISKnAAChwADUSkNOdIrExvjme5qNgQ",
+	# Cute Stickers
+	"sticker_cute_1": "CAACAgEAAxkBAAEPgu9o4USg2JWyq8EjIQcHKAJxTISKnAAChwADUSkNOdIrExvjme5qNgQ",
+	"sticker_cute_2": "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE", 
+	# Funny Stickers
+	"sticker_funny_1": "CAACAgQAAxkBAAEPguto4USNgkueY_8UUvG1qR0HO8pVJAAC8hEAAuKyeVAr0E__1DsLxTYE",
+	"sticker_funny_2": "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE", 
+	# Angry Stickers
+	"sticker_anger_1": "CAACAgUAAxkBAAEPgudo4UR5HlLeS-qX6SPZa68uWVYxXAACNBAAAvyQWFdWZPeCGuC2gjYE",
+	"sticker_anger_2": "CAACAgUAAxkBAAEPgulo4USHqBw08BmrpRAczQX6nqkQXQACsQIAAmfVCVXVlV0wAWPSXDYE",
+	# Other/General Stickers - Mapped as placeholders for other categories
+	"sticker_love_1": "CAACAgQAAxkBAAEPgu1o4USZaO5ewrgQV8bLpU6Y8z0d9AACXA4AAj9T-FN3FZM9W24oiTYE", 
+	"sticker_anime_1": "CAACAgEAAxkBAAEPgu9o4USg2JWyq8EjIQcHKAJxTISKnAAChwADUSkNOdIrExvjme5qNgQ",
 }
-
 
 # --- Load Replies & Known Chats ---
 try:
@@ -218,8 +217,8 @@ def get_reply(text: str):
 
 	text = text.lower()
 	
-	# Simple normalization: remove non-alphanumeric except spaces for better keyword matching
-	text = re.sub(r'[^\w\s]', '', text) 
+	# FIX: Removed the non-printable character U+00A0 from the end of the line
+	text = re.sub(r'[^\w\s]', '', text) 
 	
 	for word, cat in KEYWORDS.items():
 		# Check if keyword is a substring of the message text
@@ -747,11 +746,9 @@ async def afk_cmd(client, message):
 	except IndexError:
 		reason = "𝐍ᴏ ʀᴇᴀsᴏɴ ɢɪᴠᴇɴ."
 	
-	# Store AFK status
+	# Store AFK status (FIXED STRUCTURE)
 	AFK_USERS[user_id] = {
 		"reason": reason,
-		"chat_id": message.chat.id,
-		"username": message.from_user.username or user_name,
 		"first_name": user_name,
 		"time": time.time()
 	}
@@ -819,79 +816,104 @@ async def staff_cmd(client, message):
 		# FIX: Complete the error message from the incomplete snippet
 		await message.reply_text(f"🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐬𝐭𝐚𝐟𝐟 𝐥𝐢𝐬𝐭: 𝐈 𝐦𝐚𝐲 𝐧𝐨𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s 𝐭𝐨 𝐯𝐢𝐞𝐰 𝐭𝐡𝐞 𝐚𝐝𝐦𝐢𝐧s.")
 
-# -------- /botlist Command (Admin Only) - COMPLETED --------
+# -------- /botlist Command (Admin Only) [FIXED] --------
 @app.on_message(filters.command("botlist") & filters.group)
 async def botlist_cmd(client, message):
 	if not await is_admin(message.chat.id, message.from_user.id):
 		return await message.reply_text("❗ Oɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /ʙᴏᴛʟɪsᴛ.")
 
-	bots_count = 0
-	humans_count = 0
-	
 	try:
-		# Iterate over all chat members
+		bots = []
+		humans = []
+		
+		# Fetch all members
 		async for member in client.get_chat_members(message.chat.id):
 			if member.user.is_bot:
-				bots_count += 1
-			# Also count non-deleted, non-bot users as humans
-			elif not member.user.is_deleted:
-				humans_count += 1
+				bots.append(member.user)
+			else:
+				humans.append(member.user)
+				
+		bot_list_text = f"🤖 𝐁ᴏᴛ𝐬 𝐅ᴏᴜɴᴅ: **{len(bots)}**\n"
 		
-		total_members = bots_count + humans_count
-		
-		# Prevent division by zero
-		bot_percentage = (bots_count / total_members) * 100 if total_members > 0 else 0
-		
-		await message.reply_text(
-			f"🤖 **𝐁𝐨𝐭 𝐂𝐨𝐮𝐧𝐭 𝐒𝐭𝐚𝐭𝐬**\n\n"
-			f"👥 **𝐓𝐨𝐭𝐚𝐥 𝐌𝐞𝐦𝐛𝐞𝐫𝐬**: {total_members}\n"
-			f"👤 **𝐇𝐮𝐦𝐚𝐧𝐬**: {humans_count}\n"
-			f"🤖 **𝐁𝐨𝐭𝐬**: {bots_count}\n"
-			f"📈 **𝐁𝐨𝐭 𝐏𝐞𝐫𝐜𝐞𝐧𝐭𝐚𝐠𝐞**: {bot_percentage:.2f}%",
-			parse_mode=enums.ParseMode.MARKDOWN
+		if bots:
+			bot_list_text += "➖➖➖➖➖➖➖➖➖➖\n"
+			# List up to 10 bots to avoid overly long messages
+			for bot in bots[:10]: 
+				bot_list_text += f"• 🤖 [{bot.first_name}](tg://user?id={bot.id}) {f'@{bot.username}' if bot.username else ''}\n"
+			
+			if len(bots) > 10:
+				bot_list_text += f"\n... and {len(bots) - 10} more bots."
+				
+		else:
+			bot_list_text += "𝐍ᴏ 𝐛ᴏᴛ𝐬 𝐟𝐨𝐮𝐧𝐝 𝐢𝐧 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩."
+			
+		bot_list_text += (
+			f"\n➖➖➖➖➖➖➖➖➖➖\n"
+			f"👤 𝐇𝐮𝐦𝐚𝐧𝐬: **{len(humans)}**\n"
+			f"👥 𝐓𝐨𝐭𝐚𝐥 𝐌𝐞𝐦𝐛𝐞𝐫s: **{len(bots) + len(humans)}**"
 		)
+		
+		await message.reply_text(bot_list_text, parse_mode=enums.ParseMode.MARKDOWN)
+		
 	except Exception as e:
-		print(f"Error fetching botlist: {e}")
-		await message.reply_text("🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐦𝐞𝐦𝐛𝐞𝐫s: 𝐈 𝐦𝐚𝐲 𝐧𝐨𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s.")
+		await message.reply_text(f"🚫 𝐄𝐫𝐫𝐨𝐫 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐛𝐨𝐭 𝐥𝐢𝐬𝐭: 𝐈 𝐦𝐚𝐲 𝐧𝐨𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧𝐬 𝐭𝐨 𝐯𝐢𝐞𝐰 𝐭𝐡𝐞 𝐦𝐞𝐦𝐛𝐞𝐫𝐬.")
+		print(f"Error in botlist: {e}")
 
-
-# -------- VOICE CHAT NOTIFICATION HANDLERS (New Feature) --------
+# -------- Voice Chat Handlers (NEW FEATURE) --------
 
 @app.on_message(filters.voice_chat_started & filters.group)
 async def voice_chat_started_handler(client, message):
-	await message.reply_text("🎤 𝐀 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐡𝐚𝐬 𝐛𝐞𝐞𝐧 𝐬𝐭𝐚𝐫𝐭𝐞𝐝! 𝐉𝐨𝐢𝐧 𝐭𝐡𝐞 𝐜𝐨𝐧𝐯𝐞𝐫𝐬𝐚𝐭𝐢𝐨𝐧.")
+	# The user who started the VC is generally in the service message.
+	user = message.from_user if message.from_user else client.get_me() 
+	vc_starter = f"[{user.first_name}](tg://user?id={user.id})"
+	await message.reply_text(
+		f"📢 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐒𝐭𝐚𝐫𝐭𝐞𝐝!\n\n"
+		f"{vc_starter} 𝐡𝐚𝐬 𝐬𝐭𝐚𝐫𝐭𝐞𝐝 𝐚 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭. 𝐂𝐨𝐦𝐞 𝐣𝐨𝐢𝐧 𝐭𝐡𝐞 𝐜𝐨𝐧𝐯𝐞𝐫𝐬𝐚𝐭𝐢𝐨𝐧! 🎙️",
+		parse_mode=enums.ParseMode.MARKDOWN
+	)
 
 @app.on_message(filters.voice_chat_ended & filters.group)
 async def voice_chat_ended_handler(client, message):
-	# voice_chat_ended attribute contains 'duration'
-	if message.voice_chat_ended:
-		duration_seconds = message.voice_chat_ended.duration
-		duration_readable = get_readable_time(duration_seconds)
-		await message.reply_text(f"🛑 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐞𝐧𝐝𝐞𝐝 𝐚𝐟𝐭𝐞𝐫 {duration_readable}.")
+	# Telegram usually provides the duration when the VC ends
+	if not message.voice_chat_ended:
+		return
+		
+	duration_seconds = message.voice_chat_ended.duration
+	readable_duration = get_readable_time(duration_seconds)
+	
+	await message.reply_text(
+		f"🛑 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐄𝐧𝐝𝐞𝐝!\n\n"
+		f"𝐓𝐡𝐞 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐥𝐚𝐬𝐭𝐞𝐝 𝐟𝐨𝐫: **{readable_duration}** ⏳",
+		parse_mode=enums.ParseMode.MARKDOWN
+	)
 
 @app.on_message(filters.voice_chat_members_invited & filters.group)
-async def voice_chat_invited_handler(client, message):
-	# Get list of invited users
-	invited_users = []
-	if message.voice_chat_members_invited and message.voice_chat_members_invited.users:
-		for user in message.voice_chat_members_invited.users:
-			invited_users.append(f"[{user.first_name}](tg://user?id={user.id})")
-			
-	if invited_users:
-		invited_list = ", ".join(invited_users)
-		# User who performed the invitation
-		inviter_name = f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})" if message.from_user else "Someone"
+async def voice_chat_members_invited_handler(client, message):
+	if not message.voice_chat_members_invited:
+		return
 		
-		await message.reply_text(
-			f"✉️ **{inviter_name}** 𝐢𝐧𝐯𝐢𝐭𝐞𝐝 𝐭𝐡𝐞𝐬𝐞 𝐮𝐬𝐞𝐫𝐬 𝐭𝐨 𝐭𝐡𝐞 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭: {invited_list}",
-			parse_mode=enums.ParseMode.MARKDOWN
-		)
-
+	user = message.from_user
+	inviter = f"[{user.first_name}](tg://user?id={user.id})"
+	invited_users = [
+		f"[{u.first_name}](tg://user?id={u.id})" for u in message.voice_chat_members_invited.users
+	]
+	
+	# Limit the list of invited users for clean message
+	invited_list = ", ".join(invited_users[:5])
+	
+	if len(invited_users) > 5:
+		invited_list += f" and {len(invited_users) - 5} others"
+		
+	await message.reply_text(
+		f"🔔 {inviter} 𝐢𝐧𝐯𝐢𝐭𝐞𝐝 𝐬𝐨𝐦𝐞𝐨𝐧𝐞 𝐭𝐨 𝐭𝐡𝐞 𝐕𝐂:\n"
+		f"**{invited_list}** - 𝐂𝐨𝐦𝐞 𝐣𝐨𝐢𝐧! 🔗",
+		parse_mode=enums.ParseMode.MARKDOWN
+	)
 
 # -------- Main Chatbot Reply Handler (FIXED/ADDED) --------
-# FIX: filters.not_bot changed to ~filters.bot
 @app.on_message(
-	(filters.text | filters.sticker) & ~filters.bot & 
+	# FIX: Replaced filters.not_bot with ~filters.bot 
+	(filters.text | filters.sticker) & ~filters.bot & 
 	(filters.private | filters.mentioned | filters.reply | is_chatbot_enabled)
 )
 async def handle_messages(client, message):
@@ -910,26 +932,25 @@ async def handle_messages(client, message):
 	
 	# 2. Handle incoming AFK mentions in group chats
 	if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
-		for afk_user_id_str, afk_data in list(AFK_USERS.items()):
-			afk_user_id = int(afk_user_id_str)
+		# Check if the message is a reply to an AFK user
+		if message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id in AFK_USERS:
+			afk_user_id = message.reply_to_message.from_user.id
+			afk_data = AFK_USERS[afk_user_id]
 			
-			# Check if the message replies to the AFK user
-			if message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id == afk_user_id:
-				time_afk = get_readable_time(int(time.time() - afk_data["time"]))
-				await message.reply_text(
-					f"⚠️ [{afk_data['first_name']}](tg://user?id={afk_user_id}) 𝐢𝐬 𝐀𝐅𝐊!\n"
-					f"⏰ 𝐀𝐰𝐚𝐲 𝐟𝐨𝐫: {time_afk}\n"
-					f"📝 𝐑𝐞𝐚𝐬𝐨𝐧: {afk_data['reason']}",
-					parse_mode=enums.ParseMode.MARKDOWN
-				)
-				# Only trigger the AFK reply once per mention/reply
-				break 
-
+			time_afk = get_readable_time(int(time.time() - afk_data["time"]))
+			await message.reply_text(
+				f"⚠️ [{afk_data['first_name']}](tg://user?id={afk_user_id}) 𝐢𝐬 𝐀𝐅𝐊!\n"
+				f"⏰ 𝐀𝐰𝐚𝐲 𝐟𝐨𝐫: {time_afk}\n"
+				f"📝 𝐑𝐞𝐚𝐬𝐨𝐧: {afk_data['reason']}",
+				parse_mode=enums.ParseMode.MARKDOWN
+			)
+			return # Stop execution after AFK reply
+	
 	# 3. Handle incoming stickers (User request: reply to sticker with a sticker)
 	if message.sticker:
 		sticker_cats = ["sticker_cute", "sticker_funny", "sticker_anime", "sticker_love"]
 		
-		# Collect all unique sticker IDs from categories
+		# Collect available sticker IDs
 		available_stickers = [
 			s_id for cat in sticker_cats for s_id in DATA.get(cat, []) if s_id
 		]
@@ -940,25 +961,27 @@ async def handle_messages(client, message):
 				await message.reply_sticker(reply_sticker)
 			except Exception as e:
 				print(f"Failed to send reply sticker: {e}")
-		return # Stop execution after sticker reply (since we don't process sticker content for text replies)
+		return # Stop execution after sticker reply
 
 	# 4. Handle incoming text
 	if message.text:
-		# Since the decorator already filters messages for us, we just need to reply.
-		reply, is_sticker = get_reply(message.text)
-		
-		if is_sticker:
-			try:
-				await message.reply_sticker(reply)
-			except Exception as e:
-				# Fallback if sticker fails
-				await message.reply_text(random.choice(DATA.get("daily", ["Hello!"])))
-				print(f"Sticker reply failed: {e}")
-		else:
-			await message.reply_text(reply)
+		# Determine if the bot should reply based on chat type and settings
+		should_reply = (
+			message.chat.type == enums.ChatType.PRIVATE or
+			await filters.mentioned(client, message) or # Bot is mentioned
+			(message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.is_self) or # Bot is replied to
+			CHATBOT_STATUS.get(message.chat.id, False) # Chatbot is enabled
+		)
 
-# -------- Bot Start --------
-if __name__ == "__main__":
-	print("Bot is starting...")
-	app.run()
-	print("Bot has stopped.")
+		if should_reply:
+			reply, is_sticker = get_reply(message.text)
+			
+			if is_sticker:
+				try:
+					await message.reply_sticker(reply)
+				except Exception as e:
+					print(f"Failed to send reply sticker: {e}")
+					# Fallback to text reply if sticker fails
+					await message.reply_text(random.choice(DATA.get("daily", ["Hello!"])))
+			else:
+				await message.reply_text(reply)
