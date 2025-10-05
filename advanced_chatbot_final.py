@@ -921,24 +921,24 @@ async def chatbot_reply_handler(client, message):
     # Check if the message is a reply to the bot
     is_reply_to_me = message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.is_self
 
-    # The get_reply function handles the 60% chance for groups.
-    # It will only attempt a reply if it's a private chat OR it's a group AND
-    # the 60% chance passes OR the message is a direct reply to the bot.
-
-    should_reply = (
-        not is_group or # Always reply in private chat
-        is_reply_to_me or # Always reply if a direct reply
-        CHATBOT_STATUS.get(message.chat.id, False) # Only reply if status is enabled
+    # The chatbot should only proceed if:
+    # 1. It's a private chat (is_group is False)
+    # 2. It's a group AND the chatbot is enabled
+    should_proceed = (
+        not is_group or 
+        CHATBOT_STATUS.get(message.chat.id, False)
     )
 
-    if not should_reply:
+    if not should_proceed:
         return
 
-    # If in a group and not a reply, use the 60% chance logic inside get_reply
-    # If in a private chat or a direct reply in a group, bypass the chance logic
+    # Determine if this message should be subject to the group's chance logic (e.g., 60% chance)
+    # This is True only for messages in a group that are NOT direct replies to the bot.
+    is_chance_reply = is_group and not is_reply_to_me
+
     response, is_sticker = get_reply(
         message.text, 
-        is_group=is_group and not is_reply_to_me # Pass True for group chance only if not a direct reply
+        is_group=is_chance_reply # <--- Pass the new flag here
     )
 
     if response:
@@ -948,7 +948,6 @@ async def chatbot_reply_handler(client, message):
         elif response.strip():
             # Send text reply
             await message.reply_text(response)
-
 
 # -------- Start the bot --------
 # Run the client
