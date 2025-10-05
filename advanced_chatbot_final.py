@@ -958,7 +958,7 @@ async def chat_handler(client, message):
                     await message.reply_text(f"*(Sticker failed to load)* {response}")
 
 
-if name == "main":
+if __name__ == "main":
     print("Bot is starting...")
     app.run()
     print("Bot stopped.")
