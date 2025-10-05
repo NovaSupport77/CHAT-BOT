@@ -1,234 +1,296 @@
-import os
-import json
-import time
-import asyncio
-import random
-from datetime import datetime
-
+# -*- coding: utf-8 -*-
 from pyrogram import Client, filters, enums
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-from pyrogram.errors import FloodWait
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
+import os, json, random, threading, asyncio, time
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from datetime import datetime
+import re # For advanced text processing
 
-# --- 1. CONFIGURATION AND GLOBAL CONSTANTS ---
+# -------- Keep-Alive Web Server for Render/Cloud Deployments --------
+# THIS IS THE FIX FOR "No open ports detected" ERROR
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(b"Bot is running and healthy!")
 
-# NOTE: Replace these placeholders with your actual values
-API_ID = 12345678 # Your API ID
-API_HASH = "YOUR_API_HASH" # Your API Hash
-BOT_TOKEN = "YOUR_BOT_TOKEN" # Your Bot Token
-OWNER_ID = 123456789 # Replace with the developer's Telegram ID
-DEVELOPER_HANDLE = "@Your_Developer_Username"
-DEVELOPER_USERNAME = "DeveloperName"
-SUPPORT_CHAT = "https://t.me/YourSupportChat" # Link to support group
-UPDATES_CHANNEL = "https://t.me/YourUpdatesChannel" # Link to updates channel
+def keep_alive():
+    # Use the port specified by the environment, default to 8080 if not set
+    # Render requires a service to bind to a port to stay running.
+    port = int(os.environ.get("PORT", 8080))
+    try:
+        server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
+        print(f"Starting keep-alive server on port {port}")
+        server.serve_forever()
+    except Exception as e:
+        print(f"Could not start health check server: {e}")
 
-# File for persistent storage
-CHAT_IDS_FILE = "known_chats.json"
+# Start the web server thread before starting the bot
+threading.Thread(target=keep_alive, daemon=True).start()
+# -------- END Keep-Alive Web Server --------
 
-# Placeholders for media files (Replace with actual file_ids or URLs)
-START_PHOTO = "https://placehold.co/600x400/2563eb/ffffff?text=Start+Image"
-PING_PHOTO = "https://placehold.co/600x400/10b981/ffffff?text=Ping+Stats"
-DEVELOPER_PHOTO = "https://placehold.co/600x400/f59e0b/ffffff?text=Developer+Info"
+# -------- Env Vars --------
+# NOTE: Set these environment variables before running!
+API_ID = int(os.environ.get("API_ID", "0"))
+API_HASH = os.environ.get("API_HASH", "")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 
-# Start time for Uptime calculation
+# Please ensure you set this to your actual Telegram User ID
+OWNER_ID = int(os.environ.get("OWNER_ID", "7589623332"))
+
+DEVELOPER_USERNAME = "Voren"
+DEVELOPER_HANDLE = "@TheXVoren"
+SUPPORT_CHAT = "https://t.me/Evara_Support_Chat"
+UPDATES_CHANNEL = "https://t.me/Evara_Updates"
+
+# -------- Bot Client --------
+app = Client("advanced_chatbot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+
+# -------- Global Vars --------
 START_TIME = datetime.now()
-
-# Load/Initialize global data structures
-try:
-    with open(CHAT_IDS_FILE, "r") as f:
-        KNOWN_CHATS = json.load(f)
-except (FileNotFoundError, json.JSONDecodeError):
-    KNOWN_CHATS = {"groups": [], "privates": []}
-
-# Status dictionary for the chatbot toggle
-CHATBOT_STATUS = {}
-# Status dictionary for tagall command
-TAGGING = {}
-# Status dictionary for AFK users
+CHATBOT_STATUS = {} # {chat_id: True/False}
+TAGGING = {} # {chat_id: True/False}
+# {user_id: {"reason": str, "chat_id": int, "username": str, "first_name": str, "time": float}}
 AFK_USERS = {}
 
-# --- 2. TEMPLATES ---
+# New image URLs and text
+START_PHOTO = "https://iili.io/KVzgS44.jpg"
+PING_PHOTO = "https://iili.io/KVzbu4t.jpg"
+DEVELOPER_PHOTO = "https://iili.io/KVzmgWl.jpg"
 
+# ----------------- FANCY FONTS APPLIED HERE -----------------
 INTRO_TEXT_TEMPLATE = (
-    "👋 𝐇ᴇʟʟᴏ, {mention_name}!\n\n"
-    "𝐼 𝑎𝑚 𝐀ᴅᴠᴀɴᴄᴇᴅ 𝐁ᴏᴛ, 𝑎 𝑓𝑢𝑙𝑙𝑦 𝑓𝑒𝑎𝑡𝑢𝑟𝑒𝑑 𝑎𝑛𝑑 𝑝𝑜𝑤𝑒𝑟𝑓𝑢𝑙 𝑏𝑜𝑡 𝑏𝑢𝑖𝑙𝑡 𝑓𝑜𝑟 𝑦𝑜𝑢𝑟 𝑐ℎ𝑎𝑡 𝑔𝑟𝑜𝑢𝑝𝑠 𝑎𝑛𝑑 𝑝𝑟𝑖𝑣𝑎𝑡𝑒 𝑢𝑠𝑒.\n\n"
-    "✨ **𝐊ᴇʏ 𝐅ᴇᴀᴛᴜʀᴇs**:\n"
-    "  ‣ 𝐀𝐮𝐭𝐨𝐦𝐚𝐭𝐢𝐜 𝐂𝐡𝐚𝐭𝐛𝐨𝐭 𝐑𝐞𝐩𝐥𝐢𝐞𝐬.\n"
-    "  ‣ 𝐆𝐫𝐨𝐮𝐩 𝐌𝐚𝐧𝐚𝐠𝐞𝐦𝐞𝐧𝐭 𝐓𝐨𝐨𝐥𝐬.\n"
-    "  ‣ 𝐅𝐮𝐧 𝐂𝐨𝐦𝐦𝐚𝐧𝐝𝐬 (𝐥𝐢𝐤𝐞 /𝐜𝐨𝐮𝐩𝐥𝐞𝐬, /𝐚𝐟𝐤).\n\n"
-    "⚙️ 𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐫: @{developer}"
+    "𝐇ᴇʏ {mention_name}\n"
+    "✦ 𝐈 ᴧᴍ ᴧɴ ᴧᴅᴠᴀɴᴄᴇᴅ ᴄʜᴧᴛ ʙᴏᴛ ᴡɪᴛʜ sᴏᴍᴇ ғᴇᴀᴛᴜʀᴇs. \n"
+    "✦ 𝐑ᴇᴘʟʏ ɪɴ ɢʀᴏᴜᴘs & ᴘʀɪᴠᴧᴛᴇs 🥀\n"
+    "✦ 𝐍ᴏ ᴧʙᴜsɪɴɢ & ᴢᴇʀᴏ ᴅᴏᴡɴᴛɪᴍᴇ\n"
+    "✦ 𝐂ʟɪᴄᴋ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ғᴏʀ ᴄᴏᴍᴍᴧɴᴅs ❤️\n"
+    "❖ 𝐌ᴧᴅᴇ ʙʏ...{developer}"
 )
 
 ABOUT_TEXT = (
-    "✨ 𝐀ʙᴏᴜᴛ 𝐌ᴇ\n\n"
-    "𝐼 𝑎𝑚 𝐀ᴅᴠᴀɴᴄᴇᴅ 𝐁ᴏᴛ, 𝑎 𝑏𝑜𝑡 𝑐𝑟𝑒𝑎𝑡𝑒𝑑 𝑡𝑜 𝑘𝑒𝑒𝑝 𝑦𝑜𝑢𝑟 𝑔𝑟𝑜𝑢𝑝𝑠 𝑙𝑖𝑣𝑒𝑙𝑦 𝑎𝑛𝑑 𝑒𝑛𝑔𝑎𝑔𝑒𝑑 𝑡ℎ𝑟𝑜𝑢𝑔ℎ 𝑎𝑢𝑡𝑜𝑚𝑎𝑡𝑖𝑐 𝑐ℎ𝑎𝑡𝑏𝑜𝑡 𝑖𝑛𝑡𝑒𝑟𝑎𝑐𝑡𝑖𝑜𝑛𝑠 𝑎𝑛𝑑 𝑢𝑡𝑖𝑙𝑖𝑡𝑦 𝑐𝑜𝑚𝑚𝑎𝑛𝑑𝑠.\n\n"
-    "📚 **𝐓𝐞𝐜𝐡𝐧𝐨𝐥𝐨𝐠𝐲**:\n"
-    "  ‣ 𝐋𝐚𝐧𝐠𝐮𝐚𝐠𝐞: 𝐏𝐲𝐭𝐡𝐨𝐧\n"
-    "  ‣ 𝐅𝐫𝐚𝐦𝐞𝐰𝐨𝐫𝐤: 𝐏𝐲𝐫𝐨𝐠𝐫𝐚𝐦\n\n"
-    "💌 𝐓𝐡𝐚𝐧𝐤𝐬 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐦𝐞!"
+    "❖ 𝐀 ᴍɪɴɪ ᴄʜᴧᴛ ʙᴏᴛ ғᴏʀ ᴛᴇʟᴇɢʀᴧᴍs ɢʀᴏᴜᴘs & ᴘʀɪᴠᴧᴛᴇ ᴍᴇssᴧɢᴇs\n"
+    "● 𝐖ʀɪᴛᴛᴇɴ ɪɴ ᴘʏᴛʜᴏɴ \n"
+    "● 𝐊ᴇᴘᴘ ʏᴏᴜʀ ɢʀᴏᴜᴘ ᴧᴄᴛɪᴠᴇ.\n"
+    "● 𝐀ᴅᴅ ᴍᴇ ɴᴏᴡ ʙᴧʙʏ ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘs."
 )
 
+# --- Sub-Help Menu Content ---
 HELP_COMMANDS_TEXT_MAP = {
-    "couple": "💘 **𝐂ᴏᴜᴘʟᴇ & 𝐋ᴏᴠᴇ 𝐂ᴏᴍᴍᴀɴᴅs**:\n/couples - Get a random couple of the day.\n/cute - Check your cuteness level.\n/love <Name1> + <Name2> - Check love possibility.",
-    "chatbot": "🤖 **𝐂ʜᴀᴛʙᴏᴛ 𝐂ᴏᴍᴍᴀɴᴅs**:\n/chatbot enable - Turn the chatbot ON in the group.\n/chatbot disable - Turn the chatbot OFF in the group.\n*(Chatbot is always ON in private chats.)*",
-    "tools": "🛠️ **𝐔ᴛɪʟɪᴛʏ 𝐂ᴏᴍᴍᴀɴᴅs**:\n/id - Get your or replied user's ID.\n/ping - Check bot's response time and uptime.\n/afk <reason> - Set yourself as Away From Keyboard.",
-    "games": "🎲 **𝐆ᴀᴍᴇs 𝐂ᴏᴍᴍᴀɴᴅs**:\n/dice - Roll a dice.\n/jackpot - Roll the slot machine.\n/football, /basketball, /bowling - Roll sports dice.",
-    "group": "🛡️ **𝐆ʀᴏᴜᴘ 𝐀ᴅᴍɪɴ 𝐂ᴏᴍᴍᴀɴᴅs**:\n/tagall <message> - Tag all members in the group (Admin only).\n/stop - Stop ongoing /tagall.\n/staff - Get a list of all group admins.",
+    "couple": (
+        "📜 𝐂ᴏᴜᴘʟᴇ & 𝐋ᴏᴠᴇ 𝐂ᴏᴍᴍᴀɴᴅs:\n"
+        "/couples ~ 𝐂ʜᴏᴏsᴇ ᴧ ʀᴧɴᴅᴏᴍ ᴄᴏᴜᴘʟᴇ\n"
+        "/cute ~ 𝐂ʜᴇᴄᴋ ʏᴏᴜʀ ᴄᴜᴛᴇɴᴇss\n"
+        "/love name1 + name2 ~ 𝐒ᴇᴇ ʟᴏᴠᴇ ᴘᴏssɪʙɪʟɪᴛʏ\n"
+        "\n_ᴧʟʟ ᴛʜᴇsᴇ ᴄᴏᴍᴍᴀɴᴅs ᴀʀᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏ ᴇᴠᴇʀʏᴏɴᴇ."
+    ),
+    "chatbot": (
+        "📜 𝐂ʜᴀᴛʙᴏᴛ 𝐂ᴏᴍᴍᴀɴᴅ:\n"
+        "/chatbot enable/disable ~ 𝐄ɴᴀʙʟᴇ/ᴅɪsᴀʙʟᴇ ᴄʜᴀᴛʙᴏᴛ\n"
+        "\n"
+        "𝐍ᴏᴛᴇ: ᴏɴʟʏ ᴡᴏʀᴋs ɪɴ ɢʀᴏᴜᴘ ᴀɴᴅ ᴏɴʟʏ ғᴏʀ ᴀᴅᴍɪɴs/ᴏᴡɴᴇʀ.\n"
+        "𝐄xᴀᴍᴘʟᴇ: /chatbot enable"
+    ),
+    "tools": (
+        "📜 𝐓ᴏᴏʟs 𝐂ᴏᴍᴍᴧɴᴅs:\n"
+        "/id ~ 𝐆ᴇᴛ ᴜsᴇʀ 𝐈ᴅ (ʀᴇᴘʟʏ ᴏʀ ᴛᴧɢ)\n"
+        "/tagall ~ 𝐓ᴧɢ ᴀʟʟ ᴍᴇᴍʙᴇʀs (𝐀ᴅᴍɪɴ 𝐎ɴʟʏ)\n"
+        "/stop ~ 𝐓ᴏ sᴛᴏᴘ ᴛᴧɢɢɪɴɢ (𝐀ᴅᴍɪɴ 𝐎ɴʟʏ)\n"
+        "/afk reason ~ 𝐀ᴡᴀʏ ғʀᴏᴍ ᴛʜᴇ ᴋᴇʏʙᴏᴀʀᴅ\n"
+        "\n_𝐓ᴀɢᴀʟʟ/𝐒ᴛᴏᴘ ʀᴇǫᴜɪʀᴇs 𝐀ᴅᴍɪɴ. 𝐎ᴛʜᴇʀs ᴀʀᴇ ғᴏʀ ᴇᴠᴇʀʏᴏɴᴇ."
+    ),
+    "games": (
+        "📜 𝐆ᴧᴍᴇs 𝐂ᴏᴍᴍᴧɴᴅs:\n"
+        "/dice ~ 𝐑ᴏʟʟ ᴧ ᴅɪᴄᴇ (🎲)\n"
+        "/jackpot ~ 𝐉ᴧᴄᴋᴘᴏᴛ ᴍᴀᴄʜɪɴᴇ (🎰)\n"
+        "/football ~ 𝐏ʟᴀʏ ғᴏᴏᴛʙᴧʟʟ (⚽)\n"
+        "/basketball ~ 𝐏ʟᴀʏ ʙᴧsᴋᴇᴛʙᴀʟʟ (🏀)\n"
+        "/bowling ~ 𝐏ʟᴀʏ ʙᴏᴡʟɪɴɢ (🎳)\n"
+        "\n_𝐀ʟʟ ᴛʜᴇsᴇ ɢᴀᴍᴇs ᴀʀᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴛᴏ ᴇᴠᴇʀʏᴏɴᴇ."
+    ),
+    "group": (
+        "📜 𝐆ʀᴏᴜᴘ 𝐔ᴛɪʟɪᴛʏ 𝐂ᴏᴍᴍᴧɴᴅs:\n"
+        "/staff ~ 𝐃ɪsᴘʟᴧʏs ɢʀᴏᴜᴘ sᴛᴧғғ ᴍᴇᴍʙᴇʀs\n"
+        "/botlist ~ 𝐂ʜᴇᴄᴋ ʜᴏᴡ ᴍᴀɴʏ ʙᴏᴛs ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ (𝐀ᴅᴍɪɴ ᴏɴʟʏ)"
+        "\n_ʙᴏᴛʟɪsᴛ ʀᴇǫᴜɪʀᴇs ᴀᴅᴍɪɴ. ᴏᴛʜᴇʀs ᴀʀᴇ ғᴏʀ ᴇᴠᴇʀʏᴏɴᴇ."
+    )
+}
+# ----------------- FANCY FONTS END -----------------
+
+# -------- STICKER MAPPING (User provided stickers) --------
+STICKER_MAPPING = {
+    # Cute Stickers
+    "sticker_cute_1": "CAACAgEAAxkBAAEPgu9o4USg2JWyq8EjIQcHKAJxTISKnAAChwADUSkNOdIrExvjme5qNgQ",
+    "sticker_cute_2": "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE", 
+    # Funny Stickers
+    "sticker_funny_1": "CAACAgQAAxkBAAEPguto4USNgkueY_8UUvG1qR0HO8pVJAAC8hEAAuKyeVAr0E__1DsLxTYE",
+    "sticker_funny_2": "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE", 
+    # Angry Stickers
+    "sticker_anger_1": "CAACAgUAAxkBAAEPgudo4UR5HlLeS-qX6SPZa68uWVYxXAACNBAAAvyQWFdWZPeCGuC2gjYE",
+    "sticker_anger_2": "CAACAgUAAxkBAAEPgulo4USHqBw08BmrpRAczQX6nqkQXQACsQIAAmfVCVXVlV0wAWPSXDYE",
+    # Other/General Stickers - Mapped as placeholders for other categories
+    "sticker_love_1": "CAACAgQAAxkBAAEPgu1o4USZaO5ewrgQV8bLpU6Y8z0d9AACXA4AAj9T-FN3FZM9W24oiTYE", 
+    "sticker_anime_1": "CAACAgEAAxkBAAEPgu9o4USg2JWyq8EjIQcHKAJxTISKnAAChwADUSkNOdIrExvjme5qNgQ",
 }
 
-# --- 3. CHATBOT DATA AND LOGIC ---
+# --- Load Replies & Known Chats ---
+try:
+    with open("conversation.json", "r", encoding="utf-8") as f:
+        DATA = json.load(f)
+except:
+    # If the JSON file is missing, use a minimal default structure with the new sticker IDs
+    DATA = {
+        "daily": ["Hello 👋", "Hey there!", "Hi!", "I'm here, what's up?"],
+        "love": ["I love you too!","Aww, sending virtual hugs.","Love is in the air! 💖"],
+        "sad": ["Don't be sad! I'm here for you.","Cheer up, friend! 😊"],
+        "happy": ["That's great news! 🥳","Keep smiling!"],
+        "bye": ["Bye bye! See you soon.","Tata! 👋"],
+        "thanks": ["You're welcome!","Anytime, that's what I'm here for."],
+        "morning": ["Good morning! Have a great day.☀️","GM!"],
+        "night": ["Good night! Sweet dreams.🌙"],
+        "abuse": ["Watch your language, please! 🚫","That's not very nice."],
+        "question": ["I am a bot designed to help and chat with you!","What would you like to know?"],
+        "anger": ["Take a deep breath. It's okay.","Sending calm vibes your way. 🧘"],
 
-# Placeholder chatbot data
-DATA = {
-    "hello": ["Hello there! 👋", "Hi! What's up?", "Hey, nice to meet you."],
-    "how_are_you": ["I'm a bot, but I'm doing great! How about you?", "Excellent, thanks for asking!"],
-    "sticker_cute": ["CAACAgUAAxkBAAEq-BxmT9tA6r9f_o_gYx-t_8v_i5vIqwACgQIAAlnS_gD-hX6fWfX7uBgE",
-                     "CAACAgUAAxkBAAEq-B1mT9tWf2k5kU3V3J-9gU4hV7VzcwAC8AIAAqE4sQYp34W5n_mCaxgE"],
-    "sticker_anger": ["CAACAgUAAxkBAAEq-CHmT9tlhL-gXgD9Vl3597l0Y-0GAAI1AAYE-qf91c9L5Yg90s8YBA",
-                      "CAACAgUAAxkBAAEq-CNmT9tq-3oOqD0y07o1o7-L1B_5qQACrAEAAqE4sQaB34g1qQ40qRgE"],
-    "daily": ["That's interesting!", "I see what you mean.", "Tell me more about that."],
-}
+        # Sticker categories using user-provided IDs
+        "sticker_cute": [
+            STICKER_MAPPING["sticker_cute_1"], STICKER_MAPPING["sticker_cute_2"]
+        ],
+        "sticker_funny": [
+            STICKER_MAPPING["sticker_funny_1"], STICKER_MAPPING["sticker_funny_2"]
+        ],
+        "sticker_anger": [
+            STICKER_MAPPING["sticker_anger_1"], STICKER_MAPPING["sticker_anger_2"]
+        ],
+        "sticker_anime": [
+            STICKER_MAPPING["sticker_anime_1"]
+        ],
+        "sticker_love": [
+            STICKER_MAPPING["sticker_love_1"]
+        ]
+    }
 
-# Simple keyword matching map (case-insensitive)
+if "daily" not in DATA:
+    DATA["daily"] = ["Hello 👋", "Hey there!", "Hi!"]
+
+
+CHAT_IDS_FILE = "chats.json"
+if os.path.exists(CHAT_IDS_FILE):
+    with open(CHAT_IDS_FILE, "r") as f:
+        KNOWN_CHATS = json.load(f)
+else:
+    KNOWN_CHATS = {"groups": [], "privates": []}
+
+# Combined Text and Sticker Keywords
 KEYWORDS = {
-    "hi": "hello",
-    "hello": "hello",
-    "how are you": "how_are_you",
-    "cute": "sticker_cute",
-    "love": "sticker_cute",
-    "anger": "sticker_anger",
-    "abuse": "sticker_anger",
+    # Text Replies (from JSON)
+    "love": "love", "i love you": "love", "miss you": "love", "crush": "love", "heart": "love",
+    "sad": "sad", "cry": "sad", "depressed": "sad", "broken": "sad", "alone": "sad",
+    "happy": "happy", "mast": "happy", "fun": "happy", "great": "happy", "cheers": "happy",
+    "hello": "daily", "hi": "daily", "hey": "daily", "yaar": "daily", "kya haal": "daily", "bhai": "daily",
+    "bye": "bye", "goodbye": "bye", "see ya": "bye", "tata": "bye",
+    "thanks": "thanks", "thank you": "thanks", "tysm": "thanks",
+    "gm": "morning", "good morning": "morning", "subah": "morning",
+    "gn": "night", "good night": "night", "shubh ratri": "night", "sleep": "night",
+    "chutiya": "abuse", "bc": "abuse", "mc": "abuse", "pagal": "abuse", "idiot": "abuse",
+    "kaisa hai": "question", "kya kar raha": "question", "who are you": "question", "bot": "question",
+    "gussa": "anger", "angry": "anger", "gali": "anger",
+
+    # Sticker Replies (New Categories)
+    "hahaha": "sticker_funny", "lol": "sticker_funny", "rofl": "sticker_funny", "funny": "sticker_funny",
+    "cute": "sticker_cute", "aww": "sticker_cute", "so sweet": "sticker_cute", "baby": "sticker_cute",
+    "anime": "sticker_anime", "manga": "sticker_anime",
+    "i hate you": "sticker_anger", "go away": "sticker_anger", "mad": "sticker_anger",
 }
 
-# Map to find corresponding text if a sticker fails (simplified, as exact text isn't stored for stickers)
-TEXT_TO_STICKER_MAP = {
-    "cute": "sticker_cute",
-    "anger": "sticker_anger",
-}
-
+# -------- Utility Functions --------
 def get_reply(text: str):
     """
-    Decides on a text or sticker reply based on keywords and 70/30 chance.
+    Determines the response (text or sticker ID) based on the input text.
     Returns (response, is_sticker)
     """
-    text_lower = text.lower()
+    if not text:
+        # Fall back to daily text
+        return (random.choice(DATA.get("daily", ["Hello 👋"])), False)
+
+    text = text.lower()
     
-    # Check for keywords
-    category = "daily"
+    # Simple normalization: remove non-alphanumeric except spaces for better keyword matching
+    text = re.sub(r'[^\w\s]', ' ', text) 
+    
     for word, cat in KEYWORDS.items():
-        if word in text_lower:
-            category = cat
-            break
-            
-    possible_replies = DATA.get(category, DATA["daily"])
+        # Check if keyword is a substring of the message text
+        if word in text:
+            if cat.startswith("sticker_") and cat in DATA and DATA[cat]:
+                # Returns a random sticker ID from the category (is_sticker=True)
+                sticker_id = random.choice(DATA[cat])
+                return (sticker_id, True) 
+            elif cat in DATA and DATA[cat]:
+                # Returns a random text reply (is_sticker=False)
+                return (random.choice(DATA[cat]), False)
     
-    # 70% chance for sticker if the category is a sticker type
-    is_sticker_category = category.startswith("sticker_")
-    
-    if is_sticker_category and random.randint(1, 100) <= 70:
-        return (random.choice(possible_replies), True)
-    
-    # Otherwise, return text (or 30% of the time for sticker categories)
-    if is_sticker_category:
-        # Fallback to a text category if sticker chance is missed, using the non-sticker version of the category if available
-        text_category = category.replace("sticker_", "")
-        text_replies = DATA.get(text_category, DATA["daily"])
-        return (random.choice(text_replies), False)
-    
-    return (random.choice(possible_replies), False)
-
-
-# --- 4. UTILITY FUNCTIONS ---
+    # If no specific keyword is found, send a general/daily reply
+    return (random.choice(DATA.get("daily", ["Hello 👋"])), False)
 
 def get_readable_time(seconds: int) -> str:
-    """Converts seconds into human-readable time format."""
-    count = 0
-    up_time = ""
-    time_list = []
-    time_suffix = ["s", "m", "h", "days"]
-    
-    # Calculate days, hours, minutes, seconds
-    
-    # Seconds
-    time_list.append(seconds % 60)
-    seconds //= 60
-    
-    # Minutes
-    time_list.append(seconds % 60)
-    seconds //= 60
-    
-    # Hours
-    time_list.append(seconds % 24)
-    seconds //= 24
-    
-    # Days
-    time_list.append(seconds)
-    
-    time_list.reverse()
-    
-    for x in time_list:
-        if x == 0:
-            continue
-        up_time += f"{x}{time_suffix[count]} "
-        count += 1
-        
-    return up_time.strip() if up_time else "0s"
-
+    result = ''
+    (days, remainder) = divmod(seconds, 86400)
+    (hours, remainder) = divmod(remainder, 3600)
+    (minutes, seconds) = divmod(remainder, 60)
+    if days > 0:
+        result += f"{days}d "
+    if hours > 0:
+        result += f"{hours}h "
+    if minutes > 0:
+        result += f"{minutes}m "
+    if seconds > 0:
+        result += f"{int(seconds)}s"
+    return result.strip() or "just now"
 
 async def is_admin(chat_id, user_id):
-    """Checks if a user is an admin or owner in a group."""
-    global app
-    if user_id == OWNER_ID:
-        return True
+    """Checks if a user is an admin or owner of the chat."""
     try:
         member = await app.get_chat_member(chat_id, user_id)
-        if member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]:
-            return True
+        return member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
     except Exception:
-        # Ignore errors like chat not found, etc.
-        pass
-    return False
+        return False
 
 async def is_bot_admin(chat_id):
-    """Checks if the bot is an admin with required permissions (for tagall: tag members)."""
-    global app
+    """Checks if the bot is an admin in the chat."""
     try:
         me = await app.get_me()
         member = await app.get_chat_member(chat_id, me.id)
-        if member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]:
-            # Specifically check for can_pin_messages or similar simple right for basic admin status
-            # For tagall, we implicitly trust basic admin status for get_chat_members and mention
-            return True
+        return member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
     except Exception:
-        pass
-    return False
+        return False
 
 async def save_chat_id(chat_id, type_):
     """Saves the chat ID to the known chats list."""
-    global KNOWN_CHATS, CHAT_IDS_FILE
     chat_id_str = str(chat_id)
-
+    
     if chat_id_str not in KNOWN_CHATS[type_]:
         KNOWN_CHATS[type_].append(chat_id_str)
-        # Use an executor for file I/O to avoid blocking the event loop
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, lambda: json.dump(KNOWN_CHATS, open(CHAT_IDS_FILE, "w"), indent=4))
+        with open(CHAT_IDS_FILE, "w") as f:
+            json.dump(KNOWN_CHATS, f)
 
 # Custom filter for checking chatbot status
 def is_chatbot_enabled(_, __, message: Message):
-    """Returns True if chatbot is enabled for this group. Always True for private chats."""
-    # Use global CHATBOT_STATUS
+    """Returns True if chatbot is enabled for this group."""
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
         # Default is False, so only True if explicitly set to True
         return CHATBOT_STATUS.get(message.chat.id, False)
-    return True # Always allow in private chats
+    return False # Chatbot should run in private chats via the main handler
 
-# --- 5. MENU BUILDER FUNCTIONS ---
+# -------- Inline Button Handlers & Menus --------
+
+# --- Menu Builder Functions ---
 def get_start_buttons(bot_username):
     """Returns the main start button layout."""
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("➕ 𝐀ᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ 𝐆ʀᴏᴜᴘ ➕", url=f"https://t.me/{bot_username}?startgroup=true")],
+        [InlineKeyboardButton("➕ 𝐀𝐝𝐝 𝐌𝐞 𝐓𝐨 𝐘𝐨𝐮𝐫 𝐆𝐫𝐨𝐮𝐩 ➕", url=f"https://t.me/{bot_username}?startgroup=true")],
         [
-            InlineKeyboardButton("ᯓ𝐃ᴇᴠᴇʟᴏρᴇя", user_id=OWNER_ID),
+            InlineKeyboardButton("ᯓ❍ᴡɳ𝛆ʀ", user_id=OWNER_ID),
             InlineKeyboardButton("◉ 𝐀ʙᴏᴜᴛ", callback_data="about")
         ],
         [InlineKeyboardButton("◉ 𝐇ᴇʟᴘ & 𝐂ᴏᴍᴍᴀɴᴅs", callback_data="help_main")]
@@ -264,8 +326,6 @@ def get_help_main_buttons():
             InlineKeyboardButton("𝐂ʟᴏsᴇ", callback_data="close")
         ]
     ])
-
-# --- 6. HANDLERS AND COMMANDS ---
 
 # --- Callbacks Handler ---
 @app.on_callback_query()
@@ -313,13 +373,45 @@ async def callbacks_handler(client, query):
         
         await query.message.edit_caption(
             caption=text,
-            reply_markup=InlineKeyboardMarkup(buttons_markup_rows),
-            parse_mode=enums.ParseMode.MARKDOWN
+            reply_markup=InlineKeyboardMarkup(buttons_markup_rows)
         )
     elif data == "close":
         await query.message.delete()
     else:
-        await query.answer("𝐓ʜɪs ʙᴜᴛᴛᴏɴ ɪs ɴᴏᴛ ʏᴇᴛ 𝐅ᴜɴᴄᴛɪᴏɴᴀʟ.")
+        await query.answer("𝐓ʜɪs ʙᴜᴛᴛᴏɴ ɪs ɴᴏᴛ ʏᴇᴛ 𝐅ᴜɴᴄᴛɪ𝐎N𝐀𝐋.") 
+
+# -------- Voice Chat Notifications (New Feature) --------
+@app.on_message(filters.voice_chat_started & filters.group)
+async def voice_chat_started_handler(client, message):
+    """Sends a notification when a voice chat starts."""
+    chat_id = message.chat.id
+    title = message.chat.title or "this group"
+    
+    # Use a clear, formatted message to notify members
+    await client.send_message(
+        chat_id, 
+        f"🎙️ 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐒𝐭𝐚𝐫𝐭𝐞𝐝!\n\n"
+        f"𝐀 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐡𝐚𝐬 𝐛𝐞𝐞𝐧 𝐬𝐭𝐚𝐫𝐭𝐞𝐝 𝐢𝐧 **{title}**. 𝐂𝐨𝐦𝐞 𝐣𝐨𝐢𝐧 𝐭𝐡𝐞 𝐜𝐨𝐧𝐯𝐞𝐫𝐬𝐚𝐭𝐢𝐨𝐧! 🎧",
+        parse_mode=enums.ParseMode.MARKDOWN
+    )
+
+@app.on_message(filters.voice_chat_ended & filters.group)
+async def voice_chat_ended_handler(client, message):
+    """Sends a notification when a voice chat ends."""
+    chat_id = message.chat.id
+    
+    # Extract duration from the update object
+    duration_sec = message.voice_chat_ended.duration if message.voice_chat_ended else 0
+    readable_duration = get_readable_time(duration_sec)
+    
+    await client.send_message(
+        chat_id, 
+        f"⏹️ 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐄𝐧𝐝𝐞𝐝!\n\n"
+        f"𝐓𝐡𝐞 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐞𝐧𝐝𝐞𝐝 𝐚𝐟𝐭𝐞𝐫 {readable_duration}. 𝐆𝐨𝐨𝐝𝐛𝐲𝐞 𝐟𝐨𝐫 𝐧𝐨𝐰! 👋",
+        parse_mode=enums.ParseMode.MARKDOWN
+    )
+
+# -------- Commands --------
 
 # -------- /start Command --------
 @app.on_message(filters.command("start"))
@@ -329,7 +421,7 @@ async def start_cmd(client, message):
     
     if message.chat.type == enums.ChatType.PRIVATE:
         # Ding Dong Animation
-        anim_text = "ᴅɪɴɢ...ᴅᴏɴɢ 💥..ʙᴏᴛ ɪs sᴛᴀʀᴛɪɴɢ"
+        anim_text = "ᴅɪɴɢ...ᴅᴏɴɢ 💥....ʙᴏᴛ ɪs sᴛᴀʀᴛɪɴɢ"
         msg = await message.reply_text("Starting...")
         
         current = ""
@@ -337,9 +429,7 @@ async def start_cmd(client, message):
             current += ch
             try:
                 await msg.edit(current)
-            except FloodWait as e:
-                await asyncio.sleep(e.value)
-            except Exception:
+            except:
                 pass
             await asyncio.sleep(0.05)
             
@@ -348,7 +438,7 @@ async def start_cmd(client, message):
         try:
             await msg.delete()
         except:
-            pass
+            pass 
         
         await message.reply_photo(
             START_PHOTO,
@@ -357,13 +447,15 @@ async def start_cmd(client, message):
                 developer=DEVELOPER_USERNAME,
             ),
             reply_markup=get_start_buttons(me.username),
-            parse_mode=enums.ParseMode.MARKDOWN
+            parse_mode=enums.ParseMode.MARKDOWN,
+            # FIX: Added spoiler tag as requested
+            has_spoiler=True 
         )
         await save_chat_id(message.chat.id, "privates")
     else:
         # Group start message
         await message.reply_text(
-            f"𝐻𝑒𝑦, [{user.first_name}](tg://user?id={user.id})! 𝐼 𝑎𝑚 𝐀ᴅᴠᴀɴᴄᴇᴅ 𝐁ᴏᴛ. 𝐶𝑙𝑖𝑐𝑘 /help 𝑓𝑜𝑟 𝑚𝑜𝑟𝑒 𝑖𝑛𝑓𝑜.",
+            f"𝐇ᴇʏ [{user.first_name}](tg://user?id={user.id})! 𝐈 𝐚𝐦 𝐫𝐞𝐚𝐝𝐲 𝐭𝐨 𝐜𝐡𝐚𝐭. 𝐂𝐥𝐢𝐜𝐤 𝐨𝐧 /help 𝐟𝐨𝐫 𝐦𝐨𝐫𝐞 𝐢𝐧𝐟𝐨.",
             parse_mode=enums.ParseMode.MARKDOWN
         )
         await save_chat_id(message.chat.id, "groups")
@@ -372,17 +464,15 @@ async def start_cmd(client, message):
 @app.on_message(filters.command("developer"))
 async def developer_cmd(client, message):
     # Animation
-    anim_text = "𝐘ᴏᴜ 𝐖ᴀɳᴛ ᴛᴏ 𝐊ɳᴏᴡ..𝐓ʜɪs 𝐁ᴏᴛ 𝐃ᴇᴠᴇʟᴏᴘᴇʀ 💥."
-    m = await message.reply_text("𝐒earching...")
+    anim_text = "𝐘ᴏᴜ 𝐖ᴀɳᴛ ᴛᴏ 𝐊ɳᴏᴡ..𝐓ʜɪs 𝐁ᴏᴛ 𝐃ᴇᴠᴇʟᴏᴘᴇʀ 💥..𝐇ᴇʀᴇ"
+    m = await message.reply_text("Searching...")
     
     current = ""
     for ch in anim_text:
         current += ch
         try:
             await m.edit(current)
-        except FloodWait as e:
-            await asyncio.sleep(e.value)
-        except Exception:
+        except:
             pass
         await asyncio.sleep(0.05)
         
@@ -392,7 +482,7 @@ async def developer_cmd(client, message):
     try:
         await m.delete()
     except:
-        pass
+        pass 
         
     buttons = InlineKeyboardMarkup([
         [InlineKeyboardButton("𝐃ᴇᴠᴇʟᴏᴘᴇʀ ღ", url=f"https://t.me/{DEVELOPER_HANDLE.strip('@')}")]
@@ -415,7 +505,7 @@ async def developer_cmd(client, message):
             reply_markup=buttons,
             parse_mode=enums.ParseMode.MARKDOWN
         )
-        print(f"Error sending developer photo: {e}") # Log the error
+        print(f"Error sending developer photo: {e}") # Log the error 
 
 # -------- /ping Command --------
 @app.on_message(filters.command("ping"))
@@ -449,33 +539,34 @@ async def ping_cmd(client, message):
         caption=f"𝐏ɪɴɢ ➳ {ping_ms} 𝐦𝐬\n"
                 f"𝐔ᴘᴛɪᴍᴇ ➳ {uptime_readable}",
         reply_markup=buttons
-    )
+    ) 
 
 # -------- /id Command --------
 @app.on_message(filters.command("id"))
 async def id_cmd(client, message):
     # Get user from reply or from the message sender itself
     user = message.reply_to_message.from_user if message.reply_to_message else message.from_user
-    
-    # Get chat ID only if it's a group or supergroup
-    chat_id_text = f"\n𝐆ʀᴏᴜᴘ 𝐈𝐃 ➳ {message.chat.id}" if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP] else ""
-    
-    await message.reply_text(f"👤 {user.first_name}\n𝐔𝐬ᴇʀ 𝐈𝐃 ➳ {user.id}{chat_id_text}")
+    # Ensure all users are tagged correctly, even if they don't have a username
+    user_mention = f"[{user.first_name}](tg://user?id={user.id})"
+    await message.reply_text(f"👤 {user_mention}\n🆔 `{user.id}`", parse_mode=enums.ParseMode.MARKDOWN)
 
 # -------- /stats Command (Owner Only) --------
 @app.on_message(filters.command("stats") & filters.user(OWNER_ID))
 async def stats_cmd(client, message):
+    uptime_seconds = (datetime.now() - START_TIME).total_seconds()
+    uptime_readable = get_readable_time(int(uptime_seconds))
     await message.reply_text(
         f"📊 𝐁ᴏᴛ 𝐒ᴛᴀᴛs:\n"
         f"👥 𝐆ʀᴏᴜᴘs: {len(KNOWN_CHATS['groups'])}\n"
-        f"👤 𝐏ʀɪᴠᴀᴛᴇs: {len(KNOWN_CHATS['privates'])}"
+        f"👤 𝐏ʀɪᴠᴀᴛᴇs: {len(KNOWN_CHATS['privates'])}\n"
+        f"⏰ 𝐔ᴘᴛɪᴍᴇ: {uptime_readable}"
     )
 
 # -------- /broadcast (Owner Only) --------
 @app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
 async def broadcast_cmd(client, message):
     if not (message.reply_to_message or len(message.command) > 1):
-        return await message.reply_text("ᴜsᴀɢᴇ: /ʙʀᴏᴀᴅᴄᴀsᴛ ᴏʀ ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇssᴀɢᴇ.")
+        return await message.reply_text("ᴜsᴀɢᴇ: /ʙʀᴏᴀᴅᴄᴀsᴛ <ᴛᴇxᴛ> ᴏʀ ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇssᴀɢᴇ.")
     
     # Extract content to broadcast
     if message.reply_to_message:
@@ -494,9 +585,9 @@ async def broadcast_cmd(client, message):
     for chat_type in ["privates", "groups"]:
         for chat_id_str in KNOWN_CHATS[chat_type]:
             try:
-                chat_id = int(chat_id_str)
+                chat_id = int(chat_id_str) 
             except ValueError:
-                continue
+                continue 
                 
             try:
                 if content_to_send:
@@ -505,22 +596,9 @@ async def broadcast_cmd(client, message):
                 elif text:
                     await app.send_message(chat_id, text)
                 sent += 1
-            except FloodWait as e:
-                print(f"FloodWait encountered: {e.value} seconds. Sleeping.")
-                await asyncio.sleep(e.value)
-                # Try sending again after sleeping
-                try:
-                    if content_to_send:
-                        await client.copy_message(chat_id, message.chat.id, content_to_send.id)
-                    elif text:
-                        await app.send_message(chat_id, text)
-                    sent += 1
-                except Exception:
-                    failed += 1
             except Exception as e:
-                # print(f"Failed to broadcast to {chat_id}: {e}") # Debugging line
                 failed += 1
-                continue
+                continue 
                 
     await m.edit_text(f"✅ 𝐁ʀᴏᴀᴅᴄᴀsᴛ ᴅᴏɴᴇ!\n𝐒ᴇɴᴛ ᴛᴏ {sent} ᴄʜᴀᴛs.\n𝐅ᴀɪʟᴇᴅ ɪɴ {failed} ᴄʜᴀᴛs.")
 
@@ -548,13 +626,13 @@ async def chatbot_toggle(client, message):
     else:
         return await message.reply_text("𝐔sᴀɢᴇ: /ᴄʜᴀᴛʙᴏᴛ ᴇɴᴀʙʟᴇ ᴏʀ /ᴄʜᴀᴛʙᴏᴛ ᴅɪsᴀʙʟᴇ")
         
-    await save_chat_id(message.chat.id, "groups") # Ensure group is saved if not already
+    await save_chat_id(message.chat.id, "groups") 
 
 # -------- /tagall Command --------
 @app.on_message(filters.command("tagall") & filters.group)
 async def tagall_cmd(client, message):
     if not await is_admin(message.chat.id, message.from_user.id):
-        return await message.reply_text("❗ Oɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /ᴛᴀɢᴀʟʟ.")
+        return await message.reply_text("❗ 𝐎ɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /ᴛᴀɢᴀʟʟ.")
     
     if not await is_bot_admin(message.chat.id):
         return await message.reply_text("❗ 𝐈 ɴᴇᴇᴅ ᴀᴅᴍɪɴ ᴘᴇʀᴍɪssɪᴏɴ (ᴛᴀɢ ᴍᴇᴍʙᴇʀs) ᴛᴏ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ.")
@@ -570,8 +648,7 @@ async def tagall_cmd(client, message):
     if len(message.command) > 1:
         msg = message.text.split(None, 1)[1]
     elif message.reply_to_message and message.reply_to_message.text:
-        # Preview of replied message text (max 50 chars)
-        msg = f"{message.reply_to_message.text[:50]}{'...' if len(message.reply_to_message.text) > 50 else ''}" 
+        msg = f"{message.reply_to_message.text[:50]}{'...' if len(message.reply_to_message.text) > 50 else ''}" # Preview of replied message text
     else:
         msg = "𝐀ᴛᴛᴇɴᴛɪᴏɴ!"
         
@@ -603,68 +680,42 @@ async def tagall_cmd(client, message):
             # Send the tag chunk
             await app.send_message(chat_id, tag_text, disable_web_page_preview=True, parse_mode=enums.ParseMode.MARKDOWN)
             await asyncio.sleep(2) # Delay to avoid flooding limits
-        except FloodWait as e:
-            await asyncio.sleep(e.value)
-        except Exception:
+        except:
             continue
             
     # Final message update
     if TAGGING.get(chat_id):
         await m.edit_text("𝐓ᴀɢɢɪɴɢ 𝐂ᴏᴍᴘʟᴇᴛᴇᴅ !! ◉‿◉")
-    else:
-        # This handles the case where /stop was used
-        await m.edit_text("𝐓ᴀɢ𝐠𝐢𝐧𝐠 𝐂𝐚𝐧𝐜𝐞𝐥𝐥𝐞𝐝.")
-        
-    TAGGING[chat_id] = False
+        TAGGING[chat_id] = False 
 
 # -------- /stop Tagging --------
 @app.on_message(filters.command("stop") & filters.group)
-async def stop_tagging_cmd(client, message):
+async def stop_tag(client, message):
     if not await is_admin(message.chat.id, message.from_user.id):
-        return await message.reply_text("❗ Oɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /sᴛᴏᴘ.")
+        return await message.reply_text("❗ 𝐎ɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /sᴛᴏᴘ.")
         
     if TAGGING.get(message.chat.id):
-        TAGGING[message.chat.id] = False # Corrected logic
+        TAGGING[message.chat.id] = False
         await message.reply_text("𝐓ᴀɢɢɪɴɢ 𝐒ᴛᴏᴘᴘᴇᴅ !!")
     else:
-        await message.reply_text("❗ 𝐍ᴏ 𝐓ᴀɢɢɪɴɢ ɪs 𝐂ᴜʀʀᴇɴᴛʟʏ 𝐑ᴜɴɴɪɴɢ.")
-
-# -------- /afk Command --------
-@app.on_message(filters.command("afk"))
-async def afk_cmd(client, message):
-    user = message.from_user
-    reason = "No reason given."
-    if len(message.command) > 1:
-        # Use message.text.split(None, 1)[1] to get all text after the command
-        reason = message.text.split(None, 1)[1] 
-
-    AFK_USERS[user.id] = {
-        "reason": reason,
-        "first_name": user.first_name,
-        "time": time.time()
-    }
-
-    text = f"[{user.first_name}](tg://user?id={user.id}) is 𝐀𝐅𝐊! 💤\n"
-    text += f"📝 𝐑𝐞𝐚𝐬𝐨𝐧: *{reason}*"
-
-    await message.reply_text(text, parse_mode=enums.ParseMode.MARKDOWN)
+        await message.reply_text("❗ 𝐍ᴏ 𝐓ᴀɢɢɪɴɢ ɪs 𝐂ᴜʀʀᴇɴᴛ𝐥𝐲 𝐑ᴜ𝐍𝐍ɪɴɢ.")
 
 # -------- /couples, /cute, /love Commands --------
 @app.on_message(filters.command("couples") & filters.group)
 async def couples_cmd(client, message):
     member_list = []
     try:
-        # Fetch all non-bot, non-deleted users
+        # Use only USERS in the group, excluding bots and deleted accounts
         async for member in app.get_chat_members(message.chat.id):
             if not (member.user.is_bot or member.user.is_deleted):
                 member_list.append(member.user)
     except Exception:
-        return await message.reply_text("🚫 𝐂𝐚𝐧𝐧𝐨𝐭 𝐟𝐞𝐭𝐜𝐡 𝐦𝐞𝐦𝐛𝐞𝐫s. 𝐈 𝐦𝐚𝐲 𝐧𝐨𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s 𝐨𝐫 𝐭𝐡𝐞 𝐠𝐫𝐨𝐮𝐩 𝐢s 𝐭𝐨𝐨 l𝐚𝐫𝐠𝐞.")
+        return await message.reply_text("🚫 𝐂𝐚𝐧𝐧𝐨𝐭 𝐟𝐞𝐭𝐜𝐡 𝐦𝐞𝐦𝐛𝐞𝐫s 𝐝𝐮𝐞 𝐭𝐨 𝐫𝐞𝐬𝐭𝐫𝐢𝐜𝐭𝐢𝐨𝐧s.")
 
     if len(member_list) < 2:
         return await message.reply_text("❗ 𝐍ᴇᴇᴅ ᴀᴛ ʟᴇᴀsᴛ ᴛᴡᴏ ᴍᴇᴍʙᴇʀs ᴛᴏ ғᴏʀᴍ ᴀ 𝐂ᴏᴜᴘ𝐥ᴇ.")
         
-    # Pick two random members
+    # Pick two random unique members
     couple = random.sample(member_list, 2)
     user1 = couple[0]
     user2 = couple[1]
@@ -683,11 +734,10 @@ async def couples_cmd(client, message):
 async def cute_cmd(client, message):
     cute_level = random.randint(30, 99)
     user = message.from_user
+    # FIX: Ensure user mention works
     user_mention = f"[{user.first_name}](tg://user?id={user.id})"
     text = f"{user_mention}’𝐬 ᴄᴜᴛᴇɴᴇss ʟᴇᴠᴇʟ ɪs {cute_level}% 💖"
-    
-    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]]) 
-    
+    buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
     await message.reply_text(text, reply_markup=buttons, parse_mode=enums.ParseMode.MARKDOWN)
 
 @app.on_message(filters.command("love"))
@@ -700,227 +750,223 @@ async def love_cmd(client, message):
     names = [n.strip() for n in arg_text.split("+") if n.strip()]
     
     if len(names) < 2:
-        return await message.reply_text("𝐏ʟᴇᴀsᴇ ᴘʀᴏ𝐯ɪᴅᴇ ᴛᴡᴏ ɴᴀᴍᴇs sᴇᴘʀᴀᴛᴇᴅ ʙʏ ᴀ '+' (ᴇ.ɢ., /ʟᴏᴠᴇ 𝐀ʟɪᴄᴇ + 𝐁ᴏʙ)")
+        return await message.reply_text("𝐏ʟᴇᴀsᴇ ᴘʀᴏᴠɪᴅᴇ ᴛᴡᴏ ɴᴀᴍᴇs sᴇᴘʀᴀᴛᴇᴅ ʙʏ ᴀ '+' (ᴇ.ɢ., /ʟᴏᴠᴇ 𝐀ʟɪᴄᴇ + 𝐁ᴏʙ)")
         
-    # Calculate a random love percentage (just for fun)
+    # FIX: Missing love_percent calculation
     love_percent = random.randint(30, 99)
 
     text = f"❤️ 𝐋ᴏᴠᴇ 𝐏ᴏssɪʙʟɪᴛʏ\n" \
-           f"{names[0]} & {names[1]}’𝐬 ʟᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}% 😉"
-           
+               f"{names[0]} & {names[1]}’𝐬 ʟᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}% 😉"
+            
     buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
-    await message.reply_text(text, reply_markup=buttons)
+    await message.reply_text(text, reply_markup=buttons) 
 
-# -------- Game Commands --------
+# -------- /afk Command (FIXED) --------
+@app.on_message(filters.command("afk"))
+async def afk_cmd(client, message):
+    user_id = message.from_user.id
+    user_name = message.from_user.first_name
+    
+    # 1. Check if user is already AFK (meaning they are typing /afk to return)
+    if user_id in AFK_USERS:
+        # User is coming back
+        afk_data = AFK_USERS.pop(user_id)
+        time_afk = get_readable_time(int(time.time() - afk_data["time"]))
+        await message.reply_text(
+            f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ 𝐚𝐫𝐞 ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏ𝐫: {time_afk}) 😉",
+            parse_mode=enums.ParseMode.MARKDOWN
+        )
+        return # Stop execution after returning
+        
+    # 2. If not returning, user is setting AFK status
+    try:
+        # Get the reason if provided
+        reason = message.text.split(None, 1)[1] 
+    except IndexError:
+        reason = "𝐍ᴏ ʀᴇᴀsᴏɴ ɢɪᴠᴇɴ."
+    
+    # Store AFK status (FIX: Corrected reason assignment)
+    AFK_USERS[user_id] = {
+        "reason": reason,
+        "chat_id": message.chat.id,
+        "username": message.from_user.username or user_name,
+        "first_name": user_name,
+        "time": time.time()
+    }
+    
+    # Send the AFK message
+    await message.reply_text(
+        f"𝐇ᴇʏ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ 𝐚𝐫𝐞 𝐀ғᴋ! (𝐑ᴇᴀsᴏɴ: {reason})",
+        parse_mode=enums.ParseMode.MARKDOWN
+    )
+
+# -------- /mmf Command (Disabled) --------
+# FIX: The function definition was incomplete. Cleaned up and kept disabled.
+@app.on_message(filters.command("mmf") & filters.group)
+async def mmf_cmd(client, message):
+    # This feature requires complex image processing libraries which are often difficult
+    # to set up in cloud environments. It is intentionally disabled for stability.
+    
+    await message.reply_text(
+        "❌ 𝐒𝐭𝐢𝐜𝐤𝐞𝐫 𝐓𝐞𝐱𝐭 𝐅𝐞𝐚𝐭𝐮𝐫𝐞 𝐔𝐧𝐚𝐯𝐚𝐢𝐥𝐚𝐛𝐥𝐞\n"
+        "𝐏𝐥𝐞𝐚𝐬𝐞 𝐧𝐨𝐭𝐞: 𝐓𝐡𝐢𝐬 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐢𝐬 𝐭𝐞𝐦𝐩𝐨𝐫𝐚𝐫𝐢𝐥𝐲 𝐝𝐢𝐬𝐚𝐛𝐥𝐞𝐝 𝐝𝐮𝐞 𝐭𝐨 𝐦𝐢𝐬𝐬𝐢𝐧𝐠 𝐢𝐦𝐚𝐠𝐞 𝐩𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐧𝐠 𝐥𝐢𝐛𝐫𝐚𝐫𝐢𝐞s. "
+        "𝐈 ᴀᴍ ᴡᴏʀᴋɪɴɢ ᴏɴ ɪᴛ!"
+    ) 
+
+# -------- /staff Command (FIXED) --------
+@app.on_message(filters.command("staff") & filters.group)
+async def staff_cmd(client, message):
+    try:
+        admins = []
+        # FIX: Corrected the fetch call to iterate through administrators
+        async for admin in client.get_chat_members(
+            chat_id=message.chat.id,
+            filter=enums.ChatMembersFilter.ADMINISTRATORS
+        ):
+            admins.append(admin)
+        
+        staff_list = "👑 𝐆ʀᴏᴜᴘ 𝐒ᴛᴀғғ 𝐌ᴇᴍʙᴇʀs:\n\n"
+        
+        if not admins:
+            staff_list += "𝐍ᴏ 𝐚𝐝𝐦𝐢𝐧s 𝐟𝐨𝐮𝐧𝐝."
+        else:
+            for admin in admins: 
+                # Skip deleted accounts
+                if admin.user.is_deleted:
+                    continue
+                    
+                tag = f"[{admin.user.first_name}](tg://user?id={admin.user.id})"
+                
+                # Determine status and append to list
+                if admin.status == enums.ChatMemberStatus.OWNER:
+                    staff_list += f"• 👑 {tag} (Owner)\n"
+                elif admin.user.is_bot:
+                    # Check if the bot is the group's own bot before listing as bot admin
+                    me = await client.get_me()
+                    if admin.user.id != me.id:
+                        staff_list += f"• 🤖 {tag} (Bot Admin)\n"
+                else: # Regular human administrator
+                    staff_list += f"• 🛡️ {tag} (Admin)\n"
+                    
+        await message.reply_text(staff_list, parse_mode=enums.ParseMode.MARKDOWN)
+        
+    except Exception as e:
+        print(f"Error fetching staff: {e}")
+        await message.reply_text(f"🚫 𝐄𝐫𝐫𝐨𝐫 𝐢𝐧 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐬𝐭𝐚𝐟𝐟 𝐥𝐢𝐬𝐭: {e}")
+
+# -------- Main Message Handler (AFK & Chatbot Reply Logic) --------
+@app.on_message(
+    filters.text & 
+    ~filters.bot & 
+    ~filters.via_bot & 
+    ~filters.command
+)
+async def afk_and_chatbot_reply_handler(client, message: Message):
+    user = message.from_user
+    chat_id = message.chat.id
+    
+    # ------------------ 1. AFK RETURN/TAGGING LOGIC ------------------
+    if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        
+        # Check if the AFK user has returned by sending a message
+        if user.id in AFK_USERS:
+            # Note: This is a backup if the user didn't use /afk command to return
+            AFK_USERS.pop(user.id, None)
+            
+            # No need to send 'Welcome Back' here, as it's handled by the /afk command 
+            # if the user typed it, or by the fact that they are now active.
+        
+        # Check if the user is replying to an AFK user
+        if message.reply_to_message and message.reply_to_message.from_user:
+            afk_user_id = message.reply_to_message.from_user.id
+            if afk_user_id in AFK_USERS:
+                afk_data = AFK_USERS[afk_user_id]
+                time_afk = get_readable_time(int(time.time() - afk_data["time"]))
+                
+                # Send notification about the AFK user
+                afk_mention = f"[{afk_data['first_name']}](tg://user?id={afk_user_id})"
+                
+                await message.reply_text(
+                    f"**⚠️ 𝐀𝐖𝐀𝐘 𝐅𝐑𝐎𝐌 𝐊𝐄𝐘𝐁𝐎𝐀𝐑𝐃**\n"
+                    f"{afk_mention} ɪs ᴄᴜʀʀᴇɴᴛʟʏ 𝐀ғᴋ!\n"
+                    f"**𝐑ᴇᴀsᴏɴ**: {afk_data['reason']}\n"
+                    f"**𝐀ғᴋ 𝐅𝐨𝐫**: {time_afk}",
+                    parse_mode=enums.ParseMode.MARKDOWN
+                )
+            
+    # ------------------ 2. CHATBOT REPLY LOGIC ------------------
+    
+    should_reply = False
+    me = await client.get_me()
+
+    if message.chat.type == enums.ChatType.PRIVATE:
+        should_reply = True
+    elif message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        is_reply_to_me = message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id == me.id
+
+        # Reply if (chatbot is enabled) OR (message is a direct reply to the bot)
+        if CHATBOT_STATUS.get(chat_id, False) or is_reply_to_me:
+            should_reply = True
+
+    if should_reply:
+        text = message.text
+        response, is_sticker = get_reply(text)
+        
+        if is_sticker:
+            try:
+                # Send the sticker ID
+                await message.reply_sticker(response)
+            except Exception as e:
+                # Fallback to text if sticker sending fails
+                print(f"Error sending sticker: {e}. Falling back to text.")
+                # Fallback to a random text reply from the daily category
+                await message.reply_text(random.choice(DATA.get("daily", ["Hello 👋"])))
+        else:
+            # Send the text reply
+            await message.reply_text(response)
+
+# -------- Game Commands (Existing Logic) --------
+
 @app.on_message(filters.command("dice"))
 async def dice_cmd(client, message):
-    await message.reply_dice(emoji="🎲")
+    await message.reply_dice(enums.DiceEmoji.DICE)
 
 @app.on_message(filters.command("jackpot"))
 async def jackpot_cmd(client, message):
-    await message.reply_dice(emoji="🎰")
+    await message.reply_dice(enums.DiceEmoji.SLOT_MACHINE)
 
 @app.on_message(filters.command("football"))
 async def football_cmd(client, message):
-    await message.reply_dice(emoji="⚽")
+    await message.reply_dice(enums.DiceEmoji.FOOTBALL)
 
 @app.on_message(filters.command("basketball"))
 async def basketball_cmd(client, message):
-    await message.reply_dice(emoji="🏀")
+    await message.reply_dice(enums.DiceEmoji.BASKETBALL)
 
 @app.on_message(filters.command("bowling"))
 async def bowling_cmd(client, message):
-    await message.reply_dice(emoji="🎳")
-    
-# -------- Group Utility Commands --------
-@app.on_message(filters.command("staff") & filters.group)
-async def staff_cmd(client, message):
-    admin_list = []
-    owner = None
+    await message.reply_dice(enums.DiceEmoji.BOWLING)
+
+# -------- /botlist (Group Command) --------
+@app.on_message(filters.command("botlist") & filters.group)
+async def botlist_cmd(client, message):
+    if not await is_admin(message.chat.id, message.from_user.id):
+        return await message.reply_text("❗ Oɴʟʏ ᴀᴅᴍɪɴs ᴄᴀɴ ᴜsᴇ /ʙᴏᴛʟɪsᴛ.")
+
+    bot_count = 0
     try:
-        # Fetch administrators only
-        async for member in app.get_chat_members(message.chat.id, filter=enums.ChatMembersFilter.ADMINISTRATORS):
+        async for member in client.get_chat_members(message.chat.id):
             if member.user.is_bot:
-                continue
-            
-            if member.status == enums.ChatMemberStatus.OWNER:
-                owner = member.user
-            elif member.status == enums.ChatMemberStatus.ADMINISTRATOR: 
-                admin_list.append(member.user)
-    except Exception:
-        return await message.reply_text("🚫 𝐈 𝐜𝐚𝐧'𝐭 𝐟𝐞𝐭𝐜𝐡 𝐚𝐝𝐦𝐢𝐧s. 𝐈 𝐦𝐚𝐲 𝐧𝐨𝐭 be 𝐚𝐧 𝐚𝐝𝐦𝐢𝐧 𝐡𝐞𝐫𝐞.")
-
-    if not owner and not admin_list:
-        return await message.reply_text("🚫 𝐍𝐨 𝐬𝐭𝐚𝐟𝐟 𝐟𝐨𝐮𝐧𝐝 𝐢𝐧 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩.") 
-
-    staff_text = "👑 𝐆ʀᴏᴜᴘ 𝐒ᴛᴀғғ:\n\n"
-    if owner:
-        staff_text += f"**𝐎ᴡɴᴇʀ**: [{owner.first_name}](tg://user?id={owner.id})\n"
-    
-    if admin_list:
-        staff_text += "\n**𝐀ᴅᴍɪɴs**:\n"
-        for admin in admin_list:
-            staff_text += f"- [{admin.first_name}](tg://user?id={admin.id})\n"
-            
-    await message.reply_text(staff_text, parse_mode=enums.ParseMode.MARKDOWN, disable_web_page_preview=True)
-
-# --- 7. CHAT & AFK HANDLERS (The main logic) ---
-
-# 1. AFK Status Check (Must run before chatbot reply)
-@app.on_message(filters.text & filters.incoming & ~filters.bot & filters.group)
-async def afk_handler(client, message: Message):
-    # Check if the user is AFK and is now back (by sending a message)
-    user = message.from_user
-    if user and user.id in AFK_USERS:
-        data = AFK_USERS.pop(user.id)
-        uptime = get_readable_time(int(time.time() - data["time"]))
-        return await message.reply_text(
-            f"𝐖ᴇʟᴄᴏᴍᴇ ʙᴀᴄᴋ, [{user.first_name}](tg://user?id={user.id})! 💖\n"
-            f"𝐘ᴏᴜ ᴡᴇʀᴇ ᴀғᴋ ғᴏʀ: **{uptime}**\n"
-            f"𝐘ᴏᴜʀ ʀᴇᴀsᴏɴ ᴡᴀs: *{data['reason']}*",
+                bot_count += 1
+                
+        await message.reply_text(
+            f"🤖 𝐁ᴏᴛ 𝐂ᴏᴜɴᴛ:\n"
+            f"𝐓𝐡𝐞𝐫𝐞 𝐚𝐫𝐞 **{bot_count}** 𝐛𝐨𝐭𝐬 𝐢𝐧 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩.",
             parse_mode=enums.ParseMode.MARKDOWN
         )
+    except Exception as e:
+        await message.reply_text(f"🚫 𝐄𝐫𝐫𝐨𝐫 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐛𝐨𝐭𝐬: {e}")
 
-    # Check if an AFK user was tagged (in replies or mentions)
-    if message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id in AFK_USERS:
-        mentioned_user_id = message.reply_to_message.from_user.id
-    elif message.entities:
-        # Check through entities for mentions
-        mentioned_user_id = next((
-            entity.user.id for entity in message.entities 
-            if (entity.type == enums.MessageEntityType.TEXT_MENTION or entity.type == enums.MessageEntityType.MENTION) 
-            and entity.user and entity.user.id in AFK_USERS
-        ), None)
-    else:
-        mentioned_user_id = None
-
-
-    if mentioned_user_id and mentioned_user_id in AFK_USERS:
-        data = AFK_USERS[mentioned_user_id]
-        uptime = get_readable_time(int(time.time() - data["time"]))
-        return await message.reply_text(
-            f"❗ 𝐀ғᴋ ᴀʟᴇʀᴛ: **{data['first_name']}** is AFK!\n"
-            f"⏰ 𝐒ɪɴᴄᴇ: {uptime} ago.\n"
-            f"📝 𝐑ᴇᴀsᴏɴ: *{data['reason']}*",
-            parse_mode=enums.ParseMode.MARKDOWN
-        )
-
-
-# 2. Chatbot Reply Handler
-@app.on_message(filters.text & filters.incoming & is_chatbot_enabled & ~filters.via_bot & ~filters.edited)
-async def chatbot_reply_handler(client, message: Message):
-    me = await client.get_me()
-    text = message.text
-    
-    # Remove bot mention from text for better keyword matching if present
-    if me.username and f"@{me.username.lower()}" in text.lower():
-        text = text.replace(f"@{me.username}", "").replace(f"@{me.username.lower()}", "").strip()
-
-    # Condition for reply:
-    # 1. Private chat (handled by is_chatbot_enabled returning True)
-    # 2. Group chat AND reply to the bot
-    # 3. Group chat AND bot is mentioned
-    is_private = message.chat.type == enums.ChatType.PRIVATE
-    is_reply_to_bot = message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id == me.id
-    is_mention = me.username and f"@{me.username.lower()}" in message.text.lower()
-
-    if is_private or is_reply_to_bot or is_mention:
-        
-        # Get response using the 70/30 logic (Sticker or Text)
-        response, is_sticker = get_reply(text)
-
-        try:
-            if is_sticker:
-                await message.reply_sticker(response)
-            else:
-                await message.reply_text(response)
-        except Exception as e:
-            # Fallback to text if sticker sending fails
-            print(f"Chatbot failed to send sticker/message: {e}. Falling back to text.")
-            
-            # Send the text version if the sticker failed or if text sending failed
-            if is_sticker:
-                # Try to get the corresponding text/default text
-                matching_cat = next((cat for word, cat in KEYWORDS.items() if word in text.lower() and not cat.startswith("sticker_")), "daily")
-                
-                # If it was an 'anger' sticker failure, use the 'daily' text fallback or general text
-                text_to_send = random.choice(DATA.get(matching_cat, DATA["daily"]))
-                
-                await message.reply_text(text_to_send)
-            else:
-                # If it wasn't a sticker and failed, something else is wrong, but reply the intended text anyway
-                await message.reply_text(response)
-
-# --- 8. GROUP ENTRY/EXIT HANDLERS ---
-
-# Welcome Message (Permanent, not deleted)
-@app.on_message(filters.new_chat_members & filters.group)
-async def welcome_handler(client, message: Message):
-    for user in message.new_chat_members:
-        # Check if the bot itself was added
-        if user.is_self:
-            # Bot was added to the group
-            await message.reply_text(
-                f"**𝐓ʜᴀɴᴋs** ғᴏʀ ᴀᴅᴅɪɴɢ ᴍᴇ ᴛᴏ *{message.chat.title}*! 🎉\n"
-                f"I ᴀᴍ ʜᴇʀᴇ ᴛᴏ ᴋᴇᴇᴘ ᴛʜᴇ ᴄʜᴀᴛ ᴀᴄᴛɪᴠᴇ. Use /chatbot enable to activate auto replies.",
-                parse_mode=enums.ParseMode.MARKDOWN
-            )
-            await save_chat_id(message.chat.id, "groups")
-        else:
-            # New member joined
-            mention = f"[{user.first_name}](tg://user?id={user.id})"
-            await message.reply_text(
-                f"👋 𝐇ᴇʏ, {mention} ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ➳ *{message.chat.title}*! ʜᴀᴠᴇ ᴀ ғᴀɴᴛᴀsᴛɪᴄ ᴅᴀʏ♡.",
-                parse_mode=enums.ParseMode.MARKDOWN
-            )
-
-# Voice Chat Started Notification
-@app.on_message(filters.video_chat_started & filters.group)
-async def vc_started_handler(client, message: Message):
-    text = f"🎙️ ➳𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐒ᴛᴀʀᴛᴇᴅ! Come join the fun."
-    await client.send_message(message.chat.id, text, reply_to_message_id=message.id)
-
-# Voice Chat Ended Notification
-@app.on_message(filters.video_chat_ended & filters.group)
-async def vc_ended_handler(client, message: Message):
-    # Duration is in message.video_chat_ended.duration
-    duration = get_readable_time(message.video_chat_ended.duration)
-    text = f"❌ ➳𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐄ɴᴅᴇᴅ! \n⏱️ Duration: **{duration}**."
-    await client.send_message(message.chat.id, text, parse_mode=enums.ParseMode.MARKDOWN)
-
-# Voice Chat Members Invited Notification
-@app.on_message(filters.video_chat_members_invited & filters.group)
-async def vc_invited_handler(client, message: Message):
-    inviter = message.from_user
-    invited_users = message.video_chat_members_invited.users
-    
-    invited_mentions = ", ".join(
-        [f"[{u.first_name}](tg://user?id={u.id})" for u in invited_users]
-    )
-    
-    inviter_mention = f"[{inviter.first_name}](tg://user?id={inviter.id})"
-    
-    text = (
-        f"📣 {inviter_mention} invited the following users to the Voice Chat:\n"
-        f"➡️ {invited_mentions}"
-    )
-    
-    await client.send_message(message.chat.id, text, parse_mode=enums.ParseMode.MARKDOWN)
-
-
-# --- 9. BOT INITIALIZATION ---
-
-# Create the Pyrogram Client instance
-app = Client(
-    "advanced_chatbot",
-    api_id=API_ID,
-    api_hash=API_HASH,
-    bot_token=BOT_TOKEN,
-    plugins=dict(root="handlers") # Optional: Structure if you use external handlers
-)
-
-# Start the bot
-if __name__ == "__main__":
-    print("Bot starting up...")
-    app.run()
-    print("Bot shut down.")
+# -------- Run the Bot --------
+# This is usually the last line in a Pyrogram bot script
+# app.run() is typically called in the main execution block in a production environment
