@@ -113,25 +113,25 @@ HELP_COMMANDS_TEXT_MAP = {
 		"📜 𝐆ʀᴏᴜᴘ 𝐔ᴛɪʟɪᴛʏ 𝐂ᴏᴍᴍᴧɴᴅs:\n"
 		"/staff ~ 𝐃ɪsᴘʟᴧʏs ɢʀᴏᴜᴘ sᴛᴧғғ ᴍᴇᴍʙᴇʀs\n"
 		"/botlist ~ 𝐂ʜᴇᴄᴋ ʜᴏᴡ ᴍᴀɴʏ ʙᴏᴛs ɪɴ ʏᴏᴜʀ ɢʀᴏᴜᴘ (𝐀ᴅᴍɪɴ ᴏɴʟʏ)\n"
-        "📢 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐍𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧𝐬 𝐀𝐫𝐞 𝐄𝐧𝐚𝐛𝐥𝐞𝐝\n"
+        "📢 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐍𝐨𝐭𝐢𝐟𝐢𝐜𝐚𝐭𝐢𝐨𝐧𝐬 𝐀𝐫𝐞 𝐄𝐧𝐚𝐛𝐥𝐞𝐝\n"
 		"\n_ʙᴏᴛʟɪsᴛ ʀᴇǫᴜɪʀᴇs ᴀᴅᴍɪɴ. ᴏᴛʜᴇʀs ᴀʀᴇ ғᴏʀ ᴇᴠᴇʀʏᴏɴᴇ."
 	)
 }
 # ----------------- FANCY FONTS END -----------------
 # -------- STICKER MAPPING (User provided stickers) --------
 STICKER_MAPPING = {
-    # Cute Stickers
-    "sticker_cute_1": "CAACAgEAAxkBAAEPgu9o4USg2JWyq8EjIQcHKAJxTISKnAAChwADUSkNOdIrExvjme5qNgQ",
-    "sticker_cute_2": "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE",
-    # Funny Stickers
-    "sticker_funny_1": "CAACAgQAAxkBAAEPguto4USNgkueY_8UUvG1qR0HO8pVJAAC8hEAAuKyeVAr0E__1DsLxTYE",
-    "sticker_funny_2": "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE",
-    # Angry Stickers
-    "sticker_anger_1": "CAACAgUAAxkBAAEPgudo4UR5HlLeS-qX6SPZa68uWVYxXAACNBAAAvyQWFdWZPeCGuC2gjYE",
-    "sticker_anger_2": "CAACAgUAAxkBAAEPgulo4USHqBw08BmrpRAczQX6nqkQXQACsQIAAmfVCVXVlV0wAWPSXDYE",
-    # Other/General Stickers - Mapped as placeholders for other categories
-    "sticker_love_1": "CAACAgQAAxkBAAEPgu1o4USZaO5ewrgQV8bLpU6Y8z0d9AACXA4AAj9T-FN3FZM9W24oiTYE",
-    "sticker_anime_1": "CAACAgEAAxkBAAEPgu9o4USg2JWyq8EjIQcHKAJxTISKnAAChwADUSkNOdIrExvjme5qNgQ",
+    # Cute Stickers
+    "sticker_cute_1": "CAACAgEAAxkBAAEPgu9o4USg2JWyq8EjIQcHKAJxTISKnAAChwADUSkNOdIrExvjme5qNgQ",
+    "sticker_cute_2": "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE",
+    # Funny Stickers
+    "sticker_funny_1": "CAACAgQAAxkBAAEPguto4USNgkueY_8UUvG1qR0HO8pVJAAC8hEAAuKyeVAr0E__1DsLxTYE",
+    "sticker_funny_2": "CAACAgUAAxkBAAEPgvFo4USiv1_Mf9-45IeDMN5kETeB7AACzQ4AAsp_IVSL99zOZVfZeTYE",
+  	# Angry Stickers
+    "sticker_anger_1": "CAACAgUAAxkBAAEPgudo4UR5HlLeS-qX6SPZa68uWVYxXAACNBAAAvyQWFdWZPeCGuC2gjYE",
+    "sticker_anger_2": "CAACAgUAAxkBAAEPgulo4USHqBw08BmrpRAczQX6nqkQXQACsQIAAmfVCVXVlV0wAWPSXDYE",
+    # Other/General Stickers - Mapped as placeholders for other categories
+    "sticker_love_1": "CAACAgQAAxkBAAEPgu1o4USZaO5ewrgQV8bLpU6Y8z0d9AACXA4AAj9T-FN3FZM9W24oiTYE",
+    "sticker_anime_1": "CAACAgEAAxkBAAEPgu9o4USg2JWyq8EjIQcHKAJxTISKnAAChwADUSkNOdIrExvjme5qNgQ",
 }
 
 
@@ -207,86 +207,86 @@ KEYWORDS = {
 
 # -------- Utility Functions --------
 def get_reply(text: str):
-    """
-    Determines the response (text or sticker ID) based on the input text.
-    Returns (response, is_sticker)
-    """
-    if not text:
-        # Fall back to daily text
-        return (random.choice(DATA.get("daily", ["Hello 👋"])), False)
+    """
+    Determines the response (text or sticker ID) based on the input text.
+    Returns (response, is_sticker)
+    """
+    if not text:
+        # Fall back to daily text
+        return (random.choice(DATA.get("daily", ["Hello 👋"])), False)
 
-    text = text.lower()
+    text = text.lower()
 
-    # FIX: Removed the non-printable character U+00A0 from the end of the line
-    text = re.sub(r'[^\w\s]', '', text)
+    # FIX: Removed the non-printable character U+00A0 from the end of the line
+    text = re.sub(r'[^\w\s]', '', text)
 
-    for word, cat in KEYWORDS.items():
-        # Check if keyword is a substring of the message text
-        if word in text:
-            if cat.startswith("sticker_") and cat in DATA and DATA[cat]:
-                # Returns a random sticker ID from the category (is_sticker=True)
-                sticker_id = random.choice(DATA[cat])
-                return (sticker_id, True)
-            elif cat in DATA and DATA[cat]:
-                # Returns a random text reply (is_sticker=False)
-                return (random.choice(DATA[cat]), False)
+    for word, cat in KEYWORDS.items():
+        # Check if keyword is a substring of the message text
+        if word in text:
+            if cat.startswith("sticker_") and cat in DATA and DATA[cat]:
+                # Returns a random sticker ID from the category (is_sticker=True)
+                sticker_id = random.choice(DATA[cat])
+                return (sticker_id, True)
+            elif cat in DATA and DATA[cat]:
+                # Returns a random text reply (is_sticker=False)
+                return (random.choice(DATA[cat]), False)
 
-    # If no specific keyword is found, send a general/daily reply
-    return (random.choice(DATA.get("daily", ["Hello 👋"])), False)
+    # If no specific keyword is found, send a general/daily reply
+    return (random.choice(DATA.get("daily", ["Hello 👋"])), False)
 
 
 def get_readable_time(seconds: int) -> str:
-    result = ''
-    (days, remainder) = divmod(seconds, 86400)
-    (hours, remainder) = divmod(remainder, 3600)
-    (minutes, seconds) = divmod(remainder, 60)
-    if days > 0:
-        result += f"{days}d "
-    if hours > 0:
-        result += f"{hours}h "
-    if minutes > 0:
-        result += f"{minutes}m "
-    if seconds > 0:
-        result += f"{seconds}s"
-    return result.strip() or "just now"
+    result = ''
+    (days, remainder) = divmod(seconds, 86400)
+    (hours, remainder) = divmod(remainder, 3600)
+    (minutes, seconds) = divmod(remainder, 60)
+    if days > 0:
+        result += f"{days}d "
+    if hours > 0:
+        result += f"{hours}h "
+    if minutes > 0:
+        result += f"{minutes}m "
+    if seconds > 0:
+        result += f"{seconds}s"
+    return result.strip() or "just now"
 
 
 async def is_admin(chat_id, user_id):
-    """Checks if a user is an admin or owner of the chat."""
-    try:
-        member = await app.get_chat_member(chat_id, user_id)
-        return member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
-    except Exception:
-        return False
+    """Checks if a user is an admin or owner of the chat."""
+    try:
+        member = await app.get_chat_member(chat_id, user_id)
+        return member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
+    except Exception:
+        return False
 
 
 async def is_bot_admin(chat_id):
-    """Checks if the bot is an admin in the chat."""
-    try:
-        me = await app.get_me()
-        member = await app.get_chat_member(chat_id, me.id)
-        return member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
-    except Exception:
-        return False
+    """Checks if the bot is an admin in the chat."""
+    try:
+        me = await app.get_me()
+        member = await app.get_chat_member(chat_id, me.id)
+        return member.status in [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
+    except Exception:
+        return False
 
 
 async def save_chat_id(chat_id, type_):
-    """Saves the chat ID to the known chats list."""
-    chat_id_str = str(chat_id)
+    """Saves the chat ID to the known chats list."""
+    chat_id_str = str(chat_id)
 
-    if chat_id_str not in KNOWN_CHATS[type_]:
-        KNOWN_CHATS[type_].append(chat_id_str)
-        with open(CHAT_IDS_FILE, "w") as f:
-            json.dump(KNOWN_CHATS, f)
+    if chat_id_str not in KNOWN_CHATS[type_]:
+        KNOWN_CHATS[type_].append(chat_id_str)
+        with open(CHAT_IDS_FILE, "w") as f:
+            json.dump(KNOWN_CHATS, f)
 
 
 # Custom filter for checking chatbot status
 def is_chatbot_enabled(_, __, message: Message):
-    """Returns True if chatbot is enabled for this group."""
-    if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
-        # Default is False, so only True if explicitly set to True
-        return CHATBOT_STATUS.get(message.chat.id, False)
-    return False  # Chatbot should run in private chats via the main handler
+    """Returns True if chatbot is enabled for this group."""
+    if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        # Default is False, so only True if explicitly set to True
+        return CHATBOT_STATUS.get(message.chat.id, False)
+    return False  # Chatbot should run in private chats via the main handler
 
 # -------- Inline Button Handlers & Menus --------
 
@@ -438,7 +438,7 @@ async def start_cmd(client, message):
 @app.on_message(filters.command("developer"))
 async def developer_cmd(client, message):
 	# Animation
-	anim_text = "𝐘ᴏᴜ 𝐖ᴀɳᴛ ᴛᴏ 𝐊ɳᴏᴡ..𝐓ʜɪs 𝐁ᴏᴛ 𝐃ᴇᴠᴇʟᴏᴘᴇʀ 💥..𝐇ᴇʀᴇ"
+	anim_text = "𝐘ᴏᴜ 𝐖ᴀɳᴛ ᴛᴏ 𝐊ɳᴏᴡ..𝐓ʜɪs 𝐁ᴏᴛ 𝐃ᴇᴠᴇʟᴏᴘᴇʀ 💥."
 	m = await message.reply_text("Searching...")
 	
 	current = ""
@@ -690,7 +690,7 @@ async def couples_cmd(client, message):
 	love_percent = random.randint(30, 99)
 	
 	await message.reply_text(
-		f"💘 𝐍ᴇᴡ 𝐂ᴏᴜᴘ𝐥ᴇ ᴏғ ᴛʜᴇ 𝐃ᴀʏ!\n\n"
+		f"💘 𝐍ᴇᴡ 𝐂ᴏᴜᴘ𝐥𝐞 ᴏғ ᴛʜᴇ 𝐃ᴀʏ!\n\n"
 		f"[{user1.first_name}](tg://user?id={user1.id}) 💖 [{user2.first_name}](tg://user?id={user2.id})\n"
 		f"𝐋ᴏᴠᴇ ʟᴇᴠᴇʟ ɪs {love_percent}%! 🎉",
 		parse_mode=enums.ParseMode.MARKDOWN
@@ -797,7 +797,7 @@ async def staff_cmd(client, message):
 		staff_list = "👑 𝐆ʀᴏᴜᴘ 𝐒ᴛᴀғғ 𝐌ᴇᴍʙᴇʀs:\n\n"
 		
 		if not admins:
-			staff_list += "𝐍ᴏ 𝐚𝐝𝐦𝐢𝐧s 𝐟𝐨𝐮𝐧𝐝."
+			staff_list += "𝐍ᴏ ᴀᴅᴍɪɴs ғᴏᴜɴᴅ."
 		else:
 			for admin in admins: 
 				# Skip deleted accounts
@@ -843,33 +843,33 @@ async def botlist_cmd(client, message):
 		if bots:
 			bot_list_text += "➖➖➖➖➖➖➖➖➖➖\n"
 			# List up to 10 bots to avoid overly long messages
-			for bot in bots[:10]: 
+			for bot in bots[:10]: 
 				bot_list_text += f"• 🤖 [{bot.first_name}](tg://user?id={bot.id}) {f'@{bot.username}' if bot.username else ''}\n"
 			
 			if len(bots) > 10:
 				bot_list_text += f"\n... and {len(bots) - 10} more bots."
 				
 		else:
-			bot_list_text += "𝐍ᴏ 𝐛ᴏᴛ𝐬 𝐟𝐨𝐮𝐧𝐝 𝐢𝐧 𝐭𝐡𝐢𝐬 𝐠𝐫𝐨𝐮𝐩."
+			bot_list_text += "𝐍ᴏ ʙᴏᴛs ғᴏᴜɴᴅ ɪɴ ᴛʜɪs ɢʀᴏᴜᴘ."
 			
 		bot_list_text += (
 			f"\n➖➖➖➖➖➖➖➖➖➖\n"
-			f"👤 𝐇𝐮𝐦𝐚𝐧𝐬: **{len(humans)}**\n"
-			f"👥 𝐓𝐨𝐭𝐚𝐥 𝐌𝐞𝐦𝐛𝐞𝐫s: **{len(bots) + len(humans)}**"
+			f"👤 𝐇ᴜᴍᴀɴs: **{len(humans)}**\n"
+			f"👥 𝐓ᴏᴛᴀʟ 𝐌ᴇᴍʙᴇʀs: **{len(bots) + len(humans)}**"
 		)
 		
 		await message.reply_text(bot_list_text, parse_mode=enums.ParseMode.MARKDOWN)
 		
 	except Exception as e:
-		await message.reply_text(f"🚫 𝐄𝐫𝐫𝐨𝐫 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐛𝐨𝐭 𝐥𝐢𝐬𝐭: 𝐈 𝐦𝐚𝐲 𝐧𝐨𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧𝐬 𝐭𝐨 𝐯𝐢𝐞𝐰 𝐭𝐡𝐞 𝐦𝐞𝐦𝐛𝐞𝐫𝐬.")
+		await message.reply_text(f"🚫 𝐄𝐫𝐫𝐨𝐫 𝐟𝐞𝐭𝐜𝐡𝐢𝐧𝐠 𝐛𝐨𝐭 𝐥𝐢𝐬𝐭: 𝐈 𝐦𝐚𝐲 𝐧𝐨𝐭 𝐡𝐚𝐯𝐞 𝐩𝐞𝐫𝐦𝐢𝐬𝐬𝐢𝐨𝐧s 𝐭𝐨 𝐯𝐢𝐞𝐰 𝐭𝐡𝐞 𝐦𝐞𝐦𝐛𝐞𝐫s.")
 		print(f"Error in botlist: {e}")
 
-# -------- Voice Chat Handlers (NEW FEATURE) --------
+# -------- Voice Chat Handlers (NEW FEATURE - FIXED) --------
 
 @app.on_message(filters.voice_chat_started & filters.group)
 async def voice_chat_started_handler(client, message):
 	# The user who started the VC is generally in the service message.
-	user = message.from_user if message.from_user else client.get_me() 
+	user = message.from_user if message.from_user else client.get_me() 
 	vc_starter = f"[{user.first_name}](tg://user?id={user.id})"
 	await message.reply_text(
 		f"📢 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐒𝐭𝐚𝐫𝐭𝐞𝐝!\n\n"
@@ -910,83 +910,97 @@ async def voice_chat_members_invited_handler(client, message):
 		invited_list += f" and {len(invited_users) - 5} others"
 		
 	await message.reply_text(
-		f"🔔 {inviter} 𝐢𝐧𝐯𝐢𝐭𝐞𝐝 𝐬𝐨𝐦𝐞𝐨𝐧𝐞 𝐭𝐨 𝐭𝐡𝐞 𝐕𝐂:\n"
-		f"**{invited_list}** - 𝐂𝐨𝐦𝐞 𝐣𝐨𝐢𝐧! 🔗",
+		f"📣 𝐍𝐞𝐰 𝐕𝐨𝐢𝐜𝐞 𝐂𝐡𝐚𝐭 𝐈𝐧𝐯𝐢𝐭𝐞!\n\n"
+		f"{inviter} 𝐢𝐧𝐯𝐢𝐭𝐞𝐝 𝐭𝐡𝐞𝐬𝐞 𝐮𝐬𝐞𝐫𝐬: {invited_list} 𝐭𝐨 𝐭𝐡𝐞 𝐕𝐂. 𝐆𝐞𝐭 𝐢𝐧 𝐭𝐡𝐞𝐫𝐞! 🎧",
 		parse_mode=enums.ParseMode.MARKDOWN
 	)
 
-# -------- Main Chatbot Reply Handler (FIXED/ADDED) --------
+# -------- Main Chatbot/Reply Handler (MISSING - CRITICAL FIX) --------
 @app.on_message(
-	# FIX: Replaced filters.not_bot with ~filters.bot 
-	(filters.text | filters.sticker) & ~filters.bot & 
-	(filters.private | filters.mentioned | filters.reply | is_chatbot_enabled)
+    filters.text & 
+    (filters.private | (filters.group & is_chatbot_enabled)) &
+    filters.incoming &
+    filters.regex(r"^(?!/)") # Exclude messages starting with a command (e.g., /start)
 )
-async def handle_messages(client, message):
-	user_id = message.from_user.id
-	
-	# 1. Check if user is coming back from AFK by sending any message
-	if user_id in AFK_USERS:
-		afk_data = AFK_USERS.pop(user_id)
-		# Only announce return if the message is NOT an AFK command itself (already handled by /afk)
-		if message.text and not message.text.lower().startswith("/afk"):
-			time_afk = get_readable_time(int(time.time() - afk_data["time"]))
-			await message.reply_text(
-				f"𝐖ᴇʟᴄᴏᴍᴇ 𝐁ᴀᴄᴋ, [{afk_data['first_name']}](tg://user?id={user_id})! (𝐀ғᴋ ғᴏʀ: {time_afk})",
-				parse_mode=enums.ParseMode.MARKDOWN
-			)
-	
-	# 2. Handle incoming AFK mentions in group chats
-	if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
-		# Check if the message is a reply to an AFK user
-		if message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id in AFK_USERS:
-			afk_user_id = message.reply_to_message.from_user.id
-			afk_data = AFK_USERS[afk_user_id]
-			
-			time_afk = get_readable_time(int(time.time() - afk_data["time"]))
-			await message.reply_text(
-				f"⚠️ [{afk_data['first_name']}](tg://user?id={afk_user_id}) 𝐢𝐬 𝐀𝐅𝐊!\n"
-				f"⏰ 𝐀𝐰𝐚𝐲 𝐟𝐨𝐫: {time_afk}\n"
-				f"📝 𝐑𝐞𝐚𝐬𝐨𝐧: {afk_data['reason']}",
-				parse_mode=enums.ParseMode.MARKDOWN
-			)
-			return # Stop execution after AFK reply
-	
-	# 3. Handle incoming stickers (User request: reply to sticker with a sticker)
-	if message.sticker:
-		sticker_cats = ["sticker_cute", "sticker_funny", "sticker_anime", "sticker_love"]
-		
-		# Collect available sticker IDs
-		available_stickers = [
-			s_id for cat in sticker_cats for s_id in DATA.get(cat, []) if s_id
-		]
-		
-		if available_stickers:
-			reply_sticker = random.choice(available_stickers)
-			try:
-				await message.reply_sticker(reply_sticker)
-			except Exception as e:
-				print(f"Failed to send reply sticker: {e}")
-		return # Stop execution after sticker reply
+async def main_chatbot_handler(client, message):
+    """
+    Handles all incoming text messages in private chats and groups
+    where the chatbot is enabled. Also handles AFK checks.
+    """
+    # 1. AFK Check on mentions/replies
+    is_afk_check_done = False
 
-	# 4. Handle incoming text
-	if message.text:
-		# Determine if the bot should reply based on chat type and settings
-		should_reply = (
-			message.chat.type == enums.ChatType.PRIVATE or
-			await filters.mentioned(client, message) or # Bot is mentioned
-			(message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.is_self) or # Bot is replied to
-			CHATBOT_STATUS.get(message.chat.id, False) # Chatbot is enabled
-		)
+    # Check for AFK mentions in group chats
+    if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP] and message.mentions:
+        for user_id in message.mentions:
+            if user_id in AFK_USERS:
+                afk_data = AFK_USERS[user_id]
+                time_afk = get_readable_time(int(time.time() - afk_data["time"]))
+                
+                await message.reply_text(
+                    f"⚠️ 𝐖ᴀʀɴɪɴɢ: [{afk_data['first_name']}](tg://user?id={user_id}) 𝐢𝐬 𝐀𝐅𝐊!\n"
+                    f"⏰ 𝐀ғᴋ 𝐟ᴏʀ: **{time_afk}**\n"
+                    f"✍️ 𝐑ᴇᴀsᴏɴ: **{afk_data['reason']}**",
+                    parse_mode=enums.ParseMode.MARKDOWN
+                )
+                is_afk_check_done = True
+                
+    # Check for AFK in replies
+    if message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id in AFK_USERS:
+        user_id = message.reply_to_message.from_user.id
+        afk_data = AFK_USERS[user_id]
+        time_afk = get_readable_time(int(time.time() - afk_data["time"]))
+        
+        await message.reply_text(
+            f"⚠️ 𝐖ᴀʀɴɪɴɢ: [{afk_data['first_name']}](tg://user?id={user_id}) 𝐢𝐬 𝐀𝐅𝐊!\n"
+            f"⏰ 𝐀ғᴋ 𝐟ᴏʀ: **{time_afk}**\n"
+            f"✍️ 𝐑ᴇᴀsᴏɴ: **{afk_data['reason']}**",
+            parse_mode=enums.ParseMode.MARKDOWN
+        )
+        is_afk_check_done = True
 
-		if should_reply:
-			reply, is_sticker = get_reply(message.text)
-			
-			if is_sticker:
-				try:
-					await message.reply_sticker(reply)
-				except Exception as e:
-					print(f"Failed to send reply sticker: {e}")
-					# Fallback to text reply if sticker fails
-					await message.reply_text(random.choice(DATA.get("daily", ["Hello!"])))
-			else:
-				await message.reply_text(reply)
+    # 2. Main chatbot reply logic
+    # Reply only if it's a private chat OR if it's a group AND the message is a reply to the bot
+    # We use 'is_chatbot_enabled' filter for general group messages. 
+    # If the bot is tagged or replied to, it should respond regardless of CHATBOT_STATUS
+    
+    should_reply = False
+    
+    if message.chat.type == enums.ChatType.PRIVATE:
+        should_reply = True
+    elif CHATBOT_STATUS.get(message.chat.id, False):
+        should_reply = True
+    elif message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id == client.me.id:
+        should_reply = True
+    
+    if should_reply:
+        if message.text and not message.text.startswith('/'):
+            text = message.text
+            response_data, is_sticker = get_reply(text)
+            
+            # Avoid replying if we just did a bunch of AFK alerts, to prevent spam
+            if not is_afk_check_done or random.random() < 0.25: # small chance to reply even after AFK check
+                if is_sticker:
+                    await message.reply_sticker(response_data)
+                else:
+                    await message.reply_text(response_data)
+        
+    # 3. User coming back from AFK when they chat normally
+    if message.from_user.id in AFK_USERS and not message.text.lower().startswith('/afk'):
+        user_id = message.from_user.id
+        user_name = message.from_user.first_name
+        afk_data = AFK_USERS.pop(user_id)
+        time_afk = get_readable_time(int(time.time() - afk_data["time"]))
+        
+        # Announce the return to the chat
+        await app.send_message(
+            message.chat.id,
+            f"𝐖ᴇʟᴄ𝐨ᴍᴇ 𝐁ᴀᴄᴋ! [{user_name}](tg://user?id={user_id}), ʏᴏᴜ 𝐚𝐫𝐞 ᴏɴʟɪɴᴇ ɴᴏᴡ! (𝐀ғᴋ ғᴏʀ: {time_afk}) 😉",
+            parse_mode=enums.ParseMode.MARKDOWN
+        )
+# -------- END Main Chatbot/Reply Handler --------
+
+# Start the bot
+if __name__ == "__main__":
+	print("Starting Bot...")
+	app.run()
