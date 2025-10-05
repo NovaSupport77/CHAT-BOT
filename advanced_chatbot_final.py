@@ -897,26 +897,27 @@ async def afk_mention_handler(client, message):
 
 import os
 import logging
+import asyncio # Auto-delete ke liye zaroori library
 from pyrogram import Client, filters
 from pyrogram.enums import ChatType
 
-# Logging configuration (Taaki console mein output dikhe)
+# Logging configuration
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # --- Configuration ---
-# Apne credentials yahaan ya environment variables mein set karein.
-# Agar aap Canvas ke bahar deploy kar rahe hain, toh yeh values bharni hongi.
 API_ID = os.environ.get("API_ID", 1234567)          # Apka Telegram API ID
 API_HASH = os.environ.get("API_HASH", "YOUR_API_HASH") # Apka Telegram API Hash
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN") # Apka Bot Token
-# Jis channel/group mein logs bhejne hain, uska ID.
-# Negative ID (e.g., -100123456789) use karein groups/channels ke liye.
+# Log Channel ID (Negative ID use karein)
 LOG_CHANNEL_ID = os.environ.get("LOG_CHANNEL_ID", -100000000000)
+# Auto-delete time in seconds
+AUTO_DELETE_TIME = 10 
 
 if API_ID == 1234567 or API_HASH == "YOUR_API_HASH" or BOT_TOKEN == "YOUR_BOT_TOKEN":
     logger.error("Configuration ERROR: Please set your API_ID, API_HASH, and BOT_TOKEN.")
-    exit()
+    # Exit is commented out for deployment flexibility, but configuration is required.
+    # exit() 
 
 # --- Client Initialization ---
 app = Client(
@@ -930,10 +931,10 @@ app = Client(
 def get_user_mention(user):
     """User object se mention ya name return karta hai."""
     if user.username:
-        return f"@{user.username} (ID: `{user.id}`)"
-    return f"[{user.first_name}](tg://user?id={user.id}) (ID: `{user.id}`)"
+        return f"@{user.username}"
+    return f"[{user.first_name}](tg://user?id={user.id})"
 
-# Function to send logs to the designated channel
+# Function to send logs to the designated channel (Long-term record)
 async def send_log(client, text):
     """Logs ko designated channel par bhejta hai."""
     try:
@@ -945,58 +946,95 @@ async def send_log(client, text):
     except Exception as e:
         logger.error(f"Error sending log to channel {LOG_CHANNEL_ID}: {e}")
 
+# Function to send temporary notification to the group and auto-delete
+async def send_temp_notification(client, chat_id, text):
+    """Group mein notification bhejta hai aur 10 seconds baad delete kar deta hai."""
+    try:
+        # Send message
+        sent_message = await client.send_message(
+            chat_id=chat_id,
+            text=text
+        )
+        
+        # Wait for 10 seconds
+        await asyncio.sleep(AUTO_DELETE_TIME)
+        
+        # Delete message
+        await sent_message.delete()
+        
+    except Exception as e:
+        # Agar bot ke paas delete karne ya message bhejney ka permission nahi hai
+        logger.warning(f"Failed to send/delete message in chat {chat_id}: {e}")
+
+
 # ====================================================================
-# --- 1. VC/Video Chat Status Handlers (Error Fixed here) ---
-# Pyrogram 'voice_chat_' ko 'video_chat_' ke roop mein istemal karta hai.
+# --- VC/Video Chat Status Handlers (Group Notification + Auto-Delete) ---
 # ====================================================================
 
-@app.on_message(filters.video_chat_started)
+@app.on_message(filters.video_chat_started & filters.group)
 async def handle_vc_started(client, message):
     """Jab group/channel mein video/voice chat shuru hota hai."""
-    chat_title = message.chat.title or "Private Chat"
+    chat_title = message.chat.title
+    
+    # Log to designated channel
     log_text = (
         f"🎙️ **VC Started**\n"
         f"**Group:** {chat_title} (`{message.chat.id}`)"
     )
     await send_log(client, log_text)
+    
+    # Notify group and auto-delete
+    group_notification_text = f"🎙️ **Voice Chat Started!** Join now to talk!"
+    await send_temp_notification(client, message.chat.id, group_notification_text)
 
-@app.on_message(filters.video_chat_ended)
+@app.on_message(filters.video_chat_ended & filters.group)
 async def handle_vc_ended(client, message):
     """Jab group/channel mein video/voice chat khatam hota hai."""
-    chat_title = message.chat.title or "Private Chat"
+    chat_title = message.chat.title
     duration = message.video_chat_ended.duration
     minutes = duration // 60
     seconds = duration % 60
     
+    # Log to designated channel
     log_text = (
         f"🛑 **VC Ended**\n"
         f"**Group:** {chat_title} (`{message.chat.id}`)\n"
         f"**Duration:** {minutes} minutes and {seconds} seconds."
     )
     await send_log(client, log_text)
+    
+    # Notify group and auto-delete
+    group_notification_text = f"🛑 **Voice Chat Ended.** Duration: {minutes}m {seconds}s."
+    await send_temp_notification(client, message.chat.id, group_notification_text)
 
-@app.on_message(filters.video_chat_members_invited)
+@app.on_message(filters.video_chat_members_invited & filters.group)
 async def handle_vc_members_invited(client, message):
     """Jab koi member VC mein dusre members ko invite karta hai."""
-    chat_title = message.chat.title or "Private Chat"
+    chat_title = message.chat.title
     inviter = get_user_mention(message.from_user)
     
     invited_users = []
     for user in message.video_chat_members_invited.users:
         invited_users.append(get_user_mention(user))
 
+    # Log to designated channel
     log_text = (
         f"✉️ **VC Invitation**\n"
         f"**Group:** {chat_title} (`{message.chat.id}`)\n"
         f"**Inviter:** {inviter}\n"
-        f"**Invited Members:**\n"
-        f"{' • ' + '\n • '.join(invited_users)}"
+        f"**Invited Members:** {', '.join([u.split('(')[0].strip() for u in invited_users])}"
     )
     await send_log(client, log_text)
+    
+    # Notify group and auto-delete
+    group_notification_text = (
+        f"✉️ {inviter} invited {len(invited_users)} member(s) to the VC!"
+    )
+    await send_temp_notification(client, message.chat.id, group_notification_text)
+
 
 # ====================================================================
-# --- 2. Member Join/Leave Handlers (VC Left/Join requested feature) ---
-# Yeh members ke main group join/leave hone par trigger hote hain.
+# --- Member Join/Leave Handlers (Group Notification + Auto-Delete) ---
 # ====================================================================
 
 @app.on_message(filters.new_chat_members & filters.group)
@@ -1006,20 +1044,25 @@ async def handle_member_join(client, message):
     new_members_list = []
     
     for user in message.new_chat_members:
-        # Bot khud ko ignore karega agar woh join ho raha hai
         if user.is_bot and user.id == client.me.id:
             continue
-            
         new_members_list.append(get_user_mention(user))
 
     if new_members_list:
+        # Log to designated channel
         log_text = (
             f"➕ **Member Joined**\n"
             f"**Group:** {chat_title} (`{message.chat.id}`)\n"
-            f"**New Members:**\n"
-            f"{' • ' + '\n • '.join(new_members_list)}"
+            f"**New Members:** {', '.join([u.split('(')[0].strip() for u in new_members_list])}"
         )
         await send_log(client, log_text)
+
+        # Notify group and auto-delete
+        member_names = [user.first_name for user in message.new_chat_members if not user.is_bot]
+        if member_names:
+            names_text = ", ".join(member_names)
+            group_notification_text = f"👋 Welcome to the group, **{names_text}**!"
+            await send_temp_notification(client, message.chat.id, group_notification_text)
 
 @app.on_message(filters.left_chat_member & filters.group)
 async def handle_member_left(client, message):
@@ -1027,32 +1070,28 @@ async def handle_member_left(client, message):
     chat_title = message.chat.title
     member = message.left_chat_member
     
-    # Bot khud ko ignore karega agar woh leave ho raha hai
     if member.is_bot and member.id == client.me.id:
         return
 
     leaver_mention = get_user_mention(member)
+    leaver_name = member.first_name
     
+    # Log to designated channel
     log_text = (
         f"➖ **Member Left**\n"
         f"**Group:** {chat_title} (`{message.chat.id}`)\n"
         f"**Leaver:** {leaver_mention}"
     )
     await send_log(client, log_text)
+    
+    # Notify group and auto-delete
+    group_notification_text = f"🚪 **{leaver_name}** has left the group. Goodbye!"
+    await send_temp_notification(client, message.chat.id, group_notification_text)
 
 
-# --- Start Command (Bot ko check karne ke liye) ---
-@app.on_message(filters.command("start") & filters.private)
-async def start_command(client, message):
-    await message.reply_text(
-        "Hello! I am the VC Logger Bot. "
-        "I log video/voice chat activities and member join/leave events. "
-        "Make sure I have admin rights in the groups and log channel."
-    )
-
-
-# -------- CHATBOT HANDLER (Responds to keywords or replies) (FIXED) --------
-# Filter: Run in private, OR if in group AND chatbot is explicitly enabled. Exclude bot's own messages.
+# --- Configuration ---
+# Apne credentials yahaan ya environment variables mein set karein.
+#  in group AND chatbot is explicitly enabled. Exclude bot's own messages.
 @app.on_message(
     filters.text & 
     (filters.private | (filters.group & is_chatbot_enabled)) & 
