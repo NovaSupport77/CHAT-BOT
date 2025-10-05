@@ -959,19 +959,37 @@ async def goodbye_handler(client, message: Message):
         parse_mode=enums.ParseMode.MARKDOWN
     )
 
+from pyrogram import Client, filters, enums
+from pyrogram.types import Message
+
+# Assuming 'app' is your Pyrogram client instance and 'get_readable_time' is defined elsewhere.
+# You will need to make sure 'get_readable_time' function is present in your original file.
+
 # Voice Chat Started Notification (Permanent, not deleted)
-@app.on_message(filters.voice_chat_started & filters.group)
+# FIX: Using filters.video_chat_started instead of filters.voice_chat_started
+@app.on_message(filters.video_chat_started & filters.group)
 async def vc_started_handler(client, message: Message):
+    """Handles the notification when a video/voice chat starts in a group."""
     text = f"🎙️ ➳𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐒ᴛᴀʀᴛᴇᴅ! Come join the fun."
+    # Sending the message without parse_mode as the text contains only plain characters and an emoji
     await client.send_message(message.chat.id, text, reply_to_message_id=message.id)
 
 # Voice Chat Ended Notification (Permanent, not deleted)
-@app.on_message(filters.voice_chat_ended & filters.group)
+# FIX: Using filters.video_chat_ended instead of filters.voice_chat_ended
+@app.on_message(filters.video_chat_ended & filters.group)
 async def vc_ended_handler(client, message: Message):
-    # Duration is in message.voice_chat_ended.duration
-    duration = get_readable_time(message.voice_chat_ended.duration)
-    text = f"❌ ➳𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐄ɴᴅᴇᴅ! \n⏱️ Duration: **{duration}**."
-    await client.send_message(message.chat.id, text, parse_mode=enums.ParseMode.MARKDOWN)
+    """Handles the notification when a video/voice chat ends in a group."""
+    try:
+        # Duration is in message.video_chat_ended.duration
+        # Ensure 'get_readable_time' is accessible and correctly defined.
+        duration = get_readable_time(message.video_chat_ended.duration)
+        text = f"❌ ➳𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐄ɴᴅᴇᴅ! \n⏱️ Duration: **{duration}**."
+        # Using MARKDOWN parse mode for bold text in duration
+        await client.send_message(message.chat.id, text, parse_mode=enums.ParseMode.MARKDOWN)
+    except Exception as e:
+        # Fallback in case of any error (e.g., if get_readable_time is missing)
+        print(f"Error handling VC ended: {e}")
+        await client.send_message(message.chat.id, "❌ ➳𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐄ɴᴅᴇᴅ! (Duration calculation failed).")
 
 # Voice Chat Members Invited Notification (Permanent, not deleted)
 @app.on_message(filters.voice_chat_participants_invited & filters.group)
