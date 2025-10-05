@@ -924,28 +924,38 @@ async def voice_chat_members_invited_handler(client, message):
         parse_mode=enums.ParseMode.MARKDOWN
     )
 
-# -------- Main Chatbot/Reply Handler (MISSING - CRITICAL FIX) --------
+# -------- Main Chatbot/Reply Handler (FIXED & CLEAN) --------
+from pyrogram import Client, filters, enums
+import time, random
+
+# These must exist in your main file
+# AFK_USERS = {}
+# CHATBOT_STATUS = {}
+# def get_reply(text): return ("response text", False)
+# def get_readable_time(seconds): return "1m 23s"
+
 @app.on_message(
-    filters.text & 
-    (filters.private | (filters.group & is_chatbot_enabled)) &
-    filters.incoming &
-    filters.regex(r"^(?!/)") # Exclude messages starting with a command (e.g., /start)
+    filters.text
+    & filters.incoming
+    & ~filters.command(["start", "help", "afk"])  # exclude commands
 )
 async def main_chatbot_handler(client, message):
     """
     Handles all incoming text messages in private chats and groups
     where the chatbot is enabled. Also handles AFK checks.
     """
-    # 1. AFK Check on mentions/replies
+    user = message.from_user
+    chat = message.chat
     is_afk_check_done = False
 
+    # -------- 1. AFK CHECKS --------
     # Check for AFK mentions in group chats
-    if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP] and message.mentions:
-        for user_id in message.mentions:
+    if chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP] and message.entities:
+        mentioned_ids = [ent.user.id for ent in message.entities if getattr(ent, "user", None)]
+        for user_id in mentioned_ids:
             if user_id in AFK_USERS:
                 afk_data = AFK_USERS[user_id]
                 time_afk = get_readable_time(int(time.time() - afk_data["time"]))
-                
                 await message.reply_text(
                     f"⚠️ 𝐖ᴀʀɴɪɴɢ: [{afk_data['first_name']}](tg://user?id={user_id}) 𝐢𝐬 𝐀𝐅𝐊!\n"
                     f"⏰ 𝐀ғᴋ 𝐟ᴏʀ: **{time_afk}**\n"
@@ -953,13 +963,16 @@ async def main_chatbot_handler(client, message):
                     parse_mode=enums.ParseMode.MARKDOWN
                 )
                 is_afk_check_done = True
-                
+
     # Check for AFK in replies
-    if message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id in AFK_USERS:
+    if (
+        message.reply_to_message
+        and message.reply_to_message.from_user
+        and message.reply_to_message.from_user.id in AFK_USERS
+    ):
         user_id = message.reply_to_message.from_user.id
         afk_data = AFK_USERS[user_id]
         time_afk = get_readable_time(int(time.time() - afk_data["time"]))
-        
         await message.reply_text(
             f"⚠️ 𝐖ᴀʀɴɪɴɢ: [{afk_data['first_name']}](tg://user?id={user_id}) 𝐢𝐬 𝐀𝐅𝐊!\n"
             f"⏰ 𝐀ғᴋ 𝐟ᴏʀ: **{time_afk}**\n"
@@ -968,48 +981,53 @@ async def main_chatbot_handler(client, message):
         )
         is_afk_check_done = True
 
-    # 2. Main chatbot reply logic
-    # Reply only if it's a private chat OR if it's a group AND the message is a reply to the bot
-    # We use 'is_chatbot_enabled' filter for general group messages. 
-    # If the bot is tagged or replied to, it should respond regardless of CHATBOT_STATUS
-    
+    # -------- 2. MAIN CHATBOT REPLY LOGIC --------
     should_reply = False
-    
-    if message.chat.type == enums.ChatType.PRIVATE:
+
+    # Private chat → always reply
+    if chat.type == enums.ChatType.PRIVATE:
         should_reply = True
-    elif CHATBOT_STATUS.get(message.chat.id, False):
+    # Group → reply only if chatbot enabled
+    elif CHATBOT_STATUS.get(chat.id, False):
         should_reply = True
-    elif message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id == client.me.id:
+    # Or if replied to the bot
+    elif (
+        message.reply_to_message
+        and message.reply_to_message.from_user
+        and message.reply_to_message.from_user.id == (await client.get_me()).id
+    ):
         should_reply = True
-    
+
     if should_reply:
-        if message.text and not message.text.startswith('/'):
+        if message.text and not message.text.startswith("/"):
             text = message.text
             response_data, is_sticker = get_reply(text)
-            
-            # Avoid replying if we just did a bunch of AFK alerts, to prevent spam
-            if not is_afk_check_done or random.random() < 0.25: # small chance to reply even after AFK check
+
+            # Avoid over-replying when AFK message already sent
+            if not is_afk_check_done or random.random() < 0.25:
                 if is_sticker:
                     await message.reply_sticker(response_data)
                 else:
                     await message.reply_text(response_data)
-        
-    # 3. User coming back from AFK when they chat normally
-    if message.from_user.id in AFK_USERS and not message.text.lower().startswith('/afk'):
-        user_id = message.from_user.id
-        user_name = message.from_user.first_name
+
+    # -------- 3. USER RETURNING FROM AFK --------
+    if user and user.id in AFK_USERS and not message.text.lower().startswith("/afk"):
+        user_id = user.id
+        user_name = user.first_name
         afk_data = AFK_USERS.pop(user_id)
         time_afk = get_readable_time(int(time.time() - afk_data["time"]))
-        
-        # Announce the return to the chat
-        await app.send_message(
-            message.chat.id,
-            f"𝐖ᴇʟᴄ𝐨ᴍᴇ 𝐁ᴀᴄᴋ! [{user_name}](tg://user?id={user_id}), ʏᴏᴜ 𝐚𝐫𝐞 ᴏɴʟɪɴᴇ ɴᴏᴡ! (𝐀ғᴋ ғᴏʀ: {time_afk}) 😉",
+
+        await message.reply_text(
+            f"👋 𝐖ᴇʟᴄ𝐨ᴍᴇ 𝐁ᴀᴄᴋ [{user_name}](tg://user?id={user_id})!\n"
+            f"🕒 𝐘𝐨𝐮 𝐰𝐞ʀ𝐞 𝐀𝐅𝐊 𝐟ᴏʀ **{time_afk}** 😉",
             parse_mode=enums.ParseMode.MARKDOWN
         )
+
+
 # -------- END Main Chatbot/Reply Handler --------
 
-# Start the bot
+
+# -------- START BOT --------
 if __name__ == "__main__":
-	print("Starting Bot...")
-	app.run()
+    print("🚀 Starting Bot...")
+    app.run()
