@@ -893,13 +893,20 @@ async def afk_trigger_handler(client, message):
             await asyncio.sleep(0.5)
 
 
+import random
+from pyrogram import Client, filters, enums
+from pyrogram.types import Message
+# Assume CHATBOT_STATUS and get_reply are defined elsewhere
+# from your_module import CHATBOT_STATUS, get_reply
+
 # -------- CHAT BOT HANDLER (UPDATED LOGIC) --------
 @app.on_message(
     (filters.text | filters.sticker) & 
     filters.group & 
     ~filters.via_bot & 
     ~filters.forwarded & 
-    ~filters.command
+    # FIX: ~filters.command must be called with parentheses ()
+    ~filters.command() 
 )
 async def chat_bot_handler(client, message: Message):
     me = await client.get_me()
@@ -912,25 +919,25 @@ async def chat_bot_handler(client, message: Message):
     is_mentioned = False
     is_replied_to_bot = False
 
-    # Check for mention
-    if message.text and f"@{me.username.lower()}" in message.text.lower():
-        is_mentioned = True
+    # --- 2. Checking Mention/Reply Status ---
     
     # Check for reply
     if message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id == me.id:
         is_replied_to_bot = True
-
-    # Check for text mention entity (more reliable than just checking raw text)
-    if message.entities:
+    
+    # Check for text mention entity (more reliable)
+    if message.text and message.entities:
         for entity in message.entities:
+            # Check for MENTION entity (like @username)
             if entity.type == enums.MessageEntityType.MENTION and message.text[entity.offset:entity.offset+entity.length].lstrip('@').lower() == me.username.lower():
                 is_mentioned = True
+            # Check for TEXT_MENTION entity (hidden link to user)
             elif entity.type == enums.MessageEntityType.TEXT_MENTION and entity.user and entity.user.id == me.id:
                 is_mentioned = True
 
     should_reply = False
     
-    # A. Prioritized Reply (Mention/Reply to bot): 100% chance to reply if a reply is warranted
+    # A. Prioritized Reply (Mention/Reply to bot): 100% chance
     if is_mentioned or is_replied_to_bot:
         should_reply = True
         
@@ -939,36 +946,42 @@ async def chat_bot_handler(client, message: Message):
         should_reply = True
     
     if should_reply:
-        # Determine the response source
+        # --- 3. Determining Text to Process and Cleaning Mention ---
         text_to_process = ""
         
-        if is_replied_to_bot and message.text:
-            # If replying to the bot, use the current message text
+        if message.text:
             text_to_process = message.text
-        elif is_mentioned and message.text:
-            # If mentioned, use the current message text
-            text_to_process = message.text
-        elif message.text:
-            # For general chat, use the current message text
-            text_to_process = message.text
+            
+            # If mentioned, remove the bot's username/mention for cleaner AI input
+            if is_mentioned:
+                mention_string = f"@{me.username.lower()}"
+                text_to_process = text_to_process.replace(f"@{me.username}", "").replace(mention_string, "").strip()
+            
+            # If the text is empty after cleaning (e.g., only contained the mention), 
+            # fall back to a default trigger if needed, or let it pass for the AI 
+            # to decide based on context.
+
         elif message.sticker:
-             # If it's a sticker, use its emoji or an empty string to trigger general reply
-             text_to_process = message.sticker.emoji or ""
+            # If it's a sticker, use its emoji or a placeholder
+            text_to_process = message.sticker.emoji or "sticker"
         
-        # Get the reply
-        response, is_sticker = get_reply(text_to_process)
+        # --- 4. Get and Send Reply ---
         
-        if response:
-            try:
-                if is_sticker:
-                    # Send sticker
-                    await message.reply_sticker(response)
-                else:
-                    # Send text
-                    await message.reply_text(response)
-            except Exception as e:
-                print(f"Error sending reply in chat {chat_id}: {e}")
-                
+        if text_to_process:
+            # Get the reply
+            response, is_sticker = get_reply(text_to_process)
+            
+            if response:
+                try:
+                    if is_sticker:
+                        # Send sticker
+                        await message.reply_sticker(response, quote=True) # quote=True for better context
+                    else:
+                        # Send text
+                        await message.reply_text(response, quote=True) # quote=True for better context
+                except Exception as e:
+                    print(f"Error sending reply in chat {chat_id}: {e}")
+                    
 # -------- Run the bot --------
 if __name__ == "__main__":
     print("Bot starting...")
