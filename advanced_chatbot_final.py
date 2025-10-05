@@ -932,26 +932,17 @@ from pyrogram import Client, filters, enums
 from pyrogram.types import Message
 
 
-
-# NOTE: The functions 'get_readable_time' and 'save_chat_id' are assumed to be defined elsewhere.
-
-# Assuming 'app' is your Pyrogram Client instance.
-
-
+# NOTE: This block assumes 'app' (Pyrogram client), 'get_readable_time', 
+# and 'save_chat_id' are defined earlier in your main file, along with the 
+# necessary imports (Client, filters, enums, Message).
 
 # -------- CHAT AND VOICE CHAT HANDLERS (Permanent Notifications) --------
-
-from pyrogram import Client, filters, enums
-from pyrogram.types import Message
-
-# NOTE: The functions 'save_chat_id' is assumed to be defined elsewhere.
-# Assuming 'app' is your Pyrogram Client instance.
 
 # Welcome Message (Permanent, not deleted)
 @app.on_message(filters.new_chat_members & filters.group)
 async def welcome_handler(client, message: Message):
     for user in message.new_chat_members:
-        # FIX: 'if' statement is now correctly indented inside the 'for' loop
+        # Correct Indentation starts here
         if user.is_self:
             # Bot was added to the group
             await message.reply_text(
@@ -961,8 +952,6 @@ async def welcome_handler(client, message: Message):
             )
             # Assuming save_chat_id is a function that saves the chat ID
             await save_chat_id(message.chat.id, "groups")
-        
-        # FIX: 'else' statement is correctly aligned with 'if' inside the 'for' loop
         else:
             # New member joined
             mention = f"[{user.first_name}](tg://user?id={user.id})"
@@ -970,88 +959,39 @@ async def welcome_handler(client, message: Message):
                 f"👋 𝐇ᴇʏ, {mention} ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ➳ *{message.chat.title}*! ʜᴀᴠᴇ ᴀ ғᴀɴᴛᴀsᴛɪᴄ ᴅᴀʏ♡.",
                 parse_mode=enums.ParseMode.MARKDOWN
             )
-
-
-
+        # Correct Indentation ends here
 
 # Voice Chat Started Notification (Permanent, not deleted)
-
-# FIX: Changed filters.voice_chat_started to filters.video_chat_started
-
 @app.on_message(filters.video_chat_started & filters.group)
-
 async def vc_started_handler(client, message: Message):
-
-    text = f"🎙️ ➳𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐒ᴛᴀʀᴛᴇᴅ! Come join the fun."
-
-    await client.send_message(message.chat.id, text, reply_to_message_id=message.id)
-
-
+    text = f"🎙️ ➳𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐒ᴛᴀʀᴛᴇᴅ! Come join the fun."
+    await client.send_message(message.chat.id, text, reply_to_message_id=message.id)
 
 # Voice Chat Ended Notification (Permanent, not deleted)
-
-# FIX: Changed filters.voice_chat_ended to filters.video_chat_ended
-
 @app.on_message(filters.video_chat_ended & filters.group)
-
 async def vc_ended_handler(client, message: Message):
-
-    # Duration is in message.video_chat_ended.duration (Updated field name)
-
-    duration = get_readable_time(message.video_chat_ended.duration)
-
-    text = f"❌ ➳𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐄ɴᴅᴇᴅ! \n⏱️ Duration: **{duration}**."
-
-    await client.send_message(message.chat.id, text, parse_mode=enums.ParseMode.MARKDOWN)
-
-
+    # Duration is in message.video_chat_ended.duration
+    duration = get_readable_time(message.video_chat_ended.duration)
+    text = f"❌ ➳𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐄ɴᴅᴇᴅ! \n⏱️ Duration: **{duration}**."
+    await client.send_message(message.chat.id, text, parse_mode=enums.ParseMode.MARKDOWN)
 
 # Voice Chat Members Invited Notification (Permanent, not deleted)
-
-# FIX: Changed filters.voice_chat_participants_invited to filters.video_chat_participants_invited
-
 @app.on_message(filters.video_chat_participants_invited & filters.group)
-
 async def vc_invited_handler(client, message: Message):
+    inviter = message.from_user
+    invited_users = message.video_chat_participants_invited.users
+    
+    invited_mentions = ", ".join(
+        [f"[{u.first_name}](tg://user?id={u.id})" for u in invited_users]
+    )
+    
+    inviter_mention = f"[{inviter.first_name}](tg://user?id={inviter.id})"
+    
+    text = (
+        f"📣 {inviter_mention} invited the following users to the Voice Chat:\n"
+        f"➡️ {invited_mentions}"
+    )
+    
+    await client.send_message(message.chat.id, text, parse_mode=enums.ParseMode.MARKDOWN)
 
-    inviter = message.from_user
-
-    # Updated field name: message.video_chat_participants_invited.users
-
-    invited_users = message.video_chat_participants_invited.users
-
-    
-
-    invited_mentions = ", ".join(
-
-        [f"[{u.first_name}](tg://user?id={u.id})" for u in invited_users]
-
-    )
-
-    
-
-    inviter_mention = f"[{inviter.first_name}](tg://user?id={inviter.id})"
-
-    
-
-    text = (
-
-        f"📣 {inviter_mention} invited the following users to the Voice Chat:\n"
-
-        f"➡️ {invited_mentions}"
-
-    )
-
-    
-
-    await client.send_message(message.chat.id, text, parse_mode=enums.ParseMode.MARKDOWN)
-
-
-
-
-
-# -------- Bot Run --------
-
-if __name__ == "__main__":
-
-    app.run()
+# NOTE: Make sure your 'if __name__ == "__main__": app.run()' line remains at the absolute end of your file.
