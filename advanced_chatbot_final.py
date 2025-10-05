@@ -931,7 +931,6 @@ from pyrogram import Client, filters, enums
 
 from pyrogram.types import Message
 
-
 # NOTE: This block assumes 'app' (Pyrogram client), 'get_readable_time', 
 # and 'save_chat_id' are defined earlier in your main file, along with the 
 # necessary imports (Client, filters, enums, Message).
@@ -942,7 +941,7 @@ from pyrogram.types import Message
 @app.on_message(filters.new_chat_members & filters.group)
 async def welcome_handler(client, message: Message):
     for user in message.new_chat_members:
-        # Correct Indentation starts here
+        # Indentation is Correct
         if user.is_self:
             # Bot was added to the group
             await message.reply_text(
@@ -959,7 +958,6 @@ async def welcome_handler(client, message: Message):
                 f"👋 𝐇ᴇʏ, {mention} ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ➳ *{message.chat.title}*! ʜᴀᴠᴇ ᴀ ғᴀɴᴛᴀsᴛɪᴄ ᴅᴀʏ♡.",
                 parse_mode=enums.ParseMode.MARKDOWN
             )
-        # Correct Indentation ends here
 
 # Voice Chat Started Notification (Permanent, not deleted)
 @app.on_message(filters.video_chat_started & filters.group)
@@ -976,10 +974,11 @@ async def vc_ended_handler(client, message: Message):
     await client.send_message(message.chat.id, text, parse_mode=enums.ParseMode.MARKDOWN)
 
 # Voice Chat Members Invited Notification (Permanent, not deleted)
-@app.on_message(filters.video_chat_participants_invited & filters.group)
+@app.on_message(filters.video_chat_members_invited & filters.group)
 async def vc_invited_handler(client, message: Message):
     inviter = message.from_user
-    invited_users = message.video_chat_participants_invited.users
+    # Changed object attribute to match the corrected filter name
+    invited_users = message.video_chat_members_invited.users
     
     invited_mentions = ", ".join(
         [f"[{u.first_name}](tg://user?id={u.id})" for u in invited_users]
@@ -994,4 +993,7 @@ async def vc_invited_handler(client, message: Message):
     
     await client.send_message(message.chat.id, text, parse_mode=enums.ParseMode.MARKDOWN)
 
-# NOTE: Make sure your 'if __name__ == "__main__": app.run()' line remains at the absolute end of your file.
+# -------- Bot Run --------
+# NOTE: This section MUST be at the very end of your script to start the bot.
+# if __name__ == "__main__":
+#     app.run()
