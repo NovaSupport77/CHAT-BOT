@@ -928,36 +928,112 @@ async def afk_message_handler(client, message):
 
 
 # -------- Main Chatbot Handler (Filter for enabled or private) --------
-@app.on_message(filters.text & (is_chatbot_enabled | filters.private))
-async def main_chatbot_handler(client, message):
-    # Ignore messages sent by bots
-    if message.from_user.is_bot:
-        return
+import asyncio
+import os
+from pyrogram import Client, filters
+from pyrogram.enums import ChatType
 
-    # Check if the bot was specifically mentioned or replied to in a group where the chatbot is DISABLED
-    if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP] and not CHATBOT_STATUS.get(message.chat.id, False):
-        # We only reply if the bot is explicitly addressed via mention or reply
-        if not (message.reply_to_message and message.reply_to_message.from_user.id == client.me.id):
-             if not message.text or f"@{client.me.username.lower()}" not in message.text.lower():
-                 return
+# --- Configuration (Replace with your actual values) ---
+# NOTE: These keys are examples. In a real application, use environment variables.
+API_ID = 123456  # Replace with your API ID
+API_HASH = "YOUR_API_HASH"  # Replace with your API HASH
+BOT_TOKEN = "YOUR_BOT_TOKEN" # Replace with your Bot Token
+
+# --- Global State Simulation ---
+# In a real app, this should be stored in a database (like Firestore)
+# keyed by chat ID or user ID. For demonstration, we'll use a simple dictionary.
+# Key: chat_id (int), Value: is_enabled (bool)
+CHATBOT_STATUS = {} 
+
+# --- Pyrogram Client Initialization ---
+app = Client(
+    "advanced_chatbot",
+    api_id=API_ID,
+    api_hash=API_HASH,
+    bot_token=BOT_TOKEN
+)
+
+# --- 1. Custom Filter Definition (The Fix) ---
+
+# This function checks if the chatbot is enabled for the current chat.
+async def is_chatbot_enabled(_, message):
+    """
+    Checks the global state to see if the chatbot is enabled for this message's chat.
+    If the chat is a private chat, we always allow the chatbot unless specifically disabled.
+    """
+    chat_id = message.chat.id
+    # Default to True if status is not set (e.g., first run)
+    return CHATBOT_STATUS.get(chat_id, True)
+
+# **THE FIX:** We convert the function into a callable Filter object.
+CHATBOT_ENABLED_FILTER = filters.create(is_chatbot_enabled)
+
+
+# --- 2. Main Message Handler (Using the Corrected Filter) ---
+
+# The filter now correctly combines text messages that are:
+# 1. In a private chat (always process in DMs)
+# 2. OR In a group/channel where the chatbot is explicitly enabled (using our new filter object)
+@app.on_message(filters.text & (filters.private | CHATBOT_ENABLED_FILTER))
+async def handle_chatbot_message(_, message):
+    """
+    Responds to a user message if the chatbot is enabled in the chat.
+    """
+    try:
+        if message.chat.type == ChatType.PRIVATE:
+            chat_name = "Private Chat"
+        else:
+            chat_name = message.chat.title or "Group"
+
+        response_text = f"🤖 **Echo Bot Response**\n\nChat: `{chat_name}`\n\nYou said: *{message.text}*\n\n(Chatbot is Active)"
+        
+        await message.reply_text(response_text)
+    except Exception as e:
+        print(f"Error handling message: {e}")
+
+# --- 3. Command Handlers (For toggling the state) ---
+
+@app.on_message(filters.command("enable") & filters.group)
+async def enable_chatbot(_, message):
+    """
+    Enables the chatbot for the current group chat.
+    """
+    chat_id = message.chat.id
+    CHATBOT_STATUS[chat_id] = True
+    await message.reply_text("✅ Chatbot **enabled** for this group.")
+
+@app.on_message(filters.command("disable") & filters.group)
+async def disable_chatbot(_, message):
+    """
+    Disables the chatbot for the current group chat.
+    """
+    chat_id = message.chat.id
+    CHATBOT_STATUS[chat_id] = False
+    await message.reply_text("❌ Chatbot **disabled** for this group.")
+
+@app.on_message(filters.command("status"))
+async def get_status(_, message):
+    """
+    Reports the current status of the chatbot in the chat.
+    """
+    chat_id = message.chat.id
+    is_enabled = CHATBOT_STATUS.get(chat_id, True)
     
-    # Get the reply content
-    reply_content, is_sticker = get_reply(message.text)
-
-    # Send the response
-    if is_sticker:
-        try:
-            await client.send_sticker(message.chat.id, reply_content, reply_to_message_id=message.id)
-        except Exception as e:
-            # Fallback to text if sticker fails (e.g., bot permission missing)
-            print(f"Failed to send sticker: {e}. Falling back to text.")
-            await message.reply_text(random.choice(DATA.get("daily", ["Hello 👋"])), reply_to_message_id=message.id)
+    if message.chat.type == ChatType.PRIVATE:
+        status_message = "This is a private chat. The chatbot is always active unless explicitly disabled globally (which is not handled by this simple script)."
+    elif is_enabled:
+        status_message = "🟢 Chatbot is currently **ENABLED** in this group."
     else:
-        await message.reply_text(reply_content, reply_to_message_id=message.id)
+        status_message = "🔴 Chatbot is currently **DISABLED** in this group."
+        
+    await message.reply_text(status_message)
 
 
-# -------- Bot Run --------
+# --- 4. Main Runner ---
+
 if __name__ == "__main__":
-    print("Bot is starting...")
-    app.run()
-    print("Bot has stopped.")
+    print("Starting Advanced Chatbot...")
+    try:
+        app.run()
+    except Exception as e:
+        print(f"An error occurred during startup: {e}")
