@@ -913,7 +913,7 @@ async def afk_message_handler(client, message):
                 )
 
 # -------- Main Chatbot Reply Handler (Group/Private) --------
-@app.on_message(filters.text & ~filters.command & ~filters.bot & is_chatbot_enabled)
+@app.on_message(filters.text & ~filters.command() & ~filters.bot & is_chatbot_enabled)
 async def chatbot_reply_handler(client, message):
     chat_type = message.chat.type
     is_group = chat_type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]
