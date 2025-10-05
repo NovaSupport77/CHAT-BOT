@@ -927,90 +927,142 @@ async def chatbot_reply_handler(client, message: Message):
                  # If it wasn't a sticker and failed, something else is wrong, but reply the intended text anyway
                  await message.reply_text(response)
 
-# -------- VOICE CHAT AND MEMBER HANDLERS (ADDED/MODIFIED - Permanent Notifications) --------
-
-# Welcome Message (Permanent, not deleted)
-@app.on_message(filters.new_chat_members & filters.group)
-async def welcome_handler(client, message: Message):
-    for user in message.new_chat_members:
-        if user.is_self:
-            # Bot was added to the group
-            await message.reply_text(
-                f"**𝐓ʜᴀɴᴋs** ғᴏʀ ᴀᴅᴅɪɴɢ ᴍᴇ ᴛᴏ *{message.chat.title}*! 🎉\n"
-                f"I'm here to keep the chat active. Use /help to see commands.",
-                parse_mode=enums.ParseMode.MARKDOWN
-            )
-            await save_chat_id(message.chat.id, "groups")
-        else:
-            # New member joined
-            mention = f"[{user.first_name}](tg://user?id={user.id})"
-            await message.reply_text(
-                f"👋 𝐇ᴇʏ, {mention} ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ➳ *{message.chat.title}*! ʜᴀᴠᴇ ᴀ ғᴀɴᴛᴀsᴛɪᴄ ᴅᴀʏ♡.",
-                parse_mode=enums.ParseMode.MARKDOWN
-            )
-
-# Goodbye Message (Permanent, not deleted)
-@app.on_message(filters.left_chat_member & filters.group)
-async def goodbye_handler(client, message: Message):
-    user = message.left_chat_member
-    mention = f"[{user.first_name}](tg://user?id={user.id})"
-    await message.reply_text(
-        f"💔 𝐆ᴏᴏᴅʙʏᴇ {mention}! sᴇᴇ ʏᴀᴀ sᴏᴏɴ.",
-        parse_mode=enums.ParseMode.MARKDOWN
-    )
-
 from pyrogram import Client, filters, enums
+
 from pyrogram.types import Message
 
-# Assuming 'app' is your Pyrogram client instance and 'get_readable_time' is defined elsewhere.
-# You will need to make sure 'get_readable_time' function is present in your original file.
+
+
+# NOTE: The functions 'get_readable_time' and 'save_chat_id' are assumed to be defined elsewhere.
+
+# Assuming 'app' is your Pyrogram Client instance.
+
+
+
+# -------- CHAT AND VOICE CHAT HANDLERS (Permanent Notifications) --------
+
+
+
+# Welcome Message (Permanent, not deleted)
+
+@app.on_message(filters.new_chat_members & filters.group)
+
+async def welcome_handler(client, message: Message):
+
+    for user in message.new_chat_members:
+
+        if user.is_self:
+
+            # Bot was added to the group
+
+            await message.reply_text(
+
+                f"**𝐓ʜᴀɴᴋs** ғᴏʀ ᴀᴅᴅɪɴɢ ᴍᴇ ᴛᴏ *{message.chat.title}*! 🎉\n"
+
+                f"I ᴀᴍ ʜᴇʀᴇ ᴛᴏ ᴋᴇᴇᴘ ᴛʜᴇ ᴄʜᴀᴛ ᴀᴄᴛɪᴠᴇ",
+
+                parse_mode=enums.ParseMode.MARKDOWN
+
+            )
+
+            # Assuming save_chat_id is a function that saves the chat ID
+
+            await save_chat_id(message.chat.id, "groups")
+
+        else:
+
+            # New member joined
+
+            mention = f"[{user.first_name}](tg://user?id={user.id})"
+
+            await message.reply_text(
+
+                f"👋 𝐇ᴇʏ, {mention} ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ➳ *{message.chat.title}*! ʜᴀᴠᴇ ᴀ ғᴀɴᴛᴀsᴛɪᴄ ᴅᴀʏ♡.",
+
+                parse_mode=enums.ParseMode.MARKDOWN
+
+            )
+
+
 
 # Voice Chat Started Notification (Permanent, not deleted)
-# FIX: Using filters.video_chat_started instead of filters.voice_chat_started
+
+# FIX: Changed filters.voice_chat_started to filters.video_chat_started
+
 @app.on_message(filters.video_chat_started & filters.group)
+
 async def vc_started_handler(client, message: Message):
-    """Handles the notification when a video/voice chat starts in a group."""
-    text = f"🎙️ ➳𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐒ᴛᴀʀᴛᴇᴅ! Come join the fun."
-    # Sending the message without parse_mode as the text contains only plain characters and an emoji
-    await client.send_message(message.chat.id, text, reply_to_message_id=message.id)
+
+    text = f"🎙️ ➳𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐒ᴛᴀʀᴛᴇᴅ! Come join the fun."
+
+    await client.send_message(message.chat.id, text, reply_to_message_id=message.id)
+
+
 
 # Voice Chat Ended Notification (Permanent, not deleted)
-# FIX: Using filters.video_chat_ended instead of filters.voice_chat_ended
+
+# FIX: Changed filters.voice_chat_ended to filters.video_chat_ended
+
 @app.on_message(filters.video_chat_ended & filters.group)
+
 async def vc_ended_handler(client, message: Message):
-    """Handles the notification when a video/voice chat ends in a group."""
-    try:
-        # Duration is in message.video_chat_ended.duration
-        # Ensure 'get_readable_time' is accessible and correctly defined.
-        duration = get_readable_time(message.video_chat_ended.duration)
-        text = f"❌ ➳𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐄ɴᴅᴇᴅ! \n⏱️ Duration: **{duration}**."
-        # Using MARKDOWN parse mode for bold text in duration
-        await client.send_message(message.chat.id, text, parse_mode=enums.ParseMode.MARKDOWN)
-    except Exception as e:
-        # Fallback in case of any error (e.g., if get_readable_time is missing)
-        print(f"Error handling VC ended: {e}")
-        await client.send_message(message.chat.id, "❌ ➳𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐄ɴᴅᴇᴅ! (Duration calculation failed).")
+
+    # Duration is in message.video_chat_ended.duration (Updated field name)
+
+    duration = get_readable_time(message.video_chat_ended.duration)
+
+    text = f"❌ ➳𝐕ᴏɪᴄᴇ 𝐂ʜᴀᴛ 𝐄ɴᴅᴇᴅ! \n⏱️ Duration: **{duration}**."
+
+    await client.send_message(message.chat.id, text, parse_mode=enums.ParseMode.MARKDOWN)
+
+
 
 # Voice Chat Members Invited Notification (Permanent, not deleted)
-@app.on_message(filters.voice_chat_participants_invited & filters.group)
+
+# FIX: Changed filters.voice_chat_participants_invited to filters.video_chat_participants_invited
+
+@app.on_message(filters.video_chat_participants_invited & filters.group)
+
 async def vc_invited_handler(client, message: Message):
-    inviter = message.from_user
-    invited_users = message.voice_chat_participants_invited.users
-    
-    invited_mentions = ", ".join(
-        [f"[{u.first_name}](tg://user?id={u.id})" for u in invited_users]
-    )
-    
-    inviter_mention = f"[{inviter.first_name}](tg://user?id={inviter.id})"
-    
-    text = (
-        f"📣 {inviter_mention} invited the following users to the Voice Chat:\n"
-        f"➡️ {invited_mentions}"
-    )
-    
-    await client.send_message(message.chat.id, text, parse_mode=enums.ParseMode.MARKDOWN)
+
+    inviter = message.from_user
+
+    # Updated field name: message.video_chat_participants_invited.users
+
+    invited_users = message.video_chat_participants_invited.users
+
+    
+
+    invited_mentions = ", ".join(
+
+        [f"[{u.first_name}](tg://user?id={u.id})" for u in invited_users]
+
+    )
+
+    
+
+    inviter_mention = f"[{inviter.first_name}](tg://user?id={inviter.id})"
+
+    
+
+    text = (
+
+        f"📣 {inviter_mention} invited the following users to the Voice Chat:\n"
+
+        f"➡️ {invited_mentions}"
+
+    )
+
+    
+
+    await client.send_message(message.chat.id, text, parse_mode=enums.ParseMode.MARKDOWN)
+
+
+
 
 
 # -------- Bot Run --------
+
 if __name__ == "__main__":
-    app.run()
+
+    app.run()
