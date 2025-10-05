@@ -899,14 +899,27 @@ from pyrogram.types import Message
 # Assume CHATBOT_STATUS and get_reply are defined elsewhere
 # from your_module import CHATBOT_STATUS, get_reply
 
+import random
+from pyrogram import Client, filters, enums
+from pyrogram.types import Message
+# Assume CHATBOT_STATUS and get_reply are defined elsewhere
+# from your_module import CHATBOT_STATUS, get_reply
+
+# Define all your bot's commands here to make the filter clean
+BOT_COMMANDS = [
+    "start", "id", "basketball", "football", "cute", 
+    "love", "couples", "developer", "staff", "botlist", 
+    "broadcast", "stats", "ping", "chabot"
+]
+
 # -------- CHAT BOT HANDLER (UPDATED LOGIC) --------
 @app.on_message(
     (filters.text | filters.sticker) & 
     filters.group & 
     ~filters.via_bot & 
     ~filters.forwarded & 
-    # FIX: ~filters.command must be called with parentheses ()
-    ~filters.command() 
+    # FIX: Added the required list of commands to be negated (excluded)
+    ~filters.command(BOT_COMMANDS) 
 )
 async def chat_bot_handler(client, message: Message):
     me = await client.get_me()
@@ -954,12 +967,13 @@ async def chat_bot_handler(client, message: Message):
             
             # If mentioned, remove the bot's username/mention for cleaner AI input
             if is_mentioned:
-                mention_string = f"@{me.username.lower()}"
-                text_to_process = text_to_process.replace(f"@{me.username}", "").replace(mention_string, "").strip()
+                mention_string = f"@{me.username}"
+                # Using regex/better cleaning is ideal, but for simplicity:
+                text_to_process = text_to_process.replace(mention_string, "").replace(mention_string.lower(), "").strip()
             
-            # If the text is empty after cleaning (e.g., only contained the mention), 
-            # fall back to a default trigger if needed, or let it pass for the AI 
-            # to decide based on context.
+            # If the text is empty after cleaning, use a placeholder
+            if not text_to_process and is_mentioned:
+                text_to_process = "Hello" # Use a default prompt if only mention was sent
 
         elif message.sticker:
             # If it's a sticker, use its emoji or a placeholder
@@ -975,10 +989,10 @@ async def chat_bot_handler(client, message: Message):
                 try:
                     if is_sticker:
                         # Send sticker
-                        await message.reply_sticker(response, quote=True) # quote=True for better context
+                        await message.reply_sticker(response, quote=True) 
                     else:
                         # Send text
-                        await message.reply_text(response, quote=True) # quote=True for better context
+                        await message.reply_text(response, quote=True) 
                 except Exception as e:
                     print(f"Error sending reply in chat {chat_id}: {e}")
                     
