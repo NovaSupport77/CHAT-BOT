@@ -27,15 +27,16 @@ threading.Thread(target=keep_alive, daemon=True).start()
 # -------- END Keep-Alive Web Server --------
 
 # -------- Env Vars --------
-API_ID = int(os.environ.get("API_ID", "0"))
+# NOTE: Replace '0' and empty strings with your actual API ID, HASH, and BOT TOKEN
+API_ID = int(os.environ.get("API_ID", "0")) 
 API_HASH = os.environ.get("API_HASH", "")
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 
+# NOTE: Replace '7589623332' with the actual Owner ID
 OWNER_ID = int(os.environ.get("OWNER_ID", "7589623332"))
 
 DEVELOPER_USERNAME = "Voren"
 DEVELOPER_HANDLE = "@TheXVoren"
-# FIX: Updated Support Chat URL
 SUPPORT_CHAT = "https://t.me/EvaraSupportChat"
 UPDATES_CHANNEL = "https://t.me/Evara_Updates"
 
@@ -376,8 +377,6 @@ async def start_cmd(client, message):
         except:
             pass 
         
-        # NOTE: Pyrogram may automatically apply SPOILER if the environment supports it
-        # but we remove the 'has_spoiler' keyword to prevent the crash.
         await message.reply_photo(
             START_PHOTO,
             caption=INTRO_TEXT_TEMPLATE.format(
@@ -454,25 +453,29 @@ async def developer_cmd(client, message):
 @app.on_message(filters.command("ping"))
 async def ping_cmd(client, message):
     start = time.time()
+    me = await client.get_me()
     
-    m = await message.reply_text("Pɪɴɢɪɴɢ...sᴛᴀʀᴛᴇᴅ..´･ᴗ･")
-    await asyncio.sleep(0.5)
-    await m.edit_text("Pɪɴɢ..Pᴏɴɢ ⚡")
-    await asyncio.sleep(0.5)
-    
+    # 1. Send the initial message as a photo
+    m = await message.reply_photo(
+        PING_PHOTO,
+        caption="Pɪɴɢɪɴɢ...sᴛᴀʀᴛᴇᴅ..´･ᴗ･"
+    )
+
+    await asyncio.sleep(1.0) # Wait a little longer for a smooth transition
+
     end = time.time()
     ping_ms = round((end-start)*1000) 
     uptime_seconds = (datetime.now() - START_TIME).total_seconds()
     uptime_readable = get_readable_time(int(uptime_seconds))
-    me = await client.get_me()
     
     buttons = InlineKeyboardMarkup([
         [InlineKeyboardButton("➕ 𝐀ᴅᴅ 𝐌ᴇ ➕", url=f"https://t.me/{me.username}?startgroup=true")],
         [InlineKeyboardButton("𝐒ᴜρρᴏɾᴛ", url=SUPPORT_CHAT)]
     ])
     
-    await m.edit_text(
-        f"𝐏ɪɴɢ ➳ **{ping_ms} 𝐦𝐬**\n"
+    # 2. Edit the photo's caption with the results
+    await m.edit_caption(
+        caption=f"𝐏ɪɴɢ ➳ **{ping_ms} 𝐦𝐬**\n"
         f"𝐔ᴘᴛɪᴍᴇ ➳ **{uptime_readable}**",
         reply_markup=buttons,
         parse_mode=enums.ParseMode.MARKDOWN
@@ -617,7 +620,7 @@ async def tagall_cmd(client, message):
         await m.edit_text("𝐓ᴀɢɢɪɴɢ 𝐂ᴏᴍᴘʟᴇᴛᴇᴅ !! ◉‿◉")
         TAGGING[chat_id] = False 
     else:
-        await m.edit_text("𝐓ᴀɢɢɪɴ𝐠 𝐒ᴛᴏᴘᴘᴇᴅ 𝐌ᴀ𝐧𝐮𝐚𝐥𝐥𝐲.")
+        await m.edit_text("𝐓ᴀɢɢɪɴɢ 𝐒ᴛᴏᴘᴘᴇᴅ 𝐌ᴀ𝐧𝐮𝐚𝐥ʟʏ.")
 
 # -------- /stop Tagging --------
 @app.on_message(filters.command("stop") & filters.group)
@@ -663,7 +666,7 @@ async def cute_cmd(client, message):
     cute_level = random.randint(30, 99)
     user = message.from_user
     user_mention = f"[{user.first_name}](tg://user?id={user.id})"
-    text = f"{user_mention}’𝐬 ᴄᴜᴛᴇɴᴇss ʟᴇᴠᴇʟ ɪs **{cute_level}%** 💖"
+    text = f"{user_mention}’s ᴄᴜᴛᴇɴᴇss ʟᴇᴠᴇʟ ɪs **{cute_level}%** 💖"
     buttons = InlineKeyboardMarkup([[InlineKeyboardButton("𝐒ᴜᴘᴘᴏʀᴛ", url=SUPPORT_CHAT)]])
     await message.reply_text(text, reply_markup=buttons, parse_mode=enums.ParseMode.MARKDOWN)
 
@@ -767,7 +770,7 @@ async def afk_cmd(client, message):
     }
     
     await message.reply_text(
-        f"𝐇ᴇʏ, [{user_name}](tg://user?id={user.id}), ʏᴏᴜ 𝐚𝐫𝐞 𝐀ғᴋ! (𝐑ᴇᴀsᴏɴ: **{reason}**)",
+        f"𝐇ᴇʏ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ 𝐚𝐫𝐞 𝐀ғᴋ! (𝐑ᴇᴀsᴏɴ: **{reason}**)",
         parse_mode=enums.ParseMode.MARKDOWN
     )
 
@@ -850,9 +853,10 @@ async def group_chatbot_reply(client, message):
         # Get the text, removing bot mention if present
         text_to_process = message.text
         if me.username:
-            text_to_process = re.sub(r'@[a-zA-Z0-9_]+', '', text_to_process, flags=re.IGNORECASE).strip()
+            # FIX: Use a more robust regex to remove the bot's username mention
+            text_to_process = re.sub(rf'@{re.escape(me.username)}\b', '', text_to_process, flags=re.IGNORECASE).strip()
             
-        reply, is_sticker = get_reply(text_to_process)
+        reply, is_sticker = get_reply(text_to_process or "hello") # Use "hello" if text is empty after removing mention
         
         if reply:
             if is_sticker:
@@ -861,7 +865,8 @@ async def group_chatbot_reply(client, message):
                 await message.reply_text(reply)
                 
     # RANDOM Group Reply (if enabled)
-    elif chatbot_enabled and random.random() < 0.15: # 15% chance for a random reply
+    # FINAL UPDATE: Increased chance to 60% for highest group activity.
+    elif chatbot_enabled and random.random() < 0.60: 
         reply, is_sticker = get_reply(message.text) 
         
         if reply:
