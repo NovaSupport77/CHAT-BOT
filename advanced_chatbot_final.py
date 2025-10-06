@@ -876,64 +876,82 @@ async def group_handler(client, message):
         )
 
     import random
-from pyrogram import enums
-# Note: 'client' aur 'app' yaha assume kiye gaye hain ki wo pyrogram
-# instance hain jaisa aapke original code mein lag raha tha.
+from pyrogram import filters, enums
+import time # time module AFK handler ke liye zaroori hai
 
-# --- 3. Chatbot Reply Logic (80% Random Chance on ALL Messages) ---
-# --- (This replaces your original Group Chat logic) ---
+# Assume ki 'app' (client) aur CHATBOT_STATUS, get_reply, AFK_USERS, etc.
+# aapke main file mein pehle se defined hain.
 
-chat_id = message.chat.id
-me = await client.get_me()
-
-# Check if chatbot is enabled for this group
-if not CHATBOT_STATUS.get(chat_id, False):
-    return
+# --- Group Chat Message Handler ---
+@app.on_message(filters.text & filters.incoming & filters.group)
+async def group_handler(client, message):
     
-# 1. 80% Random Chance Check (Reply chance is 0.80)
-# Yeh check ab har message par chalega, mention ya reply ki zaroorat nahi.
-reply_chance = random.random()
-
-if reply_chance <= 0.80: # 80% chance to reply
+    # AFK check (Optional: Agar aapke original code mein tha)
+    # NOTE: Pyrogram mein AFK logic ko yahan handle karna hota hai.
+    # Agar message kisi AFK user se aaya hai, to yahan AFK return logic aayega.
+    # Upar AFK logic nahi diya gaya tha, isliye abhi skip kar rahe hain.
     
-    # Text extraction: Ab hum simple text lenge kyuki mention remove karne ki
-    # zaroorat nahi hai (hum har message par reply kar rahe hain)
-    text = message.text
-    
-    # Agar message text nahi hai (jaise photo, command, etc.) to ignore karein
-    if not text:
-        return
+    # --- 1. Chatbot Reply Logic (80% Random Chance on ALL Messages) ---
+    chat_id = message.chat.id
+    me = await client.get_me() # ✅ Ab ye theek hai kyunki ye async function ke andar hai
 
-    response, is_sticker = get_reply(text)
-
-    # Agar get_reply se koi response nahi aaya to ignore karein
-    if not response:
+    # Check if chatbot is enabled for this group
+    if not CHATBOT_STATUS.get(chat_id, False):
         return
         
-    # 2. Response Type Check: 50% Text, 30% Sticker (0.80 ke andar)
-    
-    # Sticker chance (0.0 se 0.30 tak)
-    if reply_chance <= 0.30 or is_sticker: 
-        # is_sticker true hone par force sticker, ya random chance se sticker
-        if is_sticker:
-             await message.reply_sticker(response)
-        else:
-             # Agar get_reply ne sticker nahi bheja to is hisse ko skip karna behtar hai,
-             # nahi to bot hamesha ek hi sticker bhejega.
-             # Yaha hum assume kar rahe hain ki get_reply() smart hai.
-             pass 
+    # 2. 80% Random Chance Check (Reply chance is 0.80)
+    reply_chance = random.random()
 
-    # Text chance (0.30 se 0.80 tak)
-    else: 
-        await message.reply_text(response)
+    if reply_chance <= 0.80: # 80% chance to reply
+        
+        text = message.text
+        
+        # Agar message text nahi hai (jaise photo, command, etc.) to ignore karein
+        if not text:
+            return
 
-else:
-    # 20% chance to ignore
-    pass
+        # NOTE: get_reply function ko bhi async hona chahiye agar wo await use karta hai.
+        # Hum yahan assume kar rahe hain ki wo hai, warna yahan bhi error aayega.
+        response, is_sticker = get_reply(text) 
 
-# --- 4. New Member Welcome Message Handler ---
+        # Agar get_reply se koi response nahi aaya to ignore karein
+        if not response:
+            return
+            
+        # 3. Response Type Check: 50% Text, 30% Sticker (0.80 ke andar)
+        
+        # Sticker chance (0.0 se 0.30 tak, ya agar get_reply ne sticker bheja)
+        if reply_chance <= 0.30 or is_sticker: 
+            
+            # Agar response sticker hai to bhej dein
+            if is_sticker:
+                 await message.reply_sticker(response)
+            
+            # Agar response text hai, aur hum sticker chance block mein hain,
+            # to is hisse mein kuch nahi karenge taki random chance maintain rahe.
+            else:
+                 # Agar humein is 30% mein sticker hi bhejna hai, to is hisse ko
+                 # ignore kar dete hain agar response text hai.
+                 pass
+
+        # Text chance (0.30 se 0.80 tak)
+        else: 
+            # Agar response sticker nahi hai aur hum text block mein hain, to text bhej dein.
+            if not is_sticker:
+                await message.reply_text(response)
+            else:
+                # Agar sticker response hai, to use upar wale block mein handle kar liya gaya hai.
+                pass
+
+    else:
+        # 20% chance to ignore
+        pass
+
+# --- New Member Welcome Message Handler ---
 @app.on_message(filters.new_chat_members & filters.group)
 async def welcome_handler(client, message):
+    
+    # We need client.get_me() to check if the bot itself was added
     me = await client.get_me()
     
     # Check karein ki bot khud hi group mein add hua hai
@@ -942,10 +960,11 @@ async def welcome_handler(client, message):
             welcome_text = (
                 "𝐓ʜᴀɴᴋs 𝐅ᴏʀ 𝐀ᴅᴅ 𝐌ᴇ .. ɪ ᴡɪʟʟ ᴋᴇᴇᴘ ᴀᴄᴛɪᴠᴇ ʏᴏᴜʀ ɢʀᴏᴜᴘ !! ✨"
             )
-            # Reply_text use karne se bot usi chat (group) mein message bhejega
             await message.reply_text(welcome_text)
             return
-# -------- Start the bot --------
+
+# --- Start the bot ---
+# Agar aapka ye hissa dusri file mein hai jaha par 'app' defined hai, to ye theek hai.
 if __name__ == "__main__":
     print("Bot is starting...")
     app.run()
