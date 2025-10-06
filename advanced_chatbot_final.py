@@ -821,12 +821,16 @@ async def afk_trigger_handler(client, message):
                 parse_mode=enums.ParseMode.MARKDOWN
             )
 
+
 # -------- CORE CHATBOT LOGIC (Private Reply - Always replies to text) --------
-@app.on_message(filters.text & filters.private & (~filters.command) & (~filters.bot))
+@app.on_message(filters.text & filters.private & ~filters.command)
 async def private_chatbot_reply(client, message):
     """Handles chatbot replies in private chats (always replies)."""
     
-    # Ensure there is text and it's not None
+    # Check if the message is from a bot (we explicitly ignore bots here)
+    if message.from_user and message.from_user.is_bot:
+        return
+        
     if message.text is None:
         return
         
@@ -840,15 +844,19 @@ async def private_chatbot_reply(client, message):
 
 
 # -------- CORE CHATBOT LOGIC (Group Reply - Conditional) --------
-@app.on_message(filters.text & filters.group & (~filters.command) & (~filters.bot))
+@app.on_message(filters.text & filters.group & ~filters.command)
 async def group_chatbot_reply(client, message):
     """
     Handles chatbot replies in groups (only replies if enabled OR if mentioned/replied to).
     """
+    
+    # Check if the message is from a bot (we explicitly ignore bots here)
+    if message.from_user and message.from_user.is_bot:
+        return
+    
     chat_id = message.chat.id
     me = await client.get_me()
     
-    # Ensure there is text and it's not None
     if message.text is None:
         return
     
@@ -886,7 +894,6 @@ async def group_chatbot_reply(client, message):
                  await message.reply_sticker(reply)
             else:
                  await message.reply_text(reply)
-
                  
 # -------- Run the Bot --------
 print("Bot starting...")
