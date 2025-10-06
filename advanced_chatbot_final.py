@@ -822,39 +822,36 @@ async def afk_trigger_handler(client, message):
             )
 
 
-import re # Make sure 'import re' is at the top of your file
+# -------- CORE CHATBOT LOGIC (The Final Reliable Handler) --------
 
-# -------- CORE CHATBOT LOGIC (Group Priority) --------
-
-# 1. PRIVATE CHAT LOGIC (Fixed message for non-commands)
-# Filter: Text NOT starting with /, NOT from bot, OR a reply (all in PRIVATE chat)
-@app.on_message((filters.text & filters.private & ~filters.regex("^/") & ~filters.bot) | (filters.reply & filters.private))
-async def private_chatbot_reply(client, message):
-    """Handles private chats: sends a fixed message, unless it's a command."""
+@app.on_message(filters.text)
+async def universal_chatbot_reply(client, message):
+    """
+    Handles all text messages and filters commands/bots/private/groups internally.
+    This method guarantees no filter conflicts or TypeErrors.
+    """
     
-    # Check if the message is a command. If so, let it pass to its handler.
-    if message.text and message.text.startswith('/'):
+    # 1. IMMEDIATE CHECKS (Must be done first)
+    if message.from_user and message.from_user.is_bot:
         return
-
-    # Send the fixed response as requested
-    await message.reply_text("ᴘʟᴇᴀsᴇ ᴀᴅᴅ ᴍᴇ ᴀ ɢʀᴏᴜᴘ , ᴛʜᴇɴ ɪ ᴡɪʟʟ ɢɪᴠᴇ ʏᴏᴜ ʀᴇᴘʟʏ !!")
-
-
-# 2. GROUP CHAT LOGIC (Conditional replies - 60% random)
-# Filter: Text NOT starting with /, NOT from bot, OR a reply (all in GROUP chat)
-@app.on_message((filters.text & filters.group & ~filters.regex("^/") & ~filters.bot) | (filters.reply & filters.group))
-async def group_chatbot_reply(client, message):
-    """
-    Handles chatbot replies in groups (only replies if enabled OR if mentioned/replied to).
-    """
+    if message.text is None:
+        return
+    if message.text.startswith('/'): # Checks for commands
+        return
+        
     chat_id = message.chat.id
     me = await client.get_me()
     
-    if message.text is None:
+    # --- Private Chat Logic ---
+    if message.chat.type == enums.ChatType.PRIVATE:
+        # Fixed response for private chats (as requested)
+        await message.reply_text("ᴘʟᴇᴀsᴇ ᴀᴅᴅ ᴍᴇ ᴀ ɢʀᴏᴜᴘ , ᴛʜᴇɴ ɪ ᴡɪʟʟ ɢɪᴠᴇ ʏᴏᴜ ʀᴇᴘʟʏ !!")
         return
+
+    # --- Group Chat Logic (Executed only if it's a non-command, non-bot, group message) ---
     
     chatbot_enabled = CHATBOT_STATUS.get(chat_id, False)
-    
+
     # 1. Check for direct reply or mention
     is_direct_interaction = (
         message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id == me.id
@@ -866,6 +863,7 @@ async def group_chatbot_reply(client, message):
         # Logic for handling direct mentions or replies to the bot
         text_to_process = message.text
         if me.username:
+            # Remove mention from text
             text_to_process = re.sub(rf'@{re.escape(me.username)}\b', '', text_to_process, flags=re.IGNORECASE).strip()
             
         reply, is_sticker = get_reply(text_to_process or "hello")
