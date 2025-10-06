@@ -897,97 +897,84 @@ async def afk_reply_handler(client, message):
                      f"📝 𝐑ᴇᴀsᴏɴ: {reason}"
         
         await message.reply_text(reply_text, parse_mode=enums.ParseMode.MARKDOWN)
+# ---------- CHATBOT HANDLER (Fixed Final Version) ----------
+import json, random, os
+from pyrogram import Client, filters
+from pyrogram.types import Message
 
-# -------- General Chatbot/AFK Return Handler (CLEANED OF BAD INDENTATION) --------
-# This filter now correctly handles:
-# 1. Is a text message (filters.text)
-# 2. Is in a group or supergroup ((filters.group | filters.supergroup))
-# 3. Is NOT a command (& ~filters.command)
-@app.on_message(filters.text & (filters.group | filters.supergroup) & ~filters.command)
-async def general_chat_group(client, message):
-    # 1. AFK Return Check
-    user_id = message.from_user.id
-    if user_id in AFK_USERS:
-        # User is coming back by sending a message
-        afk_data = AFK_USERS.pop(user_id)
-        time_afk = get_readable_time(int(time.time() - afk_data["time"]))
-        await message.reply_text(
-            f"𝐖ᴇʟᴄᴏᴍᴇ 𝐁ᴀᴄᴋ, [{message.from_user.first_name}](tg://user?id={user_id})! 𝐘ᴏᴜ 𝐚𝐫𝐞 𝐎ɴʟɪɴᴇ ɴᴏᴡ. (𝐀ғᴋ ғᴏʀ: {time_afk})",
-            parse_mode=enums.ParseMode.MARKDOWN
-        )
-        return
+# ---- Load conversation replies ----
+CONVO_FILE = "conversation.json"
+if os.path.exists(CONVO_FILE):
+    with open(CONVO_FILE, "r", encoding="utf-8") as f:
+        CONVERSATIONS = json.load(f)
+else:
+    CONVERSATIONS = {}
 
-    # 2. Chatbot Logic for Groups (Only runs if CHATBOT_STATUS is True)
-    if not CHATBOT_STATUS.get(message.chat.id, False):
-        return # Chatbot is disabled for this group
+# ---- Helper to get random reply ----
+def get_reply(user_text: str):
+    user_text = user_text.lower()
+    for key, replies in CONVERSATIONS.items():
+        if key in user_text:
+            return random.choice(replies)
+    return None
 
-    me = await client.get_me()
-    text = message.text
+# ---- Sticker ID detection helper ----
+def is_sticker_id(reply_text: str):
+    # Accepts any string that looks like a Telegram sticker ID
+    return reply_text.startswith(("CA", "BA", "DA", "EA", "FA", "GA"))
 
-    # Check if the message is a reply to the bot
-    is_reply_to_bot = message.reply_to_message and message.reply_to_message.from_user.id == me.id
-    
-    # Check if the message mentions the bot's username
-    is_mention_bot = me.username.lower() in text.lower() if text and me.username else False
-    
-    response, is_sticker = get_reply(text)
-
-    # Keyword match found (specific or general, but not None)
-    if response:
-        # For a specific keyword, reply immediately.
-        pass
-    else:
-        # No specific keyword found, use general chat logic.
-        
-        # If it's a direct reply/mention, fall back to a generic 'daily' reply if no keyword was matched.
-        if is_reply_to_bot or is_mention_bot:
-            response = random.choice(DATA.get("daily", ["Hello 👋"]))
-            is_sticker = False
-        
-        # If it's general, non-replied/non-mentioned chat, apply the 80% chance.
-        elif not is_reply_to_bot and not is_mention_bot and random.random() > 0.20:
-            # 80% chance to reply with a general 'daily' message
-            response = random.choice(DATA.get("daily", ["Hello 👋"]))
-            is_sticker = False
-        else:
-            # Drop the message (20% chance for non-replied chat)
+# ---- Group Chat Handler ----
+@app.on_message(filters.group & filters.text & ~filters.bot)
+async def chatbot_group_handler(client, message: Message):
+    try:
+        # 80% chance only
+        if random.random() > 0.8:
             return
-    
-    # Send the final response
-    if response:
-        if is_sticker:
-            await message.reply_sticker(response)
+
+        # Ignore commands
+        if message.text.startswith("/"):
+            return
+
+        # Condition 1: message is not a reply (random chat)
+        # Condition 2: message is reply to bot
+        if (
+            not message.reply_to_message
+            or (message.reply_to_message.from_user and message.reply_to_message.from_user.is_bot)
+        ):
+            reply = get_reply(message.text)
+            if reply:
+                # Randomly send text or sticker (50/50)
+                if random.random() < 0.5:
+                    await message.reply_text(reply)
+                else:
+                    if is_sticker_id(reply):
+                        await message.reply_sticker(reply)
+                    else:
+                        await message.reply_text(reply)
+
+    except Exception as e:
+        print(f"[Chatbot Group Error] {e}")
+
+# ---- Private Chat Handler ----
+@app.on_message(filters.private & filters.text & ~filters.bot)
+async def chatbot_private_handler(client, message: Message):
+    try:
+        if message.text.startswith("/"):
+            return
+
+        reply = get_reply(message.text)
+        if reply:
+            if is_sticker_id(reply):
+                await message.reply_sticker(reply)
+            else:
+                await message.reply_text(reply)
         else:
-            await message.reply_text(response)
+            await message.reply_text("Hmm... interesting 😄")  # fallback
 
+    except Exception as e:
+        print(f"[Chatbot Private Error] {e}")
 
-# -------- General Chatbot Handler for Private Messages (CLEANED OF BAD INDENTATION) --------
-# Filter: filters.text & filters.private (always runs in private chats for non-commands)
-@app.on_message(filters.text & filters.private & ~filters.command) 
-async def general_chat_private(client, message):
-    # 1. AFK Return Check (for consistency)
-    user_id = message.from_user.id
-    if user_id in AFK_USERS:
-        # User is coming back by sending a message
-        afk_data = AFK_USERS.pop(user_id)
-        time_afk = get_readable_time(int(time.time() - afk_data["time"]))
-        await message.reply_text(
-            f"𝐖ᴇʟᴄᴏᴍᴇ 𝐁ᴀᴄᴋ, [{message.from_user.first_name}](tg://user?id={user_id})! 𝐘ᴏᴜ 𝐚𝐫𝐞 𝐎ɴʟɪɴᴇ ɴᴏᴡ. (𝐀ғᴋ ғᴏʀ: {time_afk})",
-            parse_mode=enums.ParseMode.MARKDOWN
-        )
-        return
-
-    # 2. Chatbot Logic for Private Chats (Always runs if not an AFK return)
-    text = message.text
-    response, is_sticker = get_reply(text)
-
-    # In private chat, always reply, so if no keyword is found, default to 'daily'
-    if not response:
-        response = random.choice(DATA.get("daily", ["Hello 👋"]))
-        is_sticker = False
-
-    if response:
-        if is_sticker:
-            await message.reply_sticker(response)
-        else:
-            await message.reply_text(response)
+# ---- BOT RUN SECTION ----
+if __name__ == "__main__":
+    print("🤖 Chatbot is starting...")
+    app.run()
