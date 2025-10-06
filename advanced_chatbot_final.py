@@ -899,7 +899,7 @@ async def afk_reply_handler(client, message):
         await message.reply_text(reply_text, parse_mode=enums.ParseMode.MARKDOWN)
 
 # -------- General Chatbot/AFK Return Handler (FIXED) --------
-@app.on_message(filters.text & ~filters.command & ~filters.private)
+@app.on_message(filters.text & ~filters.command & (filters.group | filters.supergroup))
 async def general_chat_group(client, message):
     # 1. AFK Return Check
     user_id = message.from_user.id
