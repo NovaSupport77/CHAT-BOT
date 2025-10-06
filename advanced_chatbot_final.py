@@ -822,6 +822,8 @@ async def afk_trigger_handler(client, message):
             )
 
 
+# --- 🩵 Fixed Chatbot Reply Section (Group Reply Working) ---
+
 import json, random, re
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -829,9 +831,6 @@ from pyrogram.types import Message
 # ---- Load conversation replies ----
 with open("conversation.json", "r", encoding="utf-8") as f:
     CONVERSATIONS = json.load(f)
-
-# ---- Chatbot status memory ----
-CHATBOT_STATUS = {}
 
 # ---- Helper: Get reply from conversation.json ----
 def get_reply(user_message: str):
@@ -878,15 +877,6 @@ async def group_chatbot_reply(client, message: Message):
         reply, is_sticker = get_reply(text)
         if reply:
             await message.reply_text(reply)
-
-
-# ---------- COMMAND TO TOGGLE CHATBOT IN GROUP ----------
-@app.on_message(filters.command("chatbot") & filters.group)
-async def toggle_chatbot(client, message: Message):
-    chat_id = message.chat.id
-    CHATBOT_STATUS[chat_id] = not CHATBOT_STATUS.get(chat_id, False)
-    status = "enabled ✅" if CHATBOT_STATUS[chat_id] else "disabled ❌"
-    await message.reply_text(f"Chatbot {status} for this group.")
                  
 # -------- Run the Bot --------
 print("Bot starting...")
