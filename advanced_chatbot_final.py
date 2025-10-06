@@ -822,33 +822,32 @@ async def afk_trigger_handler(client, message):
             )
 
 
-import re
-import random
+import json, random, re
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
-# Example chatbot status dict
+# ---- Load conversation replies ----
+with open("conversation.json", "r", encoding="utf-8") as f:
+    CONVERSATIONS = json.load(f)
+
+# ---- Chatbot status memory ----
 CHATBOT_STATUS = {}
 
-# Dummy function to get reply
-def get_reply(text):
-    """Return (reply_text, is_sticker)"""
-    replies = {
-        "hello": "Hey there! 👋",
-        "hi": "Hi! How are you?",
-        "love": "Aww ❤️",
-    }
-    return (replies.get(text.lower(), "I'm here! 😊"), False)
+# ---- Helper: Get reply from conversation.json ----
+def get_reply(user_message: str):
+    text = user_message.lower().strip()
+    for key, replies in CONVERSATIONS.items():
+        if key in text:
+            return random.choice(replies), False
+    return None, False
+
 
 # ---------- PRIVATE CHAT ----------
 @app.on_message(filters.text & filters.private & ~filters.bot & ~filters.command(""))
 async def private_chatbot_reply(client, message: Message):
     reply, is_sticker = get_reply(message.text)
     if reply:
-        if is_sticker:
-            await message.reply_sticker(reply)
-        else:
-            await message.reply_text(reply)
+        await message.reply_text(reply)
 
 
 # ---------- GROUP CHAT ----------
@@ -856,37 +855,38 @@ async def private_chatbot_reply(client, message: Message):
 async def group_chatbot_reply(client, message: Message):
     chat_id = message.chat.id
     me = await client.get_me()
-
-    if not message.text:
-        return
-
+    text = message.text or ""
     chatbot_enabled = CHATBOT_STATUS.get(chat_id, False)
 
-    # Check if bot is mentioned or replied to
+    # -- Check if mentioned or replied to bot
     is_direct = (
         message.reply_to_message
         and message.reply_to_message.from_user
         and message.reply_to_message.from_user.id == me.id
-    ) or (me.username and f"@{me.username.lower()}" in message.text.lower())
+    ) or (me.username and f"@{me.username.lower()}" in text.lower())
 
-    # If mentioned/replied → always reply
+    # --- Always reply if mentioned or replied ---
     if is_direct:
-        text = re.sub(rf"@{re.escape(me.username)}", "", message.text, flags=re.IGNORECASE).strip()
-        reply, is_sticker = get_reply(text or "hello")
+        clean_text = re.sub(rf"@{re.escape(me.username)}", "", text, flags=re.IGNORECASE).strip()
+        reply, is_sticker = get_reply(clean_text or "hello")
         if reply:
-            if is_sticker:
-                await message.reply_sticker(reply)
-            else:
-                await message.reply_text(reply)
+            await message.reply_text(reply)
+        return
 
-    # If enabled → random reply (60% chance)
-    elif chatbot_enabled and random.random() < 0.60:
-        reply, is_sticker = get_reply(message.text)
+    # --- Random reply if chatbot enabled ---
+    if chatbot_enabled and random.random() < 0.60:
+        reply, is_sticker = get_reply(text)
         if reply:
-            if is_sticker:
-                await message.reply_sticker(reply)
-            else:
-                await message.reply_text(reply)
+            await message.reply_text(reply)
+
+
+# ---------- COMMAND TO TOGGLE CHATBOT IN GROUP ----------
+@app.on_message(filters.command("chatbot") & filters.group)
+async def toggle_chatbot(client, message: Message):
+    chat_id = message.chat.id
+    CHATBOT_STATUS[chat_id] = not CHATBOT_STATUS.get(chat_id, False)
+    status = "enabled ✅" if CHATBOT_STATUS[chat_id] else "disabled ❌"
+    await message.reply_text(f"Chatbot {status} for this group.")
                  
 # -------- Run the Bot --------
 print("Bot starting...")
