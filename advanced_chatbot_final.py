@@ -877,25 +877,22 @@ async def group_handler(client, message):
 
 import random
 import time
-import os # Environment variables ko read karne ke liye
+import os
+import json # JSON data handling ke liye import kiya
 from pyrogram import Client, filters, enums
 
-# --- DANGER ZONE: PLACEHOLDERS (Removed for Security) ---
-# NOTE: CHATBOT_STATUS, AFK_USERS, get_readable_time, aur get_reply ko rakha gaya hai
-# taki code runnable rahe.
+# --- GLOBAL DATA & PLACEHOLDERS ---
 
 # 2. CHATBOT_STATUS (Group-wise activation status)
-# Hum man rahe hain ki testing ke liye har group mein chatbot active hai.
-CHATBOT_STATUS = {
-    # -10012345678: True  # Example group ID
-}
-
+CHATBOT_STATUS = {}
 # 3. AFK_USERS (For AFK handler in private chat)
 AFK_USERS = {}
+# 6. CONVERSATION_DATA
+CONVERSATION_DATA = {}
 
 # 4. get_readable_time (Used in AFK handler)
 def get_readable_time(seconds: int) -> str:
-    """Seconds को एक human-readable string में बदलता है।"""
+    """Seconds ko ek human-readable string mein badalta hai."""
     periods = [
         ('year', 60 * 60 * 24 * 365),
         ('month', 60 * 60 * 24 * 30),
@@ -911,21 +908,79 @@ def get_readable_time(seconds: int) -> str:
             strings.append(f"{d} {period}{'s' if d > 1 else ''}")
     return ", ".join(strings) or "less than a second"
 
-# 5. get_reply (Mock function for generating chatbot response)
+# 5. Load Conversation Data (New Function)
+def load_conversation_data():
+    """conversation.json file se data load karta hai."""
+    global CONVERSATION_DATA
+    try:
+        # Check if running in a cloud environment where a specific path might be needed
+        # Assuming the file is in the root directory
+        file_path = 'conversation.json'
+        with open(file_path, 'r', encoding='utf-8') as f:
+            CONVERSATION_DATA = json.load(f)
+        print("Conversation data loaded successfully from conversation.json.")
+        
+        # Fallback check: Ensure 'default' key exists for stability
+        if 'default' not in CONVERSATION_DATA:
+             print("WARNING: 'default' key is missing in conversation.json. Bot may ignore unknown input.")
+             
+    except FileNotFoundError:
+        print("ERROR: conversation.json file not found. Using hardcoded fallback.")
+        # Hardcoded fallback if the file is missing
+        CONVERSATION_DATA = {
+            "default": ["Sorry, conversation file nahi mili. Main abhi sirf default reply de sakta hoon.", "Sorry, file load nahi ho payi."],
+            "sticker_fallback": ["CAACAgIAankcIwzI9I63"]
+        }
+    except json.JSONDecodeError as e:
+        print(f"ERROR: Failed to decode conversation.json: {e}")
+        CONVERSATION_DATA = {"default": [f"JSON file error: {e}."]}
+    except Exception as e:
+        print(f"An unexpected error occurred while loading conversation data: {e}")
+
+# 6. get_reply (The FIX: Now reads JSON data)
 def get_reply(text: str) -> tuple[str, bool]:
     """
-    User के text के आधार पर chatbot response और sticker status return करता है।
-    इसे आपके LLM/AI logic से replace किया जाना चाहिए।
+    User ke text ke aadhar par chatbot response aur sticker status return karta hai.
+    Ab yeh CONVERSATION_DATA ka upyog karega.
     """
-    if "hi" in text.lower() or "hello" in text.lower():
-        # 30% chance wale slot ke liye text response
-        return "Hello! Kaise ho? Main yahan active rehne ke liye hu!", False
-    elif "sticker" in text.lower():
-         # 30% chance wale slot ke liye sticker response
-         return "CAACAgIAankcIwzI9I63", True # Example sticker ID (Replace with your actual sticker ID)
-    else:
-        # Default text response
-        return f"Mujhe {text} ke baare mein kuch interesting pata hai! ", False
+    if not CONVERSATION_DATA:
+        return "Sorry, mere replies ka data abhi load nahi ho paya.", False
+
+    text_lower = text.lower().strip()
+    match_key = None
+    
+    # 1. Command Handling (e.g., /daily, /sticker_funny)
+    if text_lower.startswith(('/', '!')):
+        # Remove / or ! and get the command name
+        command = text_lower.split()[0][1:].strip()
+        if command in CONVERSATION_DATA:
+            match_key = command
+    
+    # 2. Keyword Matching (e.g., 'gussa' in the message)
+    if not match_key:
+        # Since your JSON keys are simple words (like 'gussa'), we check if the word is present
+        # Note: You can change the JSON keys to use '|' separator later if needed (e.g., "hi|hello")
+        for key in CONVERSATION_DATA.keys():
+            # Ignoring list keys that are not meant for direct matching (like 'sticker_funny')
+            # For simplicity, we check if the key is the exact word in the message
+            if len(key.split()) == 1 and key in text_lower:
+                match_key = key
+                break
+            
+    # 3. Choose Reply List
+    # Use the matched key, or fallback to 'default'
+    reply_list = CONVERSATION_DATA.get(match_key)
+    if not reply_list:
+        reply_list = CONVERSATION_DATA.get("default", ["Kripya dobara type karein ya /daily try karein."])
+        
+    # 4. Generate Response and determine Type
+    response = random.choice(reply_list)
+    
+    # Check if the chosen response is a sticker ID (Pyrogram sticker IDs usually start with CAAC)
+    is_sticker = response.strip().startswith('CAAC') 
+    
+    return response, is_sticker
+
 
 # --- 1. Pyrogram Client Initialization (SECURELY using Environment Variables) ---
 try:
@@ -935,21 +990,17 @@ try:
     bot_token = os.environ.get("BOT_TOKEN")
     
     if not all([api_id, api_hash, bot_token]):
-        # Agar koi bhi credential missing hai, to error raise karein
         raise ValueError("Missing one or more required environment variables (API_ID, API_HASH, BOT_TOKEN).")
 
     # Client Initialization
     app = Client(
         "my_awesome_bot",
-        api_id=int(api_id),  # API_ID ko integer mein badalna zaroori hai
+        api_id=int(api_id),
         api_hash=api_hash, 
         bot_token=bot_token
     )
 except Exception as e:
     print(f"FATAL ERROR: Pyrogram Client initialization failed: {e}")
-    # Render par, agar client initialize nahi hota hai, to bot nahi chalega.
-    # Hum yahan exit nahi karenge, par yeh error console mein dikhna chahiye.
-    # Agar ye error Render par dikhe, to apne environment variables check karein.
     
 # --- HANDLERS START HERE ---
 
@@ -957,13 +1008,11 @@ except Exception as e:
 @app.on_message(filters.text & filters.incoming & filters.group)
 async def group_handler(client, message):
     
-    # Check if chatbot is enabled for this group (True is default for testing)
     if not CHATBOT_STATUS.get(message.chat.id, True):
         return
         
-    me = await client.get_me() 
+    # me = await client.get_me() # Not strictly needed in the handler, but harmless
     
-    # 80% Random Chance Check
     reply_chance = random.random()
 
     if reply_chance <= 0.80: # 80% chance to reply
@@ -977,22 +1026,11 @@ async def group_handler(client, message):
         if not response:
             return
             
-        # 30% Sticker vs 50% Text Split (Total 80%)
-        
-        # Sticker chance: 30% (0.0 < reply_chance <= 0.30)
-        if reply_chance <= 0.30: 
-            if is_sticker:
-                await message.reply_sticker(response)
-            else:
-                # Agar 30% block mein text aaya to bhi bhej denge.
-                await message.reply_text(response) 
-
-        # Text chance: 50% (0.30 < reply_chance <= 0.80)
-        else: 
-            # Yahan primarily text bhejenge.
+        # Send the generated response (text or sticker)
+        if is_sticker:
+            await message.reply_sticker(response)
+        else:
             await message.reply_text(response)
-
-    # 20% chance to ignore is implicitly handled by the 'else' part of the main 'if' statement.
 
 
 # --- 3. Private Chat Handler ---
@@ -1036,7 +1074,9 @@ async def welcome_handler(client, message):
 # --- Start the bot ---
 if __name__ == "__main__":
     print("Bot is starting...")
-    # Client ko chalane ke liye start() aur stop() ko use karein
+    # Conversation data load karein
+    load_conversation_data()
+    
     try:
         app.run()
     except NameError:
