@@ -911,8 +911,7 @@ async def private_chatbot_reply(client, message):
         await message.reply_sticker(reply)
     else:
         await message.reply_text(reply)
-
-@app.on_message(filters.text & filters.group & ~filters.command)
+@app.on_message((filters.text & ~filters.regex("^/") & ~filters.bot) | filters.reply)
 async def group_chatbot_reply(client, message):
     """
     Handles chatbot replies in groups (only replies if enabled OR if mentioned/replied to).
