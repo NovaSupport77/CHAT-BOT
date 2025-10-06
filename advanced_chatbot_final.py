@@ -805,7 +805,7 @@ async def afk_cmd(client, message):
     )
 
 # -------- AFK Trigger Handler (FIXED to use filters.text and exclude all commands) --------
-@app.on_message(filters.group & filters.text & ~filters.command() & ~filters.bot)
+@app.on_message(filters.group & filters.text & ~filters.regex("^/") & ~filters.bot)
 async def afk_trigger_handler(client, message):
     user_id = message.from_user.id
     
