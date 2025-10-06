@@ -902,6 +902,13 @@ import json, random, os
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
+# ---- BOT CONFIG ----
+API_ID = 123456      # apna API_ID daal
+API_HASH = "YOUR_API_HASH"  # apna API_HASH daal
+BOT_TOKEN = "YOUR_BOT_TOKEN"  # apna Bot Token daal
+
+app = Client("chatbot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+
 # ---- Load conversation replies ----
 CONVO_FILE = "conversation.json"
 if os.path.exists(CONVO_FILE):
@@ -914,7 +921,7 @@ else:
 def get_reply(user_text: str):
     user_text = user_text.lower()
     for key, replies in CONVERSATIONS.items():
-        if key in user_text:
+        if key.lower() in user_text:
             return random.choice(replies)
     return None
 
@@ -935,15 +942,13 @@ async def chatbot_group_handler(client, message: Message):
         if message.text.startswith("/"):
             return
 
-        # Condition 1: message is not a reply (random chat)
-        # Condition 2: message is reply to bot
+        # Reply only if not a reply OR reply to bot
         if (
             not message.reply_to_message
             or (message.reply_to_message.from_user and message.reply_to_message.from_user.is_bot)
         ):
             reply = get_reply(message.text)
             if reply:
-                # Randomly send text or sticker (50/50)
                 if random.random() < 0.5:
                     await message.reply_text(reply)
                 else:
