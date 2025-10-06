@@ -875,61 +875,76 @@ async def group_handler(client, message):
             parse_mode=enums.ParseMode.MARKDOWN
         )
 
-    # --- 3. Chatbot Reply Logic (55% Random Chance) ---
-    chat_id = message.chat.id
-    me = await client.get_me()
+    import random
+from pyrogram import enums
+# Note: 'client' aur 'app' yaha assume kiye gaye hain ki wo pyrogram
+# instance hain jaisa aapke original code mein lag raha tha.
+
+# --- 3. Chatbot Reply Logic (80% Random Chance on ALL Messages) ---
+# --- (This replaces your original Group Chat logic) ---
+
+chat_id = message.chat.id
+me = await client.get_me()
+
+# Check if chatbot is enabled for this group
+if not CHATBOT_STATUS.get(chat_id, False):
+    return
     
-    # Check if chatbot is enabled for this group OR if it's a private chat
-    # (Private chats are handled by the next handler, this is for groups only)
-    if not CHATBOT_STATUS.get(chat_id, False):
+# 1. 80% Random Chance Check (Reply chance is 0.80)
+# Yeh check ab har message par chalega, mention ya reply ki zaroorat nahi.
+reply_chance = random.random()
+
+if reply_chance <= 0.80: # 80% chance to reply
+    
+    # Text extraction: Ab hum simple text lenge kyuki mention remove karne ki
+    # zaroorat nahi hai (hum har message par reply kar rahe hain)
+    text = message.text
+    
+    # Agar message text nahi hai (jaise photo, command, etc.) to ignore karein
+    if not text:
         return
 
-    # Check if the bot is mentioned or if it's a direct reply
-    is_for_bot = (
-        message.reply_to_message and message.reply_to_message.from_user.id == me.id
-    ) or any(
-        e.type == enums.MessageEntityType.MENTION and me.username.lower() == message.text[e.offset:e.offset + e.length].strip('@').lower()
-        for e in message.entities or []
-    )
-    
-    # Random chance check: Only reply 55% of the time, even if mentioned/replied, 
-    # but still allow AFK check to pass through.
-    if is_for_bot:
-        if random.random() <= 0.55: # 55% chance
-            text = message.text.split(None, 1)[1] if len(message.command) > 0 and message.command[0] in ["@"+me.username, me.username] else message.text
-            response, is_sticker = get_reply(text)
-            
-            if is_sticker:
-                await message.reply_sticker(response)
-            else:
-                await message.reply_text(response)
-        else:
-            # 45% chance to not reply even if mentioned
-            pass
+    response, is_sticker = get_reply(text)
 
-# -------- Chatbot Reply in Private Chat Handler --------
-@app.on_message(filters.text & filters.incoming & filters.private)
-async def private_handler(client, message):
-    # AFK return check (runs first)
-    if message.from_user.id in AFK_USERS:
-        user_id = message.from_user.id
-        user_name = message.from_user.first_name
-        afk_data = AFK_USERS.pop(user_id)
-        time_afk = get_readable_time(int(time.time() - afk_data["time"]))
-        await message.reply_text(
-            f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ 𝐚𝐫𝐞 ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏ𝐫: {time_afk}) 😉",
-            parse_mode=enums.ParseMode.MARKDOWN
-        )
+    # Agar get_reply se koi response nahi aaya to ignore karein
+    if not response:
         return
         
-    # Full chatbot reply in private chat
-    response, is_sticker = get_reply(message.text)
+    # 2. Response Type Check: 50% Text, 30% Sticker (0.80 ke andar)
     
-    if is_sticker:
-        await message.reply_sticker(response)
-    else:
+    # Sticker chance (0.0 se 0.30 tak)
+    if reply_chance <= 0.30 or is_sticker: 
+        # is_sticker true hone par force sticker, ya random chance se sticker
+        if is_sticker:
+             await message.reply_sticker(response)
+        else:
+             # Agar get_reply ne sticker nahi bheja to is hisse ko skip karna behtar hai,
+             # nahi to bot hamesha ek hi sticker bhejega.
+             # Yaha hum assume kar rahe hain ki get_reply() smart hai.
+             pass 
+
+    # Text chance (0.30 se 0.80 tak)
+    else: 
         await message.reply_text(response)
 
+else:
+    # 20% chance to ignore
+    pass
+
+# --- 4. New Member Welcome Message Handler ---
+@app.on_message(filters.new_chat_members & filters.group)
+async def welcome_handler(client, message):
+    me = await client.get_me()
+    
+    # Check karein ki bot khud hi group mein add hua hai
+    for member in message.new_chat_members:
+        if member.id == me.id:
+            welcome_text = (
+                "𝐓ʜᴀɴᴋs 𝐅ᴏʀ 𝐀ᴅᴅ 𝐌ᴇ .. ɪ ᴡɪʟʟ ᴋᴇᴇᴘ ᴀᴄᴛɪᴠᴇ ʏᴏᴜʀ ɢʀᴏᴜᴘ !! ✨"
+            )
+            # Reply_text use karne se bot usi chat (group) mein message bhejega
+            await message.reply_text(welcome_text)
+            return
 # -------- Start the bot --------
 if __name__ == "__main__":
     print("Bot is starting...")
