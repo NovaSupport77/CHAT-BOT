@@ -822,67 +822,71 @@ async def afk_trigger_handler(client, message):
             )
 
 
-# -------- CORE CHATBOT LOGIC (The Final Reliable Handler) --------
+import re
+import random
+from pyrogram import Client, filters
+from pyrogram.types import Message
 
-@app.on_message(filters.text)
-async def universal_chatbot_reply(client, message):
-    """
-    Handles all text messages and filters commands/bots/private/groups internally.
-    This method guarantees no filter conflicts or TypeErrors.
-    """
-    
-    # 1. IMMEDIATE CHECKS (Must be done first)
-    if message.from_user and message.from_user.is_bot:
-        return
-    if message.text is None:
-        return
-    if message.text.startswith('/'): # Checks for commands
-        return
-        
+# Example chatbot status dict
+CHATBOT_STATUS = {}
+
+# Dummy function to get reply
+def get_reply(text):
+    """Return (reply_text, is_sticker)"""
+    replies = {
+        "hello": "Hey there! 👋",
+        "hi": "Hi! How are you?",
+        "love": "Aww ❤️",
+    }
+    return (replies.get(text.lower(), "I'm here! 😊"), False)
+
+# ---------- PRIVATE CHAT ----------
+@app.on_message(filters.text & filters.private & ~filters.bot & ~filters.command(""))
+async def private_chatbot_reply(client, message: Message):
+    reply, is_sticker = get_reply(message.text)
+    if reply:
+        if is_sticker:
+            await message.reply_sticker(reply)
+        else:
+            await message.reply_text(reply)
+
+
+# ---------- GROUP CHAT ----------
+@app.on_message(filters.text & filters.group & ~filters.bot & ~filters.command(""))
+async def group_chatbot_reply(client, message: Message):
     chat_id = message.chat.id
     me = await client.get_me()
-    
-    # --- Private Chat Logic ---
-    if message.chat.type == enums.ChatType.PRIVATE:
-        # Fixed response for private chats (as requested)
-        await message.reply_text("ᴘʟᴇᴀsᴇ ᴀᴅᴅ ᴍᴇ ᴀ ɢʀᴏᴜᴘ , ᴛʜᴇɴ ɪ ᴡɪʟʟ ɢɪᴠᴇ ʏᴏᴜ ʀᴇᴘʟʏ !!")
+
+    if not message.text:
         return
 
-    # --- Group Chat Logic (Executed only if it's a non-command, non-bot, group message) ---
-    
     chatbot_enabled = CHATBOT_STATUS.get(chat_id, False)
 
-    # 1. Check for direct reply or mention
-    is_direct_interaction = (
-        message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id == me.id
-    ) or (
-        me.username and f"@{me.username.lower()}" in message.text.lower() if message.text else False
-    )
+    # Check if bot is mentioned or replied to
+    is_direct = (
+        message.reply_to_message
+        and message.reply_to_message.from_user
+        and message.reply_to_message.from_user.id == me.id
+    ) or (me.username and f"@{me.username.lower()}" in message.text.lower())
 
-    if is_direct_interaction:
-        # Logic for handling direct mentions or replies to the bot
-        text_to_process = message.text
-        if me.username:
-            # Remove mention from text
-            text_to_process = re.sub(rf'@{re.escape(me.username)}\b', '', text_to_process, flags=re.IGNORECASE).strip()
-            
-        reply, is_sticker = get_reply(text_to_process or "hello")
-        
+    # If mentioned/replied → always reply
+    if is_direct:
+        text = re.sub(rf"@{re.escape(me.username)}", "", message.text, flags=re.IGNORECASE).strip()
+        reply, is_sticker = get_reply(text or "hello")
         if reply:
             if is_sticker:
                 await message.reply_sticker(reply)
             else:
                 await message.reply_text(reply)
-                
-    # 2. RANDOM Group Reply (if enabled - 60% chance)
-    elif chatbot_enabled and random.random() < 0.60: 
-        reply, is_sticker = get_reply(message.text) 
-        
+
+    # If enabled → random reply (60% chance)
+    elif chatbot_enabled and random.random() < 0.60:
+        reply, is_sticker = get_reply(message.text)
         if reply:
             if is_sticker:
-                 await message.reply_sticker(reply)
+                await message.reply_sticker(reply)
             else:
-                 await message.reply_text(reply)
+                await message.reply_text(reply)
                  
 # -------- Run the Bot --------
 print("Bot starting...")
