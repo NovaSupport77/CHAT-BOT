@@ -821,18 +821,22 @@ async def afk_trigger_handler(client, message):
                 parse_mode=enums.ParseMode.MARKDOWN
             )
 
-# -------- CORE CHATBOT LOGIC (Group/Private Reply) --------
-@app.on_message((filters.text & ~filters.regex("^/") & ~filters.bot) | filters.reply)
+# -------- CORE CHATBOT LOGIC (Private Reply - Always replies to text) --------
+@app.on_message(filters.text & filters.private & ~filters.command & ~filters.bot)
 async def private_chatbot_reply(client, message):
     """Handles chatbot replies in private chats (always replies)."""
+    
     reply, is_sticker = get_reply(message.text)
     
-    if is_sticker:
-        await message.reply_sticker(reply)
-    else:
-        await message.reply_text(reply)
+    if reply:
+        if is_sticker:
+            await message.reply_sticker(reply)
+        else:
+            await message.reply_text(reply)
 
-@app.on_message((filters.text & ~filters.regex("^/") & ~filters.bot) | filters.reply)
+
+# -------- CORE CHATBOT LOGIC (Group Reply - Conditional) --------
+@app.on_message(filters.text & filters.group & ~filters.command & ~filters.bot)
 async def group_chatbot_reply(client, message):
     """
     Handles chatbot replies in groups (only replies if enabled OR if mentioned/replied to).
@@ -840,9 +844,12 @@ async def group_chatbot_reply(client, message):
     chat_id = message.chat.id
     me = await client.get_me()
     
+    if message.text is None:
+        return
+    
     chatbot_enabled = CHATBOT_STATUS.get(chat_id, False)
     
-    # Check for direct reply or mention
+    # 1. Check for direct reply or mention
     is_direct_interaction = (
         message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id == me.id
     ) or (
@@ -856,7 +863,7 @@ async def group_chatbot_reply(client, message):
             # FIX: Use a more robust regex to remove the bot's username mention
             text_to_process = re.sub(rf'@{re.escape(me.username)}\b', '', text_to_process, flags=re.IGNORECASE).strip()
             
-        reply, is_sticker = get_reply(text_to_process or "hello") # Use "hello" if text is empty after removing mention
+        reply, is_sticker = get_reply(text_to_process or "hello")
         
         if reply:
             if is_sticker:
@@ -864,8 +871,7 @@ async def group_chatbot_reply(client, message):
             else:
                 await message.reply_text(reply)
                 
-    # RANDOM Group Reply (if enabled)
-    # FINAL UPDATE: Increased chance to 60% for highest group activity.
+    # 2. RANDOM Group Reply (if enabled)
     elif chatbot_enabled and random.random() < 0.60: 
         reply, is_sticker = get_reply(message.text) 
         
