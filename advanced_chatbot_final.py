@@ -819,7 +819,7 @@ async def afk_trigger_handler(client, message):
             )
 
 # -------- CORE CHATBOT LOGIC (Group/Private Reply) --------
-@app.on_message(filters.text & filters.private & ~filters.command)
+@app.on_message((filters.text & ~filters.regex("^/") & ~filters.bot) | filters.reply)
 async def private_chatbot_reply(client, message):
     """Handles chatbot replies in private chats (always replies)."""
     reply, is_sticker = get_reply(message.text)
@@ -829,7 +829,7 @@ async def private_chatbot_reply(client, message):
     else:
         await message.reply_text(reply)
 
-@app.on_message(filters.text & filters.group & ~filters.command)
+@app.on_message((filters.text & ~filters.regex("^/") & ~filters.bot) | filters.reply)
 async def group_chatbot_reply(client, message):
     """
     Handles chatbot replies in groups (only replies if enabled OR if mentioned/replied to).
