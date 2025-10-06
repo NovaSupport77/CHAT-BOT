@@ -875,11 +875,14 @@ async def group_handler(client, message):
             parse_mode=enums.ParseMode.MARKDOWN
         )
 
+
+
 import random
 import time
 import os
 import json # JSON data handling ke liye import kiya
 from pyrogram import Client, filters, enums
+import re # Keyword matching ke liye re module import kiya
 
 # --- GLOBAL DATA & PLACEHOLDERS ---
 
@@ -892,7 +895,7 @@ CONVERSATION_DATA = {}
 
 # 4. get_readable_time (Used in AFK handler)
 def get_readable_time(seconds: int) -> str:
-    """Seconds ko ek human-readable string mein badalta hai."""
+    """Seconds ko ek human-readable string mein badalta hai।"""
     periods = [
         ('year', 60 * 60 * 24 * 365),
         ('month', 60 * 60 * 24 * 30),
@@ -910,25 +913,21 @@ def get_readable_time(seconds: int) -> str:
 
 # 5. Load Conversation Data (New Function)
 def load_conversation_data():
-    """conversation.json file se data load karta hai."""
+    """conversation.json file se data load karta hai।"""
     global CONVERSATION_DATA
     try:
-        # Check if running in a cloud environment where a specific path might be needed
-        # Assuming the file is in the root directory
         file_path = 'conversation.json'
         with open(file_path, 'r', encoding='utf-8') as f:
             CONVERSATION_DATA = json.load(f)
         print("Conversation data loaded successfully from conversation.json.")
         
-        # Fallback check: Ensure 'default' key exists for stability
         if 'default' not in CONVERSATION_DATA:
-             print("WARNING: 'default' key is missing in conversation.json. Bot may ignore unknown input.")
+             print("WARNING: 'default' key is missing in conversation.json. General chat replies will not work.")
              
     except FileNotFoundError:
         print("ERROR: conversation.json file not found. Using hardcoded fallback.")
-        # Hardcoded fallback if the file is missing
         CONVERSATION_DATA = {
-            "default": ["Sorry, conversation file nahi mili. Main abhi sirf default reply de sakta hoon.", "Sorry, file load nahi ho payi."],
+            "default": ["Sorry, conversation file nahi mili."],
             "sticker_fallback": ["CAACAgIAankcIwzI9I63"]
         }
     except json.JSONDecodeError as e:
@@ -937,49 +936,59 @@ def load_conversation_data():
     except Exception as e:
         print(f"An unexpected error occurred while loading conversation data: {e}")
 
-# 6. get_reply (The FIX: Now reads JSON data)
-def get_reply(text: str) -> tuple[str, bool]:
+# 6. get_reply (Fix: Keyword matching improved and returns match_type)
+def get_reply(text: str) -> tuple[str, bool, str]:
     """
-    User ke text ke aadhar par chatbot response aur sticker status return karta hai.
-    Ab yeh CONVERSATION_DATA ka upyog karega.
+    User ke text ke aadhar par response, sticker status, aur match type return karta hai।
+    match_type: 'command', 'keyword', ya 'default'।
     """
     if not CONVERSATION_DATA:
-        return "Sorry, mere replies ka data abhi load nahi ho paya.", False
+        return "Sorry, mere replies ka data abhi load nahi ho paya।", False, 'error'
 
     text_lower = text.lower().strip()
     match_key = None
+    match_type = 'default' # Default to general chat type (will be used for 80% chance)
     
-    # 1. Command Handling (e.g., /daily, /sticker_funny)
+    # 1. Command Handling (100% Match)
     if text_lower.startswith(('/', '!')):
-        # Remove / or ! and get the command name
         command = text_lower.split()[0][1:].strip()
         if command in CONVERSATION_DATA:
             match_key = command
+            match_type = 'command'
     
-    # 2. Keyword Matching (e.g., 'gussa' in the message)
+    # 2. Keyword Matching (100% Match)
     if not match_key:
-        # Since your JSON keys are simple words (like 'gussa'), we check if the word is present
-        # Note: You can change the JSON keys to use '|' separator later if needed (e.g., "hi|hello")
         for key in CONVERSATION_DATA.keys():
-            # Ignoring list keys that are not meant for direct matching (like 'sticker_funny')
-            # For simplicity, we check if the key is the exact word in the message
-            if len(key.split()) == 1 and key in text_lower:
+            # 'default' key ko ignore karein
+            if key == 'default' or key.startswith('sticker_'):
+                continue
+            
+            # Use regex to find the whole word/phrase keyword in the message
+            # For example, checks if 'gussa' is present as a whole word, not part of 'gussakhana'
+            # Note: The 'daily' key is typically a command, but if used as a keyword, this handles it.
+            if re.search(r'\b' + re.escape(key.lower()) + r'\b', text_lower):
                 match_key = key
+                match_type = 'keyword'
                 break
             
     # 3. Choose Reply List
-    # Use the matched key, or fallback to 'default'
-    reply_list = CONVERSATION_DATA.get(match_key)
+    # Agar command ya keyword mila, toh uska reply list use karo. Warna 'default' use karo.
+    if match_type in ('command', 'keyword'):
+        reply_list = CONVERSATION_DATA.get(match_key)
+    else:
+        # Default scenario (general chat)
+        reply_list = CONVERSATION_DATA.get("default")
+    
+    # Agar reply list nahi mili (ya error hua), toh default fallback use karo
     if not reply_list:
-        reply_list = CONVERSATION_DATA.get("default", ["Kripya dobara type karein ya /daily try karein."])
+        reply_list = CONVERSATION_DATA.get("default", ["Kripya dobara type karein।"])
+        match_type = 'default' 
         
     # 4. Generate Response and determine Type
     response = random.choice(reply_list)
-    
-    # Check if the chosen response is a sticker ID (Pyrogram sticker IDs usually start with CAAC)
     is_sticker = response.strip().startswith('CAAC') 
     
-    return response, is_sticker
+    return response, is_sticker, match_type
 
 
 # --- 1. Pyrogram Client Initialization (SECURELY using Environment Variables) ---
@@ -1004,36 +1013,63 @@ except Exception as e:
     
 # --- HANDLERS START HERE ---
 
-# --- 2. Group Chat Message Handler (80% Reply Chance) ---
+# --- 2. Group Chat Message Handler (80% Reply Chance with 30/50 split) ---
 @app.on_message(filters.text & filters.incoming & filters.group)
 async def group_handler(client, message):
     
+    # 1. Check if chatbot is enabled
     if not CHATBOT_STATUS.get(message.chat.id, True):
         return
-        
-    # me = await client.get_me() # Not strictly needed in the handler, but harmless
     
-    reply_chance = random.random()
-
-    if reply_chance <= 0.80: # 80% chance to reply
+    text = message.text
+    if not text:
+        return
         
-        text = message.text
-        if not text:
-            return
+    # 2. Get Reply and Match Type
+    response, is_sticker, match_type = get_reply(text)
 
-        response, is_sticker = get_reply(text) 
-
-        if not response:
-            return
-            
-        # Send the generated response (text or sticker)
+    # 3. Handle 100% Reply Scenarios (Commands or Keywords)
+    # Agar Command ya Keyword mila hai, toh 100% reply karo aur aage mat badho.
+    if match_type in ('command', 'keyword'):
         if is_sticker:
             await message.reply_sticker(response)
         else:
             await message.reply_text(response)
+        return
+
+    # --- BELOW THIS LINE IS THE GENERAL CHAT (DEFAULT) 80% LOGIC ---
+    
+    # 4. Filter: Sirf un messages ko process karo jo 'bina kisi ko reply diye' likhe gaye hain.
+    # Agar reply to message hai, ya koi mention (@username) ya URL/command entity hai, toh ignore karo.
+    if message.reply_to_message or message.entities:
+        return
+        
+    # 5. Apply the 80% random chance for general chat
+    reply_chance = random.random()
+
+    if reply_chance <= 0.80: # 80% chance to reply
+        
+        # 6. Implement 30% Sticker vs 50% Text split logic (Total 80%)
+        
+        # Sticker Preference: 30% (reply_chance <= 0.30)
+        if reply_chance <= 0.30: 
+            # Agar random reply sticker hai, toh bhej do.
+            if is_sticker:
+                await message.reply_sticker(response)
+            # Agar sticker nahi hai (aur hum sticker window mein hain), toh text bhej do.
+            else:
+                 await message.reply_text(response)
+        
+        # Text Preference: 50% (0.30 < reply_chance <= 0.80)
+        else: 
+            # Agar random reply text hai, toh bhej do.
+            if not is_sticker:
+                await message.reply_text(response)
+            # Agar sticker hai (aur hum text window mein hain), toh skip kar do, 
+            # jisse 50% ka preference text ko mile.
 
 
-# --- 3. Private Chat Handler ---
+# --- 3. Private Chat Handler (No chance logic, full reply) ---
 @app.on_message(filters.text & filters.incoming & filters.private)
 async def private_handler(client, message):
     # AFK return check (runs first)
@@ -1048,8 +1084,8 @@ async def private_handler(client, message):
         )
         return
         
-    # Full chatbot reply in private chat
-    response, is_sticker = get_reply(message.text)
+    # Full chatbot reply in private chat (100% reply for any input)
+    response, is_sticker, _ = get_reply(message.text)
     
     if is_sticker:
         await message.reply_sticker(response)
