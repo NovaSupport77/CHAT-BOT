@@ -822,10 +822,14 @@ async def afk_trigger_handler(client, message):
             )
 
 # -------- CORE CHATBOT LOGIC (Private Reply - Always replies to text) --------
-@app.on_message(filters.text & filters.private & ~filters.command & ~filters.bot)
+@app.on_message(filters.text & filters.private & (~filters.command) & (~filters.bot))
 async def private_chatbot_reply(client, message):
     """Handles chatbot replies in private chats (always replies)."""
     
+    # Ensure there is text and it's not None
+    if message.text is None:
+        return
+        
     reply, is_sticker = get_reply(message.text)
     
     if reply:
@@ -836,7 +840,7 @@ async def private_chatbot_reply(client, message):
 
 
 # -------- CORE CHATBOT LOGIC (Group Reply - Conditional) --------
-@app.on_message(filters.text & filters.group & ~filters.command & ~filters.bot)
+@app.on_message(filters.text & filters.group & (~filters.command) & (~filters.bot))
 async def group_chatbot_reply(client, message):
     """
     Handles chatbot replies in groups (only replies if enabled OR if mentioned/replied to).
@@ -844,6 +848,7 @@ async def group_chatbot_reply(client, message):
     chat_id = message.chat.id
     me = await client.get_me()
     
+    # Ensure there is text and it's not None
     if message.text is None:
         return
     
@@ -872,6 +877,7 @@ async def group_chatbot_reply(client, message):
                 await message.reply_text(reply)
                 
     # 2. RANDOM Group Reply (if enabled)
+    # 60% chance to reply randomly
     elif chatbot_enabled and random.random() < 0.60: 
         reply, is_sticker = get_reply(message.text) 
         
@@ -880,6 +886,7 @@ async def group_chatbot_reply(client, message):
                  await message.reply_sticker(reply)
             else:
                  await message.reply_text(reply)
+
                  
 # -------- Run the Bot --------
 print("Bot starting...")
