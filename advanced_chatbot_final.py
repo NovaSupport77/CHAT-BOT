@@ -875,86 +875,156 @@ async def group_handler(client, message):
             parse_mode=enums.ParseMode.MARKDOWN
         )
 
-    import random
-from pyrogram import filters, enums
-import time # time module AFK handler ke liye zaroori hai
+import random
+import time
+import os # Environment variables ko read karne ke liye
+from pyrogram import Client, filters, enums
 
-# Assume ki 'app' (client) aur CHATBOT_STATUS, get_reply, AFK_USERS, etc.
-# aapke main file mein pehle se defined hain.
+# --- DANGER ZONE: PLACEHOLDERS (Removed for Security) ---
+# NOTE: CHATBOT_STATUS, AFK_USERS, get_readable_time, aur get_reply ko rakha gaya hai
+# taki code runnable rahe.
 
-# --- Group Chat Message Handler ---
+# 2. CHATBOT_STATUS (Group-wise activation status)
+# Hum man rahe hain ki testing ke liye har group mein chatbot active hai.
+CHATBOT_STATUS = {
+    # -10012345678: True  # Example group ID
+}
+
+# 3. AFK_USERS (For AFK handler in private chat)
+AFK_USERS = {}
+
+# 4. get_readable_time (Used in AFK handler)
+def get_readable_time(seconds: int) -> str:
+    """Seconds को एक human-readable string में बदलता है।"""
+    periods = [
+        ('year', 60 * 60 * 24 * 365),
+        ('month', 60 * 60 * 24 * 30),
+        ('day', 60 * 60 * 24),
+        ('hour', 60 * 60),
+        ('minute', 60),
+        ('second', 1)
+    ]
+    strings = []
+    for period, seconds_per_period in periods:
+        if seconds > seconds_per_period:
+            d, seconds = divmod(seconds, seconds_per_period)
+            strings.append(f"{d} {period}{'s' if d > 1 else ''}")
+    return ", ".join(strings) or "less than a second"
+
+# 5. get_reply (Mock function for generating chatbot response)
+def get_reply(text: str) -> tuple[str, bool]:
+    """
+    User के text के आधार पर chatbot response और sticker status return करता है।
+    इसे आपके LLM/AI logic से replace किया जाना चाहिए।
+    """
+    if "hi" in text.lower() or "hello" in text.lower():
+        # 30% chance wale slot ke liye text response
+        return "Hello! Kaise ho? Main yahan active rehne ke liye hu!", False
+    elif "sticker" in text.lower():
+         # 30% chance wale slot ke liye sticker response
+         return "CAACAgIAankcIwzI9I63", True # Example sticker ID (Replace with your actual sticker ID)
+    else:
+        # Default text response
+        return f"Mujhe {text} ke baare mein kuch interesting pata hai! ", False
+
+# --- 1. Pyrogram Client Initialization (SECURELY using Environment Variables) ---
+try:
+    # Safely retrieve credentials from environment variables
+    api_id = os.environ.get("API_ID")
+    api_hash = os.environ.get("API_HASH")
+    bot_token = os.environ.get("BOT_TOKEN")
+    
+    if not all([api_id, api_hash, bot_token]):
+        # Agar koi bhi credential missing hai, to error raise karein
+        raise ValueError("Missing one or more required environment variables (API_ID, API_HASH, BOT_TOKEN).")
+
+    # Client Initialization
+    app = Client(
+        "my_awesome_bot",
+        api_id=int(api_id),  # API_ID ko integer mein badalna zaroori hai
+        api_hash=api_hash, 
+        bot_token=bot_token
+    )
+except Exception as e:
+    print(f"FATAL ERROR: Pyrogram Client initialization failed: {e}")
+    # Render par, agar client initialize nahi hota hai, to bot nahi chalega.
+    # Hum yahan exit nahi karenge, par yeh error console mein dikhna chahiye.
+    # Agar ye error Render par dikhe, to apne environment variables check karein.
+    
+# --- HANDLERS START HERE ---
+
+# --- 2. Group Chat Message Handler (80% Reply Chance) ---
 @app.on_message(filters.text & filters.incoming & filters.group)
 async def group_handler(client, message):
     
-    # AFK check (Optional: Agar aapke original code mein tha)
-    # NOTE: Pyrogram mein AFK logic ko yahan handle karna hota hai.
-    # Agar message kisi AFK user se aaya hai, to yahan AFK return logic aayega.
-    # Upar AFK logic nahi diya gaya tha, isliye abhi skip kar rahe hain.
-    
-    # --- 1. Chatbot Reply Logic (80% Random Chance on ALL Messages) ---
-    chat_id = message.chat.id
-    me = await client.get_me() # ✅ Ab ye theek hai kyunki ye async function ke andar hai
-
-    # Check if chatbot is enabled for this group
-    if not CHATBOT_STATUS.get(chat_id, False):
+    # Check if chatbot is enabled for this group (True is default for testing)
+    if not CHATBOT_STATUS.get(message.chat.id, True):
         return
         
-    # 2. 80% Random Chance Check (Reply chance is 0.80)
+    me = await client.get_me() 
+    
+    # 80% Random Chance Check
     reply_chance = random.random()
 
     if reply_chance <= 0.80: # 80% chance to reply
         
         text = message.text
-        
-        # Agar message text nahi hai (jaise photo, command, etc.) to ignore karein
         if not text:
             return
 
-        # NOTE: get_reply function ko bhi async hona chahiye agar wo await use karta hai.
-        # Hum yahan assume kar rahe hain ki wo hai, warna yahan bhi error aayega.
         response, is_sticker = get_reply(text) 
 
-        # Agar get_reply se koi response nahi aaya to ignore karein
         if not response:
             return
             
-        # 3. Response Type Check: 50% Text, 30% Sticker (0.80 ke andar)
+        # 30% Sticker vs 50% Text Split (Total 80%)
         
-        # Sticker chance (0.0 se 0.30 tak, ya agar get_reply ne sticker bheja)
-        if reply_chance <= 0.30 or is_sticker: 
-            
-            # Agar response sticker hai to bhej dein
+        # Sticker chance: 30% (0.0 < reply_chance <= 0.30)
+        if reply_chance <= 0.30: 
             if is_sticker:
-                 await message.reply_sticker(response)
-            
-            # Agar response text hai, aur hum sticker chance block mein hain,
-            # to is hisse mein kuch nahi karenge taki random chance maintain rahe.
+                await message.reply_sticker(response)
             else:
-                 # Agar humein is 30% mein sticker hi bhejna hai, to is hisse ko
-                 # ignore kar dete hain agar response text hai.
-                 pass
+                # Agar 30% block mein text aaya to bhi bhej denge.
+                await message.reply_text(response) 
 
-        # Text chance (0.30 se 0.80 tak)
+        # Text chance: 50% (0.30 < reply_chance <= 0.80)
         else: 
-            # Agar response sticker nahi hai aur hum text block mein hain, to text bhej dein.
-            if not is_sticker:
-                await message.reply_text(response)
-            else:
-                # Agar sticker response hai, to use upar wale block mein handle kar liya gaya hai.
-                pass
+            # Yahan primarily text bhejenge.
+            await message.reply_text(response)
 
+    # 20% chance to ignore is implicitly handled by the 'else' part of the main 'if' statement.
+
+
+# --- 3. Private Chat Handler ---
+@app.on_message(filters.text & filters.incoming & filters.private)
+async def private_handler(client, message):
+    # AFK return check (runs first)
+    if message.from_user.id in AFK_USERS:
+        user_id = message.from_user.id
+        user_name = message.from_user.first_name
+        afk_data = AFK_USERS.pop(user_id)
+        time_afk = get_readable_time(int(time.time() - afk_data["time"])) 
+        await message.reply_text(
+            f"𝐘ᴇᴀʜ, [{user_name}](tg://user?id={user_id}), ʏᴏᴜ 𝐚𝐫𝐞 ʙᴀᴄᴋ, ᴏɴʟɪɴᴇ! (𝐀ғᴋ ғᴏʀ: {time_afk}) 😉",
+            parse_mode=enums.ParseMode.MARKDOWN
+        )
+        return
+        
+    # Full chatbot reply in private chat
+    response, is_sticker = get_reply(message.text)
+    
+    if is_sticker:
+        await message.reply_sticker(response)
     else:
-        # 20% chance to ignore
-        pass
+        await message.reply_text(response)
 
-# --- New Member Welcome Message Handler ---
+
+# --- 4. New Member Welcome Message Handler ---
 @app.on_message(filters.new_chat_members & filters.group)
 async def welcome_handler(client, message):
     
-    # We need client.get_me() to check if the bot itself was added
     me = await client.get_me()
     
-    # Check karein ki bot khud hi group mein add hua hai
     for member in message.new_chat_members:
         if member.id == me.id:
             welcome_text = (
@@ -964,7 +1034,10 @@ async def welcome_handler(client, message):
             return
 
 # --- Start the bot ---
-# Agar aapka ye hissa dusri file mein hai jaha par 'app' defined hai, to ye theek hai.
 if __name__ == "__main__":
     print("Bot is starting...")
-    app.run()
+    # Client ko chalane ke liye start() aur stop() ko use karein
+    try:
+        app.run()
+    except NameError:
+        print("Bot failed to start. Check API_ID/API_HASH/BOT_TOKEN environment variables.")
