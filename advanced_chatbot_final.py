@@ -855,7 +855,8 @@ async def afk_trigger_handler(client, message):
 # -------- Main Chatbot Reply Handler (FIXED filter & logic for 80/20 & private) --------
 # Filters for: any text that is NOT a command, OR any message that is a reply
 @app.on_message(
-    @app.on_message((filters.text & ~filters.regex("^/") & ~filters.bot) | filters.reply)
+    (filters.text & ~filters.regex("^/") & ~filters.bot) | filters.reply
+)
 async def general_chat_reply(client, message: Message):
     chat_type = message.chat.type
     me = await client.get_me()
