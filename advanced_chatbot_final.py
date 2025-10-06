@@ -822,19 +822,16 @@ async def afk_trigger_handler(client, message):
             )
 
 
-# -------- CORE CHATBOT LOGIC (Private Reply - Always replies to text) --------
-@app.on_message(filters.text & filters.private & ~filters.command)
+# -------- CORE CHATBOT LOGIC --------
+
+# 1. PRIVATE CHAT LOGIC (Always replies)
+# This uses the filter provided by you, but explicitly for PRIVATE chats.
+@app.on_message((filters.text & filters.private & ~filters.regex("^/") & ~filters.bot) | (filters.reply & filters.private))
 async def private_chatbot_reply(client, message):
     """Handles chatbot replies in private chats (always replies)."""
     
-    # Check if the message is from a bot (we explicitly ignore bots here)
-    if message.from_user and message.from_user.is_bot:
-        return
-        
-    if message.text is None:
-        return
-        
-    reply, is_sticker = get_reply(message.text)
+    # In private chat, just reply to the message content
+    reply, is_sticker = get_reply(message.text or "hello")
     
     if reply:
         if is_sticker:
@@ -843,17 +840,13 @@ async def private_chatbot_reply(client, message):
             await message.reply_text(reply)
 
 
-# -------- CORE CHATBOT LOGIC (Group Reply - Conditional) --------
-@app.on_message(filters.text & filters.group & ~filters.command)
+# 2. GROUP CHAT LOGIC (Conditional replies - 60% random)
+# This uses the filter provided by you, but explicitly for GROUP chats.
+@app.on_message((filters.text & filters.group & ~filters.regex("^/") & ~filters.bot) | (filters.reply & filters.group))
 async def group_chatbot_reply(client, message):
     """
     Handles chatbot replies in groups (only replies if enabled OR if mentioned/replied to).
     """
-    
-    # Check if the message is from a bot (we explicitly ignore bots here)
-    if message.from_user and message.from_user.is_bot:
-        return
-    
     chat_id = message.chat.id
     me = await client.get_me()
     
@@ -870,10 +863,9 @@ async def group_chatbot_reply(client, message):
     )
 
     if is_direct_interaction:
-        # Get the text, removing bot mention if present
+        # Logic for handling direct mentions or replies to the bot
         text_to_process = message.text
         if me.username:
-            # FIX: Use a more robust regex to remove the bot's username mention
             text_to_process = re.sub(rf'@{re.escape(me.username)}\b', '', text_to_process, flags=re.IGNORECASE).strip()
             
         reply, is_sticker = get_reply(text_to_process or "hello")
@@ -884,8 +876,7 @@ async def group_chatbot_reply(client, message):
             else:
                 await message.reply_text(reply)
                 
-    # 2. RANDOM Group Reply (if enabled)
-    # 60% chance to reply randomly
+    # 2. RANDOM Group Reply (if enabled - 60% chance)
     elif chatbot_enabled and random.random() < 0.60: 
         reply, is_sticker = get_reply(message.text) 
         
@@ -894,6 +885,7 @@ async def group_chatbot_reply(client, message):
                  await message.reply_sticker(reply)
             else:
                  await message.reply_text(reply)
+
                  
 # -------- Run the Bot --------
 print("Bot starting...")
