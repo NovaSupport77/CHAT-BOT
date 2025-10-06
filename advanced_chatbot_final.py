@@ -822,26 +822,26 @@ async def afk_trigger_handler(client, message):
             )
 
 
-# -------- CORE CHATBOT LOGIC --------
+import re # Make sure 'import re' is at the top of your file
 
-# 1. PRIVATE CHAT LOGIC (Always replies)
-# This uses the filter provided by you, but explicitly for PRIVATE chats.
+# -------- CORE CHATBOT LOGIC (Group Priority) --------
+
+# 1. PRIVATE CHAT LOGIC (Fixed message for non-commands)
+# Filter: Text NOT starting with /, NOT from bot, OR a reply (all in PRIVATE chat)
 @app.on_message((filters.text & filters.private & ~filters.regex("^/") & ~filters.bot) | (filters.reply & filters.private))
 async def private_chatbot_reply(client, message):
-    """Handles chatbot replies in private chats (always replies)."""
+    """Handles private chats: sends a fixed message, unless it's a command."""
     
-    # In private chat, just reply to the message content
-    reply, is_sticker = get_reply(message.text or "hello")
-    
-    if reply:
-        if is_sticker:
-            await message.reply_sticker(reply)
-        else:
-            await message.reply_text(reply)
+    # Check if the message is a command. If so, let it pass to its handler.
+    if message.text and message.text.startswith('/'):
+        return
+
+    # Send the fixed response as requested
+    await message.reply_text("ᴘʟᴇᴀsᴇ ᴀᴅᴅ ᴍᴇ ᴀ ɢʀᴏᴜᴘ , ᴛʜᴇɴ ɪ ᴡɪʟʟ ɢɪᴠᴇ ʏᴏᴜ ʀᴇᴘʟʏ !!")
 
 
 # 2. GROUP CHAT LOGIC (Conditional replies - 60% random)
-# This uses the filter provided by you, but explicitly for GROUP chats.
+# Filter: Text NOT starting with /, NOT from bot, OR a reply (all in GROUP chat)
 @app.on_message((filters.text & filters.group & ~filters.regex("^/") & ~filters.bot) | (filters.reply & filters.group))
 async def group_chatbot_reply(client, message):
     """
@@ -885,7 +885,6 @@ async def group_chatbot_reply(client, message):
                  await message.reply_sticker(reply)
             else:
                  await message.reply_text(reply)
-
                  
 # -------- Run the Bot --------
 print("Bot starting...")
