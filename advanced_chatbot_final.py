@@ -796,69 +796,80 @@ async def afk_trigger_handler(client, message):
     if message.reply_to_message and message.reply_to_message.from_user:
         mentions_to_check.add(message.reply_to_message.from_user.id)
     
-    if message.entities:
-        for entity in message.entities:
-            if entity.type == enums.MessageEntityType.TEXT_MENTION and entity.user:
-                mentions_to_check.add(entity.user.id)
-            # Basic check for @username mentions
-            elif entity.type == enums.MessageEntityType.MENTION and message.text:
-                username = message.text[entity.offset:entity.offset + entity.length].strip('@')
-                try:
-                    user_info = await app.get_users(username)
-                    mentions_to_check.add(user_info.id)
-                except Exception:
-                    pass
+    # -------- CORE CHATBOT LOGIC (Final Universal Handler - No Conflicts) --------
 
-    for afk_user_id in mentions_to_check:
-        if afk_user_id in AFK_USERS:
-            afk_data = AFK_USERS[afk_user_id]
+# We use the most reliable filter: text messages that are NOT commands.
+@app.on_message(filters.text & ~filters.command)
+async def universal_chatbot_reply(client, message):
+    """
+    Handles all non-command text messages by checking private/group type internally.
+    This method eliminates all filter conflicts.
+    """
+    
+    # 1. IMMEDIATE CHECK: Ignore messages from other bots
+    if message.from_user and message.from_user.is_bot:
+        return
+        
+    chat_id = message.chat.id
+    me = await client.get_me()
+    
+    # --- PRIVATE CHAT LOGIC ---
+    if message.chat.type == enums.ChatType.PRIVATE:
+        # Fixed response for private chats (as requested)
+        await message.reply_text("ᴘʟᴇᴀsᴇ ᴀᴅᴅ ᴍᴇ ᴀ ɢʀᴏᴜᴘ , ᴛʜᴇɴ ɪ ᴡɪʟʟ ɢɪᴠᴇ ʏᴏᴜ ʀᴇᴘʟʏ !!")
+        return
+
+    # --- GROUP CHAT LOGIC (Includes Merged AFK Trigger) ---
+    if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        
+        # 1. MERGED AFK TRIGGER LOGIC START
+        user_id = message.from_user.id
+        
+        # A. Check if the message sender is returning from AFK
+        if user_id in AFK_USERS:
+            afk_data = AFK_USERS.pop(user_id)
             time_afk = get_readable_time(int(time.time() - afk_data["time"]))
             
             await message.reply_text(
-                f"[{afk_data['first_name']}](tg://user?id={afk_user_id}) ɪs 𝐀ғᴋ!\n"
-                f"» 𝐑ᴇᴀsᴏɴ: **{afk_data['reason']}**\n"
-                f"» 𝐀ғᴋ ғᴏʀ: **{time_afk}**",
+                f"𝐖ᴇʟᴄᴏᴍᴇ ʙᴀᴄᴋ, [{message.from_user.first_name}](tg://user?id={user_id})! ʏᴏᴜ 𝐰𝐞𝐫𝐞 𝐀ғᴋ ғᴏʀ: **{time_afk}**",
                 parse_mode=enums.ParseMode.MARKDOWN
             )
 
-# -------- CORE CHATBOT LOGIC (Final Debug + Universal Handler) --------
+        # B. Check for AFK users mentioned in the message or reply
+        mentions_to_check = set()
 
-def non_command_filter(_, __, message):
-    """Custom filter: text messages that are NOT commands."""
-    return bool(message.text and not message.text.startswith("/"))
+        if message.reply_to_message and message.reply_to_message.from_user:
+            mentions_to_check.add(message.reply_to_message.from_user.id)
+        
+        if message.entities:
+            for entity in message.entities:
+                if entity.type == enums.MessageEntityType.TEXT_MENTION and entity.user:
+                    mentions_to_check.add(entity.user.id)
+                elif entity.type == enums.MessageEntityType.MENTION and message.text:
+                    username = message.text[entity.offset:entity.offset + entity.length].strip('@')
+                    try:
+                        user_info = await client.get_users(username)
+                        mentions_to_check.add(user_info.id)
+                    except Exception:
+                        pass
 
-@app.on_message(filters.create(non_command_filter))
-async def universal_chatbot_reply(client, message):
-    """
-    Handles all non-command text messages in both private and group chats.
-    Includes debug logs to confirm message reception.
-    """
+        for afk_user_id in mentions_to_check:
+            if afk_user_id in AFK_USERS:
+                afk_data = AFK_USERS[afk_user_id]
+                time_afk = get_readable_time(int(time.time() - afk_data["time"]))
+                
+                await message.reply_text(
+                    f"[{afk_data['first_name']}](tg://user?id={afk_user_id}) ɪs 𝐀ғᴋ!\n"
+                    f"» 𝐑ᴇᴀsᴏɴ: **{afk_data['reason']}**\n"
+                    f"» 𝐀ғᴋ ғᴏʀ: **{time_afk}**",
+                    parse_mode=enums.ParseMode.MARKDOWN
+                )
+        # 2. AFK TRIGGER LOGIC END (Now we proceed to chatbot logic)
 
-    # 1️⃣ Ignore messages from other bots
-    if message.from_user and message.from_user.is_bot:
-        return
+        # 3. CHATBOT LOGIC START
+        chatbot_enabled = CHATBOT_STATUS.get(chat_id, True) # Defaulting to True if not set
 
-    # 2️⃣ Debug log to confirm bot received the message
-    try:
-        print(f"[DEBUG] Got message from chat={message.chat.title or message.chat.id} | user={message.from_user.first_name}: {message.text}")
-    except Exception as e:
-        print(f"[DEBUG] Could not print message: {e}")
-
-    chat_id = message.chat.id
-    me = await client.get_me()
-
-    # --- PRIVATE CHAT ---
-    if message.chat.type == enums.ChatType.PRIVATE:
-        reply, is_sticker = get_reply(message.text)
-        if reply:
-            await (message.reply_sticker(reply) if is_sticker else message.reply_text(reply))
-        return
-
-    # --- GROUP CHAT ---
-    if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
-        chatbot_enabled = CHATBOT_STATUS.get(chat_id, True)
-
-        # Check if user directly interacted with bot
+        # Check if user directly interacted with bot (mention/reply)
         is_direct_interaction = (
             message.reply_to_message
             and message.reply_to_message.from_user
@@ -869,9 +880,6 @@ async def universal_chatbot_reply(client, message):
             if message.text
             else False
         )
-
-        # 👀 Log current chatbot status
-        print(f"[DEBUG] Chatbot in {chat_id} is {'ENABLED' if chatbot_enabled else 'DISABLED'}, Direct={is_direct_interaction}")
 
         # If bot mentioned or replied to → reply always
         if is_direct_interaction:
@@ -884,21 +892,13 @@ async def universal_chatbot_reply(client, message):
             reply, is_sticker = get_reply(text_to_process or "hello")
             if reply:
                 await (message.reply_sticker(reply) if is_sticker else message.reply_text(reply))
-                print("[DEBUG] Sent direct reply ✅")
-            return
+            return # Stop after direct interaction reply
 
         # Random auto reply when chatbot enabled
         if chatbot_enabled:
-            reply, is_sticker = get_reply(message.text)
-            if reply:
-                await (message.reply_sticker(reply) if is_sticker else message.reply_text(reply))
-                print("[DEBUG] Sent random reply ✅")
-            else:
-                print("[DEBUG] No suitable reply found ❌")
-        else:
-            print("[DEBUG] Chatbot disabled for this group ❌")
-
-
-# ---------- START ----------
-print("🤖 Chatbot is running successfully... (Debug Version Active) ✅")
-app.run()
+            # Check 60% chance only if not a direct interaction
+            if random.random() < 0.60: 
+                reply, is_sticker = get_reply(message.text)
+                if reply:
+                    await (message.reply_sticker(reply) if is_sticker else message.reply_text(reply))
+        # 4. CHATBOT LOGIC END
