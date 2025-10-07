@@ -821,7 +821,6 @@ async def afk_trigger_handler(client, message):
                 parse_mode=enums.ParseMode.MARKDOWN
             )
 
-
 # -------- CORE CHATBOT LOGIC (Final Universal Handler) --------
 # Universal filter that safely ignores commands across all Pyrogram versions.
 def non_command_filter(_, __, message):
@@ -842,16 +841,16 @@ async def universal_chatbot_reply(client, message):
     chat_id = message.chat.id
     me = await client.get_me()
 
-    # --- Private Chat ---
+    # --- PRIVATE CHAT ---
     if message.chat.type == enums.ChatType.PRIVATE:
-        await message.reply_text(
-            "ᴘʟᴇᴀsᴇ ᴀᴅᴅ ᴍᴇ ᴀ ɢʀᴏᴜᴘ , ᴛʜᴇɴ ɪ ᴡɪʟʟ ɢɪᴠᴇ ʏᴏᴜ ʀᴇᴘʟʏ !!"
-        )
+        reply, is_sticker = get_reply(message.text)
+        if reply:
+            await (message.reply_sticker(reply) if is_sticker else message.reply_text(reply))
         return
 
-    # --- Group Chat ---
+    # --- GROUP CHAT ---
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
-        chatbot_enabled = CHATBOT_STATUS.get(chat_id, True)
+        chatbot_enabled = CHATBOT_STATUS.get(chat_id, False)
 
         # Check if user directly replied to or mentioned the bot
         is_direct_interaction = (
@@ -873,11 +872,10 @@ async def universal_chatbot_reply(client, message):
                 ).strip()
 
             reply, is_sticker = get_reply(text_to_process or "hello")
-
             if reply:
                 await (message.reply_sticker(reply) if is_sticker else message.reply_text(reply))
 
-        # Random reply (60% chance)
+        # Random auto reply (if chatbot enabled)
         elif chatbot_enabled and random.random() < 0.6:
             reply, is_sticker = get_reply(message.text)
             if reply:
