@@ -856,7 +856,7 @@ async def universal_chatbot_reply(client, message):
 
     # --- GROUP CHAT ---
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
-        chatbot_enabled = CHATBOT_STATUS.get(chat_id, False)
+        chatbot_enabled = CHATBOT_STATUS.get(chat_id, True)
 
         # Check if user directly interacted with bot
         is_direct_interaction = (
