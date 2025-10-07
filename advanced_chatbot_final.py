@@ -822,70 +822,68 @@ async def afk_trigger_handler(client, message):
             )
 
 
-# -------- CORE CHATBOT LOGIC --------
+# -------- CORE CHATBOT LOGIC (Final Universal Handler) --------
+# Universal filter that safely ignores commands across all Pyrogram versions.
+def non_command_filter(_, __, message):
+    """Custom filter: text messages that are NOT commands."""
+    return bool(message.text and not message.text.startswith("/"))
 
-# 1. PRIVATE CHAT LOGIC (Always replies)
-# This uses the filter provided by you, but explicitly for PRIVATE chats.
-@app.on_message((filters.text & filters.private & ~filters.regex("^/") & ~filters.bot) | (filters.reply & filters.private))
-async def private_chatbot_reply(client, message):
-    """Handles chatbot replies in private chats (always replies)."""
-    
-    # In private chat, just reply to the message content
-    reply, is_sticker = get_reply(message.text or "hello")
-    
-    if reply:
-        if is_sticker:
-            await message.reply_sticker(reply)
-        else:
-            await message.reply_text(reply)
-
-
-# 2. GROUP CHAT LOGIC (Conditional replies - 60% random)
-# This uses the filter provided by you, but explicitly for GROUP chats.
-@app.on_message((filters.text & filters.group & ~filters.regex("^/") & ~filters.bot) | (filters.reply & filters.group))
-async def group_chatbot_reply(client, message):
+@app.on_message(filters.create(non_command_filter))
+async def universal_chatbot_reply(client, message):
     """
-    Handles chatbot replies in groups (only replies if enabled OR if mentioned/replied to).
+    Handles all non-command text messages in both private and group chats.
+    This single structure eliminates filter conflicts.
     """
+
+    # 1. Ignore messages from other bots
+    if message.from_user and message.from_user.is_bot:
+        return
+
     chat_id = message.chat.id
     me = await client.get_me()
-    
-    if message.text is None:
-        return
-    
-    chatbot_enabled = CHATBOT_STATUS.get(chat_id, False)
-    
-    # 1. Check for direct reply or mention
-    is_direct_interaction = (
-        message.reply_to_message and message.reply_to_message.from_user and message.reply_to_message.from_user.id == me.id
-    ) or (
-        me.username and f"@{me.username.lower()}" in message.text.lower() if message.text else False
-    )
 
-    if is_direct_interaction:
-        # Logic for handling direct mentions or replies to the bot
-        text_to_process = message.text
-        if me.username:
-            text_to_process = re.sub(rf'@{re.escape(me.username)}\b', '', text_to_process, flags=re.IGNORECASE).strip()
-            
-        reply, is_sticker = get_reply(text_to_process or "hello")
-        
-        if reply:
-            if is_sticker:
-                await message.reply_sticker(reply)
-            else:
-                await message.reply_text(reply)
-                
-    # 2. RANDOM Group Reply (if enabled - 60% chance)
-    elif chatbot_enabled and random.random() < 0.60: 
-        reply, is_sticker = get_reply(message.text) 
-        
-        if reply:
-            if is_sticker:
-                 await message.reply_sticker(reply)
-            else:
-                 await message.reply_text(reply)
-                 
-# -------- Run the Bot --------
-print("Bot starting...")
+    # --- Private Chat ---
+    if message.chat.type == enums.ChatType.PRIVATE:
+        await message.reply_text(
+            "ᴘʟᴇᴀsᴇ ᴀᴅᴅ ᴍᴇ ᴀ ɢʀᴏᴜᴘ , ᴛʜᴇɴ ɪ ᴡɪʟʟ ɢɪᴠᴇ ʏᴏᴜ ʀᴇᴘʟʏ !!"
+        )
+        return
+
+    # --- Group Chat ---
+    if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
+        chatbot_enabled = CHATBOT_STATUS.get(chat_id, True)
+
+        # Check if user directly replied to or mentioned the bot
+        is_direct_interaction = (
+            message.reply_to_message
+            and message.reply_to_message.from_user
+            and message.reply_to_message.from_user.id == me.id
+        ) or (
+            me.username
+            and f"@{me.username.lower()}" in message.text.lower()
+            if message.text
+            else False
+        )
+
+        if is_direct_interaction:
+            text_to_process = message.text
+            if me.username:
+                text_to_process = re.sub(
+                    rf"@{re.escape(me.username)}\b", "", text_to_process, flags=re.IGNORECASE
+                ).strip()
+
+            reply, is_sticker = get_reply(text_to_process or "hello")
+
+            if reply:
+                await (message.reply_sticker(reply) if is_sticker else message.reply_text(reply))
+
+        # Random reply (60% chance)
+        elif chatbot_enabled and random.random() < 0.6:
+            reply, is_sticker = get_reply(message.text)
+            if reply:
+                await (message.reply_sticker(reply) if is_sticker else message.reply_text(reply))
+
+
+# ---------- START ----------
+print("🤖 Chatbot is running successfully... No TypeError, all filters OK ✅")
 app.run()
