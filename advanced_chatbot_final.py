@@ -821,8 +821,8 @@ async def afk_trigger_handler(client, message):
                 parse_mode=enums.ParseMode.MARKDOWN
             )
 
-# -------- CORE CHATBOT LOGIC (Final Universal Handler) --------
-# Universal filter that safely ignores commands across all Pyrogram versions.
+# -------- CORE CHATBOT LOGIC (Final Debug + Universal Handler) --------
+
 def non_command_filter(_, __, message):
     """Custom filter: text messages that are NOT commands."""
     return bool(message.text and not message.text.startswith("/"))
@@ -831,12 +831,18 @@ def non_command_filter(_, __, message):
 async def universal_chatbot_reply(client, message):
     """
     Handles all non-command text messages in both private and group chats.
-    This single structure eliminates filter conflicts.
+    Includes debug logs to confirm message reception.
     """
 
-    # 1. Ignore messages from other bots
+    # 1️⃣ Ignore messages from other bots
     if message.from_user and message.from_user.is_bot:
         return
+
+    # 2️⃣ Debug log to confirm bot received the message
+    try:
+        print(f"[DEBUG] Got message from chat={message.chat.title or message.chat.id} | user={message.from_user.first_name}: {message.text}")
+    except Exception as e:
+        print(f"[DEBUG] Could not print message: {e}")
 
     chat_id = message.chat.id
     me = await client.get_me()
@@ -852,7 +858,7 @@ async def universal_chatbot_reply(client, message):
     if message.chat.type in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]:
         chatbot_enabled = CHATBOT_STATUS.get(chat_id, False)
 
-        # Check if user directly replied to or mentioned the bot
+        # Check if user directly interacted with bot
         is_direct_interaction = (
             message.reply_to_message
             and message.reply_to_message.from_user
@@ -864,6 +870,10 @@ async def universal_chatbot_reply(client, message):
             else False
         )
 
+        # 👀 Log current chatbot status
+        print(f"[DEBUG] Chatbot in {chat_id} is {'ENABLED' if chatbot_enabled else 'DISABLED'}, Direct={is_direct_interaction}")
+
+        # If bot mentioned or replied to → reply always
         if is_direct_interaction:
             text_to_process = message.text
             if me.username:
@@ -874,14 +884,21 @@ async def universal_chatbot_reply(client, message):
             reply, is_sticker = get_reply(text_to_process or "hello")
             if reply:
                 await (message.reply_sticker(reply) if is_sticker else message.reply_text(reply))
+                print("[DEBUG] Sent direct reply ✅")
+            return
 
-        # Random auto reply (if chatbot enabled)
-        elif chatbot_enabled and random.random() < 0.6:
+        # Random auto reply when chatbot enabled
+        if chatbot_enabled:
             reply, is_sticker = get_reply(message.text)
             if reply:
                 await (message.reply_sticker(reply) if is_sticker else message.reply_text(reply))
+                print("[DEBUG] Sent random reply ✅")
+            else:
+                print("[DEBUG] No suitable reply found ❌")
+        else:
+            print("[DEBUG] Chatbot disabled for this group ❌")
 
 
 # ---------- START ----------
-print("🤖 Chatbot is running successfully... No TypeError, all filters OK ✅")
+print("🤖 Chatbot is running successfully... (Debug Version Active) ✅")
 app.run()
